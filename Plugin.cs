@@ -27,7 +27,8 @@ namespace GooseGameAP
         public TrapManager TrapManager { get; private set; }
         public ItemTracker ItemTracker { get; private set; }
         
-        // Area access flags
+        // Area access flags (Hub is always accessible - starting area)
+        public bool HasGardenAccess { get; set; } = false;
         public bool HasHighStreetAccess { get; set; } = false;
         public bool HasBackGardensAccess { get; set; } = false;
         public bool HasPubAccess { get; set; } = false;
@@ -76,7 +77,7 @@ namespace GooseGameAP
             {
                 hasInitializedGates = true;
                 Log.LogInfo("Game scene detected, starting initialization...");
-                StartCoroutine(DelayedHubTeleport());
+                // Only initialize gates, don't teleport - let player start where they are
                 StartCoroutine(DelayedGateInit());
             }
             
@@ -113,7 +114,16 @@ namespace GooseGameAP
         
         private void HandleDebugKeys()
         {
-            // F2-F5: Quick area unlocks
+            // Shift+F2: Unlock Garden
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F2))
+            {
+                HasGardenAccess = true;
+                GateManager?.OpenGatesForArea("Garden");
+                UI?.ShowNotification("DEBUG: Garden unlocked!");
+                return;  // Don't also trigger F2
+            }
+            
+            // F2-F5: Quick area unlocks (non-Garden areas)
             if (Input.GetKeyDown(KeyCode.F2))
             {
                 HasHighStreetAccess = true;
@@ -145,6 +155,19 @@ namespace GooseGameAP
                 LogGoosePosition();
             }
             
+            // Shift+F8: Scan nearby objects (for debugging gates/blockers)
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F8))
+            {
+                ScanNearbyObjects(15f);
+                return;
+            }
+            
+            // F8: Log all SwitchSystems in scene
+            if (Input.GetKeyDown(KeyCode.F8))
+            {
+                LogAllSwitchSystems();
+            }
+            
             // F7: Hub teleport
             if (Input.GetKeyDown(KeyCode.F7))
             {
@@ -156,6 +179,14 @@ namespace GooseGameAP
             if (Input.GetKeyDown(KeyCode.F11))
             {
                 GateManager?.OpenAllGates();
+            }
+            
+            // F12: Clear hub blockers (for debugging)
+            if (Input.GetKeyDown(KeyCode.F12))
+            {
+                Log.LogInfo("F12: Manually clearing hub blockers...");
+                ClearHubBlockers();
+                UI?.ShowNotification("Cleared hub blockers!");
             }
             
             // Ctrl keys for traps
@@ -276,6 +307,13 @@ namespace GooseGameAP
             
             switch (offset)
             {
+                case 100:
+                    HasGardenAccess = true;
+                    GateManager?.TriggerAreaUnlock("Garden");
+                    GateManager?.OpenGatesForArea("Garden");
+                    UI?.ShowNotification("Garden is now accessible!");
+                    SaveAccessFlags();
+                    break;
                 case 101:
                     HasHighStreetAccess = true;
                     GateManager?.TriggerAreaUnlock("HighStreet");
@@ -367,17 +405,18 @@ namespace GooseGameAP
         {
             switch (area)
             {
-                case GoalListArea.Garden: return true; // Always accessible
+                case GoalListArea.Garden: return HasGardenAccess;  // Now requires access!
                 case GoalListArea.Shops: return HasHighStreetAccess;
                 case GoalListArea.Backyards: return HasBackGardensAccess;
                 case GoalListArea.Pub: return HasPubAccess;
                 case GoalListArea.Finale: return HasModelVillageAccess;
-                default: return true;
+                default: return true;  // Hub is always accessible
             }
         }
         
         public void ResetAllAccess()
         {
+            HasGardenAccess = false;
             HasHighStreetAccess = false;
             HasBackGardensAccess = false;
             HasPubAccess = false;
@@ -392,6 +431,7 @@ namespace GooseGameAP
         
         private void SaveAccessFlags()
         {
+            PlayerPrefs.SetInt("AP_Garden", HasGardenAccess ? 1 : 0);
             PlayerPrefs.SetInt("AP_HighStreet", HasHighStreetAccess ? 1 : 0);
             PlayerPrefs.SetInt("AP_BackGardens", HasBackGardensAccess ? 1 : 0);
             PlayerPrefs.SetInt("AP_Pub", HasPubAccess ? 1 : 0);
@@ -403,8 +443,9 @@ namespace GooseGameAP
         
         private void LoadAccessFlags()
         {
-            if (PlayerPrefs.HasKey("AP_HighStreet"))
+            if (PlayerPrefs.HasKey("AP_Garden"))
             {
+                HasGardenAccess = PlayerPrefs.GetInt("AP_Garden") == 1;
                 HasHighStreetAccess = PlayerPrefs.GetInt("AP_HighStreet") == 1;
                 HasBackGardensAccess = PlayerPrefs.GetInt("AP_BackGardens") == 1;
                 HasPubAccess = PlayerPrefs.GetInt("AP_Pub") == 1;
@@ -416,6 +457,7 @@ namespace GooseGameAP
         
         private void ClearSavedAccessFlags()
         {
+            PlayerPrefs.DeleteKey("AP_Garden");
             PlayerPrefs.DeleteKey("AP_HighStreet");
             PlayerPrefs.DeleteKey("AP_BackGardens");
             PlayerPrefs.DeleteKey("AP_Pub");
@@ -427,27 +469,58 @@ namespace GooseGameAP
         
         // === COROUTINES ===
         
-        private IEnumerator DelayedHubTeleport()
-        {
-            yield return new WaitForSeconds(3f);
-            GateManager?.TeleportGooseToWell();
-            UI?.ShowNotification("Welcome to the Hub!");
-        }
-        
         private IEnumerator DelayedGateInit()
         {
-            yield return new WaitForSeconds(2f);
-            Log.LogInfo("Running delayed gate initialization...");
+            // Wait longer for game to fully initialize
+            yield return new WaitForSeconds(3f);
             
-            // Disable the hub-to-garden blocker
-            var parkHubBlocker = GameObject.Find("highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders/ParkHubGateExtraCollider");
-            if (parkHubBlocker != null)
+            // Run clearing multiple times to make sure it sticks
+            for (int attempt = 0; attempt < 3; attempt++)
             {
-                parkHubBlocker.SetActive(false);
-                Log.LogInfo("Disabled ParkHubGateExtraCollider (hub-to-garden path)");
+                Log.LogInfo($"Hub clearing attempt {attempt + 1}/3...");
+                ClearHubBlockers();
+                yield return new WaitForSeconds(1f);
             }
             
-            Log.LogInfo("Initial gate setup complete");
+            // Sync area gates based on current access flags
+            GateManager?.SyncGatesFromAccessFlags();
+            
+            Log.LogInfo("Hub initialization complete");
+        }
+        
+        private void ClearHubBlockers()
+        {
+            // Use GateManager's method which has the actual blocker paths
+            GateManager?.ClearHubBlockers();
+            
+            // Also scan for any remaining GateExtraColliders and disable them
+            var allObjects = FindObjectsOfType<GameObject>();
+            foreach (var obj in allObjects)
+            {
+                if (obj == null) continue;
+                
+                // Disable any GateExtraColliders anywhere
+                if (obj.name.Contains("ExtraCollider"))
+                {
+                    var cols = obj.GetComponentsInChildren<Collider>();
+                    foreach (var c in cols) c.enabled = false;
+                    obj.SetActive(false);
+                    Log.LogInfo($"  Disabled ExtraCollider: {obj.name}");
+                }
+            }
+        }
+        
+        private string GetGameObjectPath(GameObject obj)
+        {
+            if (obj == null) return "null";
+            string path = obj.name;
+            Transform parent = obj.transform.parent;
+            while (parent != null)
+            {
+                path = parent.name + "/" + path;
+                parent = parent.parent;
+            }
+            return path;
         }
         
         private void LogGoosePosition()
@@ -462,6 +535,84 @@ namespace GooseGameAP
                     UI?.ShowNotification($"Pos: ({pos.x:F1}, {pos.y:F1}, {pos.z:F1})");
                 }
             }
+        }
+        
+        private void ScanNearbyObjects(float radius)
+        {
+            Log.LogInfo($"=== SCANNING OBJECTS WITHIN {radius}m ===");
+            
+            Vector3 goosePos = Vector3.zero;
+            if (GameManager.instance?.allGeese != null)
+            {
+                foreach (var goose in GameManager.instance.allGeese)
+                {
+                    if (goose != null && goose.isActiveAndEnabled)
+                    {
+                        goosePos = goose.transform.position;
+                        break;
+                    }
+                }
+            }
+            
+            Log.LogInfo($"Scanning from position: {goosePos}");
+            
+            // Find all objects with colliders, SwitchSystems, or Animators
+            var allObjects = UnityEngine.Object.FindObjectsOfType<GameObject>();
+            int count = 0;
+            
+            foreach (var obj in allObjects)
+            {
+                if (obj == null) continue;
+                float dist = Vector3.Distance(obj.transform.position, goosePos);
+                if (dist > radius) continue;
+                
+                // Check for interesting components
+                var switchSys = obj.GetComponent<SwitchSystem>();
+                var animator = obj.GetComponent<Animator>();
+                var collider = obj.GetComponent<Collider>();
+                var rigidbody = obj.GetComponent<Rigidbody>();
+                
+                bool isInteresting = switchSys != null || animator != null || 
+                                    obj.name.ToLower().Contains("gate") ||
+                                    obj.name.ToLower().Contains("bin") ||
+                                    obj.name.ToLower().Contains("lid") ||
+                                    obj.name.ToLower().Contains("bucket") ||
+                                    obj.name.ToLower().Contains("blocker") ||
+                                    obj.name.ToLower().Contains("collider") ||
+                                    obj.name.ToLower().Contains("finale") ||
+                                    obj.name.ToLower().Contains("pub");
+                
+                if (isInteresting)
+                {
+                    string path = GetGameObjectPath(obj);
+                    string components = "";
+                    if (switchSys != null) components += "[Switch:" + switchSys.currentState + "] ";
+                    if (animator != null) components += "[Animator] ";
+                    if (collider != null) components += "[Collider:" + (collider.enabled ? "ON" : "OFF") + "] ";
+                    if (rigidbody != null) components += "[RB] ";
+                    
+                    Log.LogInfo($"  [{dist:F1}m] {path} {components} active={obj.activeSelf}");
+                    count++;
+                }
+            }
+            
+            Log.LogInfo($"=== FOUND {count} INTERESTING OBJECTS ===");
+            UI?.ShowNotification($"Scanned {count} objects - check log!");
+        }
+        
+        private void LogAllSwitchSystems()
+        {
+            Log.LogInfo("=== ALL SWITCH SYSTEMS IN SCENE ===");
+            var allSwitches = UnityEngine.Object.FindObjectsOfType<SwitchSystem>();
+            
+            foreach (var sw in allSwitches)
+            {
+                string path = GetGameObjectPath(sw.gameObject);
+                Log.LogInfo($"  {path} state={sw.currentState} active={sw.gameObject.activeSelf}");
+            }
+            
+            Log.LogInfo($"=== TOTAL: {allSwitches.Length} SWITCH SYSTEMS ===");
+            UI?.ShowNotification($"Found {allSwitches.Length} SwitchSystems - check log!");
         }
         
         private void OnDestroy()

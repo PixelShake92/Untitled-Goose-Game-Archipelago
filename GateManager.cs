@@ -13,7 +13,7 @@ namespace GooseGameAP
         private static ManualLogSource Log => Plugin.Log;
         private Plugin plugin;
         
-        public static readonly Vector3 WellPosition = new Vector3(-22f, 0.5f, 38f);
+        public static readonly Vector3 WellPosition = new Vector3(1.0f, 1.5f, -1.5f);
         
         private static readonly Dictionary<string, string[]> AreaGates = new Dictionary<string, string[]>
         {
@@ -37,9 +37,8 @@ namespace GooseGameAP
                 "overworldStatic/GROUP_ParkToPub/FinaleToParkGateSystem"
             }},
             { "Garden", new[] {
-                "gardenDynamic/GROUP_Gate/GardenGate/GateSystem",
-                "overworldStatic/GROUP_Hub/HubGateSystem/HubGateMainSystem",
-                "overworldStatic/GROUP_Hub/HubGateSystem/LockSystem"
+                // Only the actual garden entrance gate - NOT hub-side systems
+                "gardenDynamic/GROUP_Gate/GardenGate/GateSystem"
             }}
         };
         
@@ -51,11 +50,21 @@ namespace GooseGameAP
         public void SyncGatesFromAccessFlags()
         {
             Log.LogInfo("=== SYNCING GATES FROM ACCESS FLAGS ===");
+            Log.LogInfo("  Garden: " + plugin.HasGardenAccess);
             Log.LogInfo("  High Street: " + plugin.HasHighStreetAccess);
             Log.LogInfo("  Back Gardens: " + plugin.HasBackGardensAccess);
             Log.LogInfo("  Pub: " + plugin.HasPubAccess);
             Log.LogInfo("  Model Village: " + plugin.HasModelVillageAccess);
             
+            // ALWAYS clear hub blockers first - hub should always be walkable
+            Log.LogInfo("  Clearing Hub blockers...");
+            DisableAreaBlockers("Hub");
+            
+            if (plugin.HasGardenAccess)
+            {
+                OpenGatesForArea("Garden");
+                Log.LogInfo("  Opened Garden gates");
+            }
             if (plugin.HasHighStreetAccess)
             {
                 OpenGatesForArea("HighStreet");
@@ -107,6 +116,9 @@ namespace GooseGameAP
             // Set save flags that track goal completion
             switch (areaName)
             {
+                case "Garden":
+                    // Garden doesn't have a goal that unlocks it in vanilla
+                    break;
                 case "HighStreet":
                     SaveGameData.SetBoolValue("goalHammering", true, false);
                     break;
@@ -150,6 +162,7 @@ namespace GooseGameAP
         {
             switch (areaName)
             {
+                case "Garden": return new[] { "unlockGarden", "openGarden" };
                 case "HighStreet": return new[] { "unlockHighStreet", "openHighStreet", "goalHammering" };
                 case "Backyards": return new[] { "unlockBackyards", "openBackyards", "goalGarage" };
                 case "Pub": return new[] { "unlockPub", "openPub", "goalPrune" };
@@ -252,18 +265,38 @@ namespace GooseGameAP
         {
             switch (areaName)
             {
+                case "Hub":
+                    // The actual hub blockers from game scans
+                    DisableObjectByPath("highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders/AlleyHubGateExtraCollider");
+                    DisableObjectByPath("highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders/ParkHubGateExtraCollider");
+                    DisableObjectByPath("highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders");
+                    DisableObjectByPath("overworldStatic/GROUP_Hub/HallToHubGateSystem/gateFrame/colllidersNegScalingFlipped");
+                    DisableObjectByPath("overworldStatic/GROUP_Hub/HallToHubGateSystem/gateFrame");
+                    DisableObjectByPath("overworldStatic/GROUP_Hub/HubGateSystem/HubGateMainSystem/gateFrame");
+                    DisableObjectByPath("overworldStatic/GROUP_Hub/PubToHubGateSystem/gateFrame");
+                    break;
+                case "Garden":
+                    // Hub to Garden blockers
+                    DisableObjectByPath("overworldStatic/GROUP_Hub/HubGateSystem/InvisibleWall");
+                    DisableObjectByPath("gardenDynamic/GROUP_Gate/InvisibleWall");
+                    DisableObjectByPath("gardenDynamic/GROUP_Gate/GardenGate/GateSystem/GateExtraColliders");
+                    break;
                 case "HighStreet":
                     DisableObjectByPath("gardenDynamic/GROUP_Hammering/InvisibleWall");
+                    DisableObjectByPath("gardenDynamic/GROUP_Hammering/gateTall/GateExtraColliders");
                     break;
                 case "Backyards":
                     DisableObjectByPath("highStreetDynamic/GROUP_Garage/InvisibleWall");
+                    DisableObjectByPath("highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders");
                     break;
                 case "Pub":
                     DisableObjectByPath("overworldStatic/GROUP_BackyardToPub/InvisibleWall");
                     DisableObjectByPath("overworldStatic/GROUP_BackyardToPub/SluiceGateSystem/InvisibleWall");
+                    DisableObjectByPath("pubDynamic/GROUP_pubItems/PubGateSystem/GateExtraColliders");
                     break;
                 case "Finale":
                     DisableObjectByPath("pubDynamic/GROUP_BucketOnHead/InvisibleWall");
+                    DisableObjectByPath("pubDynamic/GROUP_BucketOnHead/PubToFinaleGateSystem/GateExtraColliders");
                     break;
             }
         }
@@ -273,9 +306,51 @@ namespace GooseGameAP
             var obj = GameObject.Find(path);
             if (obj != null)
             {
+                // Disable all colliders on this
+                var colliders = obj.GetComponentsInChildren<Collider>();
+                foreach (var col in colliders)
+                {
+                    col.enabled = false;
+                }
                 obj.SetActive(false);
-                Log.LogInfo("  Disabled: " + path);
+                Log.LogInfo($"  Disabled: {path} ({colliders.Length} colliders)");
             }
+        }
+        
+        public void ClearHubBlockers()
+        {
+            Log.LogInfo("=== CLEARING HUB BLOCKERS ===");
+            DisableAreaBlockers("Hub");
+            
+            // Also set all hub gate SwitchSystems to open
+            var allSwitches = UnityEngine.Object.FindObjectsOfType<SwitchSystem>();
+            foreach (var sw in allSwitches)
+            {
+                if (sw == null) continue;
+                string path = GetFullPath(sw.gameObject);
+                
+                if (path.Contains("GROUP_Hub") && path.Contains("Gate"))
+                {
+                    if (sw.currentState == 0)
+                    {
+                        sw.SetState(1, null);
+                        Log.LogInfo($"  Opened hub gate: {path}");
+                    }
+                }
+            }
+        }
+        
+        private string GetFullPath(GameObject obj)
+        {
+            if (obj == null) return "null";
+            string path = obj.name;
+            Transform parent = obj.transform.parent;
+            while (parent != null)
+            {
+                path = parent.name + "/" + path;
+                parent = parent.parent;
+            }
+            return path;
         }
         
         public void TeleportGooseToWell()

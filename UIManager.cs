@@ -50,7 +50,7 @@ namespace GooseGameAP
         
         public void DrawUI(Plugin plugin)
         {
-            GUI.Box(new Rect(10, 10, 450, 620), "Archipelago - Goose Game v1.0");
+            GUI.Box(new Rect(10, 10, 550, 620), "Archipelago - Goose Game v1.0");
             
             // Connection settings
             GUI.Label(new Rect(20, 40, 100, 20), "Server:");
@@ -91,10 +91,10 @@ namespace GooseGameAP
             int y = 183;
             
             // Area access display
-            GUI.Label(new Rect(20, y, 380, 20), "=== Area Access ===");
+            GUI.Label(new Rect(20, y, 380, 20), "=== Area Access (Hub = Start) ===");
             y += 22;
             
-            GUI.Label(new Rect(20, y, 380, 20), "Garden: YES | High Street: " + (plugin.HasHighStreetAccess ? "YES" : "NO"));
+            GUI.Label(new Rect(20, y, 380, 20), "Garden: " + (plugin.HasGardenAccess ? "YES" : "NO") + " | High Street: " + (plugin.HasHighStreetAccess ? "YES" : "NO"));
             y += 20;
             GUI.Label(new Rect(20, y, 380, 20), "Back Gardens: " + (plugin.HasBackGardensAccess ? "YES" : "NO") + " | Pub: " + (plugin.HasPubAccess ? "YES" : "NO"));
             y += 20;

@@ -104,6 +104,15 @@ namespace GooseGameAP
                 
                 switch (id)
                 {
+                    case "enterAreaGarden":
+                        if (!Plugin.Instance.HasGardenAccess)
+                        {
+                            Plugin.Log.LogInfo("Blocked event: " + id);
+                            Plugin.Instance.OnAreaBlocked(GoalListArea.Garden);
+                            Plugin.Instance.GateManager?.TeleportGooseToWell();
+                            return false;
+                        }
+                        break;
                     case "enterAreaHighstreet":
                         if (!Plugin.Instance.HasHighStreetAccess)
                         {
@@ -159,46 +168,7 @@ namespace GooseGameAP
         // Keeping this class for potential future use
     }
     
-    // === BUTTERFINGERS PATCHES ===
-    // These intercept pickup/drag attempts when butterfingers trap is active
-    
-    [HarmonyPatch]
-    public static class HolderPatches
-    {
-        [HarmonyPatch(typeof(Holder), "Grab")]
-        [HarmonyPrefix]
-        static bool OnGrabPrefix(Holder __instance, Prop prop)
-        {
-            try
-            {
-                if (Plugin.Instance?.TrapManager?.HasButterfingers == true)
-                {
-                    Plugin.Log.LogInfo("[BUTTERFINGERS] Blocked pickup attempt!");
-                    return false;
-                }
-            }
-            catch { }
-            return true;
-        }
-    }
-    
-    [HarmonyPatch]
-    public static class DraggerPatches
-    {
-        [HarmonyPatch(typeof(Dragger), "Grab")]
-        [HarmonyPrefix]
-        static bool OnDraggerGrabPrefix()
-        {
-            try
-            {
-                if (Plugin.Instance?.TrapManager?.HasButterfingers == true)
-                {
-                    Plugin.Log.LogInfo("[BUTTERFINGERS] Blocked drag attempt!");
-                    return false;
-                }
-            }
-            catch { }
-            return true;
-        }
-    }
+    // NOTE: Butterfingers effect is handled by TrapManager forcing drops
+    // The Holder.Grab and Dragger.Grab patches were removed because
+    // those method signatures don't exist in this game version
 }

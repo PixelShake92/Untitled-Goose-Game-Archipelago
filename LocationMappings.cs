@@ -238,8 +238,11 @@ namespace GooseGameAP
                 case "paintbrush": return BASE_ID + 1087;
                 case "vasebroken01": return BASE_ID + 1088;
                 case "vasebroken02": return BASE_ID + 1089;
-                case "rightstrap": return BASE_ID + 1090;
+                case "rightstrap":
+                case "rightstrap (1)":
+                case "rightstrap (2)": return BASE_ID + 1090;
                 case "badmintonracket": return BASE_ID + 1093;
+                case "roseprop": return BASE_ID + 1094;  // Spawns when rose is pruned
                 
                 // Pub items (1101-1124)
                 case "fishingbobberprop": return BASE_ID + 1101;
@@ -335,7 +338,7 @@ namespace GooseGameAP
                 case "boltbent": return BASE_ID + 1215;  // fence bolt at game start
                 case "mallet": return BASE_ID + 1216;   // groundskeeper's mallet
                 
-                // High Street drags (1220-1226)
+                // High Street drags (1220-1227)
                 case "basketprop": return BASE_ID + 1220;
                 case "umbrella": return BASE_ID + 1221;
                 case "pushbroomprop": return BASE_ID + 1222;
@@ -343,6 +346,7 @@ namespace GooseGameAP
                 case "dustbin": return BASE_ID + 1224;
                 case "babydoll": return BASE_ID + 1225;
                 case "pricinggun": return BASE_ID + 1226;
+                case "addingmachine": return BASE_ID + 1227;
                 
                 // Back Gardens drags (1240-1250)
                 case "roseboxprop": return BASE_ID + 1240;

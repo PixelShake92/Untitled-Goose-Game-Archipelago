@@ -203,7 +203,7 @@ namespace GooseGameAP
                     }
                 }
                 
-                // Cache field accessors if we got the dragger
+                // Cache field accessors if the the dragger isn't stored
                 if (cachedDragger != null)
                 {
                     draggerHoldableField = cachedDragger.GetType().GetField("holdable",
