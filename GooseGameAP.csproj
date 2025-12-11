@@ -41,6 +41,10 @@
       <HintPath>..\Untitled Goose Game_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>..\Untitled Goose Game_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\BepInEx\core\BepInEx.dll</HintPath>
       <Private>false</Private>

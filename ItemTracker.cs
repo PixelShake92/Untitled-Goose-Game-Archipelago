@@ -80,13 +80,45 @@ namespace GooseGameAP
                     string itemName = currentProp.gameObject.name;
                     string itemPath = GetGameObjectPath(currentProp.gameObject);
                     string itemKey = LocationMappings.CleanItemName(itemName);
+                    int instanceId = currentProp.gameObject.GetInstanceID();
+                    Vector3 pos = currentProp.transform.position;
                     
-                    Log.LogInfo("[AUTO] Picked up: " + itemName);
+                    Log.LogInfo("[AUTO] Picked up: " + itemName + " (cleaned: " + itemKey + ")");
+                    
+                    // Check if this is a tracked item type that needs position-based identification
+                    var posTracker = plugin.PositionTracker;
+                    if (posTracker != null && posTracker.IsTrackedItem(itemName))
+                    {
+                        int itemIndex = posTracker.IdentifyItem(itemName, pos, instanceId);
+                        if (itemIndex > 0)
+                        {
+                            // Use unique key with index (e.g., "carrot_1", "carrot_2")
+                            itemKey = itemKey + "_" + itemIndex;
+                            Log.LogInfo($"[AUTO] Identified as unique item: {itemKey}");
+                        }
+                    }
+                    
+                    // Debug: Log hierarchy and position for items that might need differentiation
+                    string lowerName = itemName.ToLower();
+                    if (lowerName.Contains("carrot") || lowerName.Contains("umbrella") || lowerName.Contains("fertili"))
+                    {
+                        var current = currentProp.transform;
+                        string hierarchy = "";
+                        for (int i = 0; i < 6 && current != null; i++)
+                        {
+                            hierarchy += current.gameObject?.name + " | ";
+                            current = current.parent;
+                        }
+                        Log.LogInfo($"[DEBUG PICKUP] Hierarchy for {itemName}: {hierarchy}");
+                        Log.LogInfo($"[DEBUG PICKUP] InstanceID: {instanceId}");
+                        Log.LogInfo($"[DEBUG PICKUP] Full path: {itemPath}");
+                        Log.LogInfo($"[DEBUG PICKUP] World Position: ({pos.x:F2}, {pos.y:F2}, {pos.z:F2})");
+                    }
                     
                     if (firstTimePickups.Add(itemKey))
                     {
-                        Log.LogInfo("[AUTO] >>> FIRST TIME PICKUP: " + itemName + " <<<");
-                        OnFirstTimePickup(itemName, itemPath);
+                        Log.LogInfo("[AUTO] >>> FIRST TIME PICKUP: " + itemName + " (key: " + itemKey + ") <<<");
+                        OnFirstTimePickup(itemKey, itemPath);
                     }
                 }
                 // Detect drop (was holding, now null)
@@ -99,14 +131,45 @@ namespace GooseGameAP
                 {
                     string itemName = currentProp.gameObject.name;
                     string itemKey = LocationMappings.CleanItemName(itemName);
+                    int instanceId = currentProp.gameObject.GetInstanceID();
+                    Vector3 pos = currentProp.transform.position;
                     
-                    Log.LogInfo("[AUTO] Swapped to: " + itemName);
+                    Log.LogInfo("[AUTO] Swapped to: " + itemName + " (cleaned: " + itemKey + ")");
+                    
+                    // Check if this is a tracked item type that needs position-based identification
+                    var posTracker = plugin.PositionTracker;
+                    if (posTracker != null && posTracker.IsTrackedItem(itemName))
+                    {
+                        int itemIndex = posTracker.IdentifyItem(itemName, pos, instanceId);
+                        if (itemIndex > 0)
+                        {
+                            itemKey = itemKey + "_" + itemIndex;
+                            Log.LogInfo($"[AUTO] Identified as unique item: {itemKey}");
+                        }
+                    }
+                    
+                    // Debug: Log hierarchy for items that might need differentiation
+                    string lowerName = itemName.ToLower();
+                    if (lowerName.Contains("carrot") || lowerName.Contains("umbrella") || lowerName.Contains("fertili"))
+                    {
+                        var current = currentProp.transform;
+                        string hierarchy = "";
+                        for (int i = 0; i < 6 && current != null; i++)
+                        {
+                            hierarchy += current.gameObject?.name + " | ";
+                            current = current.parent;
+                        }
+                        Log.LogInfo($"[DEBUG PICKUP] Hierarchy for {itemName}: {hierarchy}");
+                        Log.LogInfo($"[DEBUG PICKUP] InstanceID: {instanceId}");
+                        string itemPath = GetGameObjectPath(currentProp.gameObject);
+                        Log.LogInfo($"[DEBUG PICKUP] Full path: {itemPath}");
+                    }
                     
                     if (firstTimePickups.Add(itemKey))
                     {
                         string itemPath = GetGameObjectPath(currentProp.gameObject);
-                        Log.LogInfo("[AUTO] >>> FIRST TIME PICKUP: " + itemName + " <<<");
-                        OnFirstTimePickup(itemName, itemPath);
+                        Log.LogInfo("[AUTO] >>> FIRST TIME PICKUP: " + itemName + " (key: " + itemKey + ") <<<");
+                        OnFirstTimePickup(itemKey, itemPath);
                     }
                 }
                 
@@ -203,7 +266,7 @@ namespace GooseGameAP
                     }
                 }
                 
-                // Cache field accessors if the the dragger isn't stored
+                // Cache field accessors if we got the dragger
                 if (cachedDragger != null)
                 {
                     draggerHoldableField = cachedDragger.GetType().GetField("holdable",
@@ -244,13 +307,44 @@ namespace GooseGameAP
                     string itemName = effectiveDragProp.gameObject.name;
                     string itemPath = GetGameObjectPath(effectiveDragProp.gameObject);
                     string itemKey = LocationMappings.CleanItemName(itemName);
+                    int instanceId = effectiveDragProp.gameObject.GetInstanceID();
+                    Vector3 pos = effectiveDragProp.transform.position;
                     
-                    Log.LogInfo("[AUTO] Dragging: " + itemName);
+                    Log.LogInfo("[AUTO] Dragging: " + itemName + " (cleaned: " + itemKey + ")");
+                    
+                    // Check if this is a tracked item type that needs position-based identification
+                    var posTracker = plugin.PositionTracker;
+                    if (posTracker != null && posTracker.IsTrackedItem(itemName))
+                    {
+                        int itemIndex = posTracker.IdentifyItem(itemName, pos, instanceId);
+                        if (itemIndex > 0)
+                        {
+                            itemKey = itemKey + "_" + itemIndex;
+                            Log.LogInfo($"[AUTO] Identified as unique item: {itemKey}");
+                        }
+                    }
+                    
+                    // Debug: Log hierarchy and position for items that might need differentiation
+                    string lowerName = itemName.ToLower();
+                    if (lowerName.Contains("carrot") || lowerName.Contains("umbrella") || lowerName.Contains("fertili"))
+                    {
+                        var current = effectiveDragProp.transform;
+                        string hierarchy = "";
+                        for (int i = 0; i < 6 && current != null; i++)
+                        {
+                            hierarchy += current.gameObject?.name + " | ";
+                            current = current.parent;
+                        }
+                        Log.LogInfo($"[DEBUG DRAG] Hierarchy for {itemName}: {hierarchy}");
+                        Log.LogInfo($"[DEBUG DRAG] InstanceID: {instanceId}");
+                        Log.LogInfo($"[DEBUG DRAG] Full path: {itemPath}");
+                        Log.LogInfo($"[DEBUG DRAG] World Position: ({pos.x:F2}, {pos.y:F2}, {pos.z:F2})");
+                    }
                     
                     if (firstTimeDrags.Add(itemKey))
                     {
-                        Log.LogInfo("[AUTO] >>> FIRST TIME DRAG: " + itemName + " <<<");
-                        OnFirstTimeDrag(itemName, itemPath);
+                        Log.LogInfo("[AUTO] >>> FIRST TIME DRAG: " + itemName + " (key: " + itemKey + ") <<<");
+                        OnFirstTimeDrag(itemKey, itemPath);
                     }
                 }
                 // Detect release
@@ -263,14 +357,43 @@ namespace GooseGameAP
                 {
                     string itemName = effectiveDragProp.gameObject.name;
                     string itemKey = LocationMappings.CleanItemName(itemName);
+                    int instanceId = effectiveDragProp.gameObject.GetInstanceID();
+                    Vector3 pos = effectiveDragProp.transform.position;
                     
                     Log.LogInfo("[AUTO] Swapped drag to: " + itemName);
+                    
+                    // Check if this is a tracked item type that needs position-based identification
+                    var posTracker = plugin.PositionTracker;
+                    if (posTracker != null && posTracker.IsTrackedItem(itemName))
+                    {
+                        int itemIndex = posTracker.IdentifyItem(itemName, pos, instanceId);
+                        if (itemIndex > 0)
+                        {
+                            itemKey = itemKey + "_" + itemIndex;
+                            Log.LogInfo($"[AUTO] Identified as unique item: {itemKey}");
+                        }
+                    }
+                    
+                    // Debug: Log hierarchy for items that might need differentiation
+                    string lowerName = itemName.ToLower();
+                    if (lowerName.Contains("carrot") || lowerName.Contains("umbrella") || lowerName.Contains("fertili"))
+                    {
+                        var current = effectiveDragProp.transform;
+                        string hierarchy = "";
+                        for (int i = 0; i < 6 && current != null; i++)
+                        {
+                            hierarchy += current.gameObject?.name + " | ";
+                            current = current.parent;
+                        }
+                        Log.LogInfo($"[DEBUG DRAG] Hierarchy for {itemName}: {hierarchy}");
+                        Log.LogInfo($"[DEBUG DRAG] InstanceID: {instanceId}");
+                    }
                     
                     if (firstTimeDrags.Add(itemKey))
                     {
                         string itemPath = GetGameObjectPath(effectiveDragProp.gameObject);
-                        Log.LogInfo("[AUTO] >>> FIRST TIME DRAG: " + itemName + " <<<");
-                        OnFirstTimeDrag(itemName, itemPath);
+                        Log.LogInfo("[AUTO] >>> FIRST TIME DRAG: " + itemName + " (key: " + itemKey + ") <<<");
+                        OnFirstTimeDrag(itemKey, itemPath);
                     }
                 }
                 

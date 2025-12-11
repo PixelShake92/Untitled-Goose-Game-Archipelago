@@ -26,7 +26,9 @@ namespace GooseGameAP
         public GateManager GateManager { get; private set; }
         public TrapManager TrapManager { get; private set; }
         public ItemTracker ItemTracker { get; private set; }
-        public GooseColorManager GooseColor { get; private set; }
+        public InteractionTracker InteractionTracker { get; private set; }
+        public PositionTracker PositionTracker { get; private set; }
+        public GooseColourManager GooseColour { get; private set; }
         
         // Area access flags (Hub is always accessible - starting area)
         public bool HasGardenAccess { get; set; } = false;
@@ -61,7 +63,9 @@ namespace GooseGameAP
             TrapManager = new TrapManager(this);
             GateManager = new GateManager(this);
             ItemTracker = new ItemTracker(this);
-            GooseColor = new GooseColorManager(this);
+            InteractionTracker = new InteractionTracker(this);
+            PositionTracker = new PositionTracker();
+            GooseColour = new GooseColourManager(this);
             Client = new ArchipelagoClient(this);
             
             harmony = new Harmony("com.archipelago.goosegame");
@@ -82,7 +86,7 @@ namespace GooseGameAP
                 // Only initialize gates, don't teleport - let player start where they are
                 
                 // Refresh goose color renderers
-                GooseColor?.RefreshRenderers();
+                GooseColour?.RefreshRenderers();
                 StartCoroutine(DelayedGateInit());
             }
             
@@ -114,7 +118,7 @@ namespace GooseGameAP
             TrapManager?.Update();
             
             // Update goose color (for rainbow mode)
-            GooseColor?.Update();
+            GooseColour?.Update();
             
             // Track pickups/drags
             ItemTracker?.Update();
@@ -206,8 +210,8 @@ namespace GooseGameAP
             // C key: Cycle goose color
             if (Input.GetKeyDown(KeyCode.C) && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl))
             {
-                GooseColor?.CycleColor();
-                UI?.ShowNotification($"Goose Color: {GooseColor?.CurrentColorName}");
+                GooseColour?.CycleColour();
+                UI?.ShowNotification($"Goose Colour: {GooseColour?.CurrentColourName}");
             }
             
             // Ctrl keys for traps
@@ -273,7 +277,7 @@ namespace GooseGameAP
                 if (Input.GetKeyDown(KeyCode.C))
                 {
                     // Debug: Reset goose color to default
-                    GooseColor?.ResetToDefault();
+                    GooseColour?.ResetToDefault();
                     UI?.ShowNotification("Goose color reset to default");
                 }
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HarmonyLib;
 using BepInEx.Logging;
 using UnityEngine;
@@ -88,6 +89,9 @@ namespace GooseGameAP
     [HarmonyPatch]
     public static class SwitchEventPatches
     {
+        // Track which events we've seen for discovery purposes
+        private static HashSet<string> seenEvents = new HashSet<string>();
+        
         [HarmonyPatch(typeof(SwitchEventManager), "TriggerEvent")]
         [HarmonyPrefix]
         static bool OnTriggerEvent(string id)
@@ -96,12 +100,26 @@ namespace GooseGameAP
             {
                 if (Plugin.Instance == null) return true;
                 
+                // Log new events for discovery (only once per event type)
+                if (!seenEvents.Contains(id))
+                {
+                    seenEvents.Add(id);
+                    Plugin.Log?.LogInfo($"[EVENT DISCOVERY] New event: {id}");
+                }
+                
                 // Reset dragger cache on area transitions (helps after resets)
                 if (id.StartsWith("enterArea") || id.StartsWith("resetArea") || id.Contains("Reset"))
                 {
-                    Plugin.Log.LogInfo("[EVENT] Area event detected: " + id + " - resetting dragger cache");
+                    Plugin.Log.LogInfo("[EVENT] Area event detected: " + id + " - resetting caches");
                     Plugin.Instance.ItemTracker?.ResetDraggerCache();
+                    Plugin.Instance.GooseColour?.RefreshRenderers();
+                    
+                    // Scan for duplicate items and cache their positions
+                    Plugin.Instance.PositionTracker?.ScanAndCacheItems();
                 }
+                
+                // Check for interaction events
+                CheckInteractionEvents(id);
                 
                 switch (id)
                 {
@@ -158,6 +176,336 @@ namespace GooseGameAP
             {
                 Plugin.Log.LogError("SwitchEvent patch error: " + ex.Message);
                 return true;
+            }
+        }
+        
+        /// <summary>
+        /// Check for interaction-related events
+        /// </summary>
+        private static void CheckInteractionEvents(string id)
+        {
+            try
+            {
+                string lower = id.ToLower();
+                
+                // Bike bell detection
+                if (lower.Contains("bell") && (lower.Contains("bike") || lower.Contains("bicycle") || lower.Contains("ring")))
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Bike bell event detected: {id}");
+                    Plugin.Instance?.InteractionTracker?.OnBikeBellRung();
+                }
+                
+                // Windmill detection
+                if (lower.Contains("windmill") || lower.Contains("pinwheel"))
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Windmill event detected: {id}");
+                    Plugin.Instance?.InteractionTracker?.OnWindmillSpun();
+                }
+                
+                // Wind chimes detection
+                if (lower.Contains("chime") || lower.Contains("windchime"))
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Wind chimes event detected: {id}");
+                    Plugin.Instance?.InteractionTracker?.OnWindChimesPlayed();
+                }
+                
+                // Radio unplug detection
+                if (lower.Contains("radio") && (lower.Contains("unplug") || lower.Contains("off") || lower.Contains("stop")))
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Radio unplug event detected: {id}");
+                    Plugin.Instance?.InteractionTracker?.OnRadioUnplugged();
+                }
+                
+                // Board break detection (entrance to back gardens)
+                if (lower.Contains("board") && (lower.Contains("break") || lower.Contains("smash") || lower.Contains("destroy")))
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Board break event detected: {id}");
+                    Plugin.Instance?.InteractionTracker?.OnBoardsBroken();
+                }
+                
+                // Also check for generic fence/gate events that might be the boards
+                if (lower.Contains("fence") && lower.Contains("break"))
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Fence break event detected: {id}");
+                    Plugin.Instance?.InteractionTracker?.OnBoardsBroken();
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogError($"[INTERACT] Event check error: {ex.Message}");
+            }
+        }
+    }
+
+    // NOTE: Interaction patches for SwitchSystem work but may have signature issues.
+    // Using careful patch definitions.
+
+    /// <summary>
+    /// Patches for SwitchSystem - this handles all switch/interaction state changes
+    /// </summary>
+    [HarmonyPatch]
+    public static class SwitchSystemPatches
+    {
+        private static HashSet<string> loggedSwitches = new HashSet<string>();
+        
+        /// <summary>
+        /// Log when SwitchSystem.Peck is called (toggle-style switches)
+        /// </summary>
+        [HarmonyPatch(typeof(SwitchSystem), "Peck")]
+        [HarmonyPostfix]
+        static void OnPeck(SwitchSystem __instance)
+        {
+            try
+            {
+                string objName = __instance?.gameObject?.name ?? "unknown";
+                string parentName = __instance?.transform?.parent?.gameObject?.name ?? "no parent";
+                
+                // Log for discovery
+                string key = $"peck_{objName}_{parentName}";
+                if (!loggedSwitches.Contains(key))
+                {
+                    loggedSwitches.Add(key);
+                    Plugin.Log?.LogInfo($"[SWITCH PECK] Object: {objName}, Parent: {parentName}");
+                }
+                
+                CheckInteraction(objName, parentName);
+                CheckLacesInteraction(__instance, objName, parentName);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogError($"[SWITCH PECK] Error: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Log when SwitchSystem.SetState is called
+        /// </summary>
+        [HarmonyPatch(typeof(SwitchSystem), "SetState")]
+        [HarmonyPostfix]
+        static void OnSetState(SwitchSystem __instance)
+        {
+            try
+            {
+                string objName = __instance?.gameObject?.name ?? "unknown";
+                string parentName = __instance?.transform?.parent?.gameObject?.name ?? "no parent";
+                
+                // Log for discovery
+                string key = $"setstate_{objName}_{parentName}";
+                if (!loggedSwitches.Contains(key))
+                {
+                    loggedSwitches.Add(key);
+                    Plugin.Log?.LogInfo($"[SWITCH SETSTATE] Object: {objName}, Parent: {parentName}");
+                }
+                
+                CheckInteraction(objName, parentName);
+                CheckLacesInteraction(__instance, objName, parentName);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogError($"[SWITCH SETSTATE] Error: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Check if a switch interaction matches our tracked interactions
+        /// </summary>
+        private static void CheckInteraction(string objName, string parentName)
+        {
+            string objLower = objName.ToLower();
+            string parentLower = parentName.ToLower();
+            
+            // === GARDEN ===
+            
+            // Bike bell - bikeBellSwitchSystem with parent "bike"
+            if (objLower.Contains("bikebell") && parentLower == "bike")
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Bike Bell: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("BikeBell");
+            }
+            
+            // Garden tap/valve
+            if (objLower == "valve" && parentLower == "gardendynamic")
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Garden Tap: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("GardenTap");
+            }
+            
+            // Sprinkler
+            if (objLower.Contains("sprinkler") && parentLower == "sprinkler")
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Sprinkler: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("Sprinkler");
+            }
+            
+            // === HUB ===
+            
+            // Intro gate (first gate at game start)
+            if (objLower == "shoosystem" && parentLower == "introgate")
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Intro Gate: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("IntroGate");
+            }
+            
+            // === HIGH STREET ===
+            
+            // Radio - bigRadioWithCable
+            if (objLower.Contains("bigradio"))
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Radio: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("UnplugRadio");
+            }
+            
+            // Boards - brokenBit objects
+            if (objLower.Contains("brokenbit") || parentLower.Contains("brokenbit"))
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Boards: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("BreakBoards");
+            }
+            
+            // Umbrellas on stands
+            if (parentLower == "umbrella")
+            {
+                if (objLower == "umbrellaonstand1")
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Umbrella Stand 1: {objName}");
+                    Plugin.Instance?.InteractionTracker?.OnInteraction("UmbrellaStand1");
+                }
+                else if (objLower == "umbrellaonstand2")
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Umbrella Stand 2: {objName}");
+                    Plugin.Instance?.InteractionTracker?.OnInteraction("UmbrellaStand2");
+                }
+                else if (objLower == "umbrellaonstand3")
+                {
+                    Plugin.Log?.LogInfo($"[INTERACT] Umbrella Stand 3: {objName}");
+                    Plugin.Instance?.InteractionTracker?.OnInteraction("UmbrellaStand3");
+                }
+            }
+            
+            // === BACK GARDENS ===
+            
+            // Big Garden Bell - StrikerSwitchSystem/BellSwitchSystem with parent "bell"
+            if (parentLower == "bell" && (objLower.Contains("striker") || objLower.Contains("bellswitch")))
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Garden Bell: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("GardenBell");
+            }
+            
+            // Wind chimes - parent is "chimeSwitches"
+            if (parentLower.Contains("chime"))
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Wind Chimes: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("WindChimes");
+            }
+            
+            // Windmill - switchsystem with parent "Plane"
+            if (parentLower == "plane" && objLower.Contains("switchsystem"))
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Windmill: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("Windmill");
+            }
+            
+            // Spinny Flower - switch with parent "Circle"
+            if (parentLower == "circle" && objLower == "switch")
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Flower: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("SpinFlower");
+            }
+            
+            // Trellis/fence to messy neighbour
+            if (parentLower == "trellisblockersystem" && objLower.Contains("peck"))
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Trellis: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("BreakTrellis");
+            }
+            
+            // === PUB ===
+            
+            // Van doors
+            if (objLower == "switchsystem" && parentLower == "doorleft")
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Van Door Left: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("VanDoorLeft");
+            }
+            if (objLower == "switchsystem" && parentLower == "doorright")
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Van Door Right: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("VanDoorRight");
+            }
+            
+            // Pub sink tap
+            if (objLower == "goosesswitch" && parentLower == "taphandlepositioner")
+            {
+                Plugin.Log?.LogInfo($"[INTERACT] Pub Tap: {objName}");
+                Plugin.Instance?.InteractionTracker?.OnInteraction("PubTap");
+            }
+        }
+        
+        /// <summary>
+        /// Check laces interactions - need grandparent to differentiate wimp vs burly man
+        /// Called separately because we need the full instance for hierarchy traversal
+        /// </summary>
+        private static void CheckLacesInteraction(SwitchSystem instance, string objName, string parentName)
+        {
+            string objLower = objName.ToLower();
+            string parentLower = parentName.ToLower();
+            
+            // Only check for laces switches
+            if (!objLower.StartsWith("lacesswitch")) return;
+            if (!parentLower.Contains("foot")) return;
+            
+            // Traverse up the hierarchy to find NPC name
+            // Structure: LacesSwitchLeft -> footLComponents -> foot_L -> ... -> hips -> Bone -> skellington -> NPC
+            // NPC name is at level 8-9 in the hierarchy
+            try
+            {
+                var current = instance?.transform;
+                string allNames = "";
+                for (int i = 0; i < 12 && current != null; i++)
+                {
+                    string name = current.gameObject?.name ?? "";
+                    allNames += name.ToLower() + "|";
+                    current = current.parent;
+                }
+                
+                // Check for wimp (High Street boy)
+                if (allNames.Contains("wimp") || allNames.Contains("boy"))
+                {
+                    if (objLower.Contains("left"))
+                    {
+                        Plugin.Log?.LogInfo($"[INTERACT] Wimp Laces Left: {objName}");
+                        Plugin.Instance?.InteractionTracker?.OnInteraction("WimpLacesLeft");
+                    }
+                    else if (objLower.Contains("right"))
+                    {
+                        Plugin.Log?.LogInfo($"[INTERACT] Wimp Laces Right: {objName}");
+                        Plugin.Instance?.InteractionTracker?.OnInteraction("WimpLacesRight");
+                    }
+                    return;
+                }
+                
+                // Check for burly man / pub man
+                if (allNames.Contains("burly") || allNames.Contains("pub") || allNames.Contains("publican"))
+                {
+                    if (objLower.Contains("left"))
+                    {
+                        Plugin.Log?.LogInfo($"[INTERACT] Burly Laces Left: {objName}");
+                        Plugin.Instance?.InteractionTracker?.OnInteraction("BurlyLacesLeft");
+                    }
+                    else if (objLower.Contains("right"))
+                    {
+                        Plugin.Log?.LogInfo($"[INTERACT] Burly Laces Right: {objName}");
+                        Plugin.Instance?.InteractionTracker?.OnInteraction("BurlyLacesRight");
+                    }
+                    return;
+                }
+                
+                // Unknown NPC - log for discovery
+                Plugin.Log?.LogInfo($"[INTERACT] Unknown Laces: {objName}, hierarchy: {allNames}");
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogError($"[LACES] Error traversing hierarchy: {ex.Message}");
             }
         }
     }

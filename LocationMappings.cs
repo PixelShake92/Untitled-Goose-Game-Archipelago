@@ -153,6 +153,22 @@ namespace GooseGameAP
             
             Log.LogInfo("[ITEM LOOKUP] Raw: '" + itemName + "' | Cleaned: '" + lowerName + "'");
             
+            // Check for unique tracked items FIRST (carrots with position-based IDs)
+            // Garden Carrots: carrot_1 through carrot_10 (IDs 1401-1410)
+            switch (lowerName)
+            {
+                case "carrot_1": return BASE_ID + 1401;
+                case "carrot_2": return BASE_ID + 1402;
+                case "carrot_3": return BASE_ID + 1403;
+                case "carrot_4": return BASE_ID + 1404;
+                case "carrot_5": return BASE_ID + 1405;
+                case "carrot_6": return BASE_ID + 1406;
+                case "carrot_7": return BASE_ID + 1407;
+                case "carrot_8": return BASE_ID + 1408;
+                case "carrot_9": return BASE_ID + 1409;
+                case "carrot_10": return BASE_ID + 1410;
+            }
+            
             switch (lowerName)
             {
                 // Garden items (1001-1020)
@@ -160,7 +176,7 @@ namespace GooseGameAP
                 case "radiosmall": return BASE_ID + 1002;
                 case "trowel": return BASE_ID + 1003;
                 case "keys": return BASE_ID + 1004;
-                case "carrot": return BASE_ID + 1005;
+                case "carrot": return BASE_ID + 1005;  // Fallback for any unmatched carrot
                 case "tulip": return BASE_ID + 1006;
                 case "apple": return BASE_ID + 1007;
                 case "jam": return BASE_ID + 1008;
@@ -305,7 +321,18 @@ namespace GooseGameAP
                 lowerName = lowerName.Replace("(clone)", "").Trim();
             }
             
-            // Strip trailing numbers after underscore (e.g., "item_1" -> "item")
+            Log.LogInfo("[DRAG LOOKUP] Raw: '" + itemName + "' | Cleaned: '" + lowerName + "'");
+            
+            // Check for unique tracked items FIRST (before stripping underscore suffix)
+            // Umbrellas: umbrella_1, umbrella_2, umbrella_3
+            switch (lowerName)
+            {
+                case "umbrella_1": return BASE_ID + 1221;  // First umbrella
+                case "umbrella_2": return BASE_ID + 1228;  // Second umbrella  
+                case "umbrella_3": return BASE_ID + 1229;  // Third umbrella
+            }
+            
+            // Strip trailing numbers after underscore for non-tracked items (e.g., "item_1" -> "item")
             int underscoreIdx = lowerName.LastIndexOf('_');
             if (underscoreIdx > 0 && underscoreIdx < lowerName.Length - 1)
             {
@@ -315,8 +342,6 @@ namespace GooseGameAP
                     lowerName = lowerName.Substring(0, underscoreIdx);
                 }
             }
-            
-            Log.LogInfo("[DRAG LOOKUP] Raw: '" + itemName + "' | Cleaned: '" + lowerName + "'");
             
             switch (lowerName)
             {
@@ -384,6 +409,50 @@ namespace GooseGameAP
                 
                 default:
                     Log.LogWarning("[DRAG] Unknown drag item not mapped: " + itemName);
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Get location ID for a first-time interaction
+        /// </summary>
+        public static long? GetInteractionLocationId(string interactionName)
+        {
+            switch (interactionName)
+            {
+                // Garden interactions (1301-1303)
+                case "BikeBell": return BASE_ID + 1301;      // Ring bike bell
+                case "GardenTap": return BASE_ID + 1302;     // Turn on garden water tank tap
+                case "Sprinkler": return BASE_ID + 1303;     // Turn on sprinkler
+                
+                // Hub interactions (1306)
+                case "IntroGate": return BASE_ID + 1306;     // Open intro gate at game start
+                
+                // High Street interactions (1310-1317)
+                case "BreakBoards": return BASE_ID + 1310;   // Break through fence boards
+                case "UnplugRadio": return BASE_ID + 1311;   // Unplug the radio
+                case "UmbrellaStand1": return BASE_ID + 1313; // Open umbrella on stand 1
+                case "UmbrellaStand2": return BASE_ID + 1314; // Open umbrella on stand 2
+                case "UmbrellaStand3": return BASE_ID + 1315; // Open umbrella on stand 3
+                case "WimpLacesLeft": return BASE_ID + 1316;  // Untie boy's left laces
+                case "WimpLacesRight": return BASE_ID + 1317; // Untie boy's right laces
+                
+                // Back Gardens interactions (1320-1325)
+                case "GardenBell": return BASE_ID + 1320;    // Ring big bell (makes man spit tea)
+                case "WindChimes": return BASE_ID + 1321;    // Play wind chimes
+                case "Windmill": return BASE_ID + 1322;      // Spin the windmill
+                case "SpinFlower": return BASE_ID + 1323;    // Spin the purple flower
+                case "BreakTrellis": return BASE_ID + 1324;  // Break through trellis fence
+                
+                // Pub interactions (1330-1339)
+                case "VanDoorLeft": return BASE_ID + 1330;   // Open van door (left)
+                case "VanDoorRight": return BASE_ID + 1331;  // Open van door (right)
+                case "BurlyLacesLeft": return BASE_ID + 1332; // Untie burly man's left laces
+                case "BurlyLacesRight": return BASE_ID + 1333; // Untie burly man's right laces
+                case "PubTap": return BASE_ID + 1334;        // Turn on pub sink tap
+                
+                default:
+                    Log.LogWarning("[INTERACTION] Unknown interaction not mapped: " + interactionName);
                     return null;
             }
         }

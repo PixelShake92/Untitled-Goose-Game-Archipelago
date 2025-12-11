@@ -56,7 +56,7 @@ namespace GooseGameAP
             Log.LogInfo("  Pub: " + plugin.HasPubAccess);
             Log.LogInfo("  Model Village: " + plugin.HasModelVillageAccess);
             
-            // ALWAYS clear hub blockers first - hub should always be walkable
+            // Clear hub blockers first - hub should always be walkable
             Log.LogInfo("  Clearing Hub blockers...");
             DisableAreaBlockers("Hub");
             
@@ -86,7 +86,7 @@ namespace GooseGameAP
                 Log.LogInfo("  Opened Model Village gates");
             }
             
-            // Always ensure hub paths are open
+            // Ensure hub paths are open
             DisableHubBlocker();
             
             plugin.UI.ShowNotification("Gates synced from server!");
@@ -112,26 +112,6 @@ namespace GooseGameAP
             }
 
             Log.LogInfo("Opening gates for area: " + areaName);
-            
-            // Set save flags that track goal completion
-            switch (areaName)
-            {
-                case "Garden":
-                    // Garden doesn't have a goal that unlocks it in vanilla
-                    break;
-                case "HighStreet":
-                    SaveGameData.SetBoolValue("goalHammering", true, false);
-                    break;
-                case "Backyards":
-                    SaveGameData.SetBoolValue("goalGarage", true, false);
-                    break;
-                case "Pub":
-                    SaveGameData.SetBoolValue("goalPrune", true, false);
-                    break;
-                case "Finale":
-                    SaveGameData.SetBoolValue("goalBucket", true, false);
-                    break;
-            }
             
             // Trigger relevant switch events
             string[] eventsToTry = GetEventsForArea(areaName);
@@ -160,13 +140,16 @@ namespace GooseGameAP
         
         private string[] GetEventsForArea(string areaName)
         {
+            // Only trigger unlock and open events, NOT goal completion events
+            // Goal events (goalHammering, goalGarage, etc) would mark goals as complete
+            // and change NPC behaviors unexpectedly
             switch (areaName)
             {
                 case "Garden": return new[] { "unlockGarden", "openGarden" };
-                case "HighStreet": return new[] { "unlockHighStreet", "openHighStreet", "goalHammering" };
-                case "Backyards": return new[] { "unlockBackyards", "openBackyards", "goalGarage" };
-                case "Pub": return new[] { "unlockPub", "openPub", "goalPrune" };
-                case "Finale": return new[] { "unlockFinale", "openFinale", "goalBucket" };
+                case "HighStreet": return new[] { "unlockHighStreet", "openHighStreet" };
+                case "Backyards": return new[] { "unlockBackyards", "openBackyards" };
+                case "Pub": return new[] { "unlockPub", "openPub" };
+                case "Finale": return new[] { "unlockFinale", "openFinale" };
                 default: return null;
             }
         }
@@ -306,7 +289,7 @@ namespace GooseGameAP
             var obj = GameObject.Find(path);
             if (obj != null)
             {
-                // Disable all colliders on this
+                // Disable all colliders on this object and children
                 var colliders = obj.GetComponentsInChildren<Collider>();
                 foreach (var col in colliders)
                 {
