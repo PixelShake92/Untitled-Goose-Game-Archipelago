@@ -180,6 +180,25 @@ namespace GooseGameAP
                 LogAllSwitchSystems();
             }
             
+            // F9: Manual gate sync from access flags (recovery for disconnect issues)
+            if (Input.GetKeyDown(KeyCode.F9))
+            {
+                Log.LogInfo("F9: Manual gate sync requested...");
+                Log.LogInfo("  Current flags - Garden:" + HasGardenAccess + " HighStreet:" + HasHighStreetAccess + 
+                    " BackGardens:" + HasBackGardensAccess + " Pub:" + HasPubAccess + " ModelVillage:" + HasModelVillageAccess);
+                
+                // Reload flags from disk in case they were saved but not in memory
+                LoadAccessFlags();
+                
+                // Clear hub blockers first
+                ClearHubBlockers();
+                
+                // Sync all gates
+                GateManager?.SyncGatesFromAccessFlags();
+                
+                UI?.ShowNotification("Gates re-synced from saved state!");
+            }
+            
             // F7: Hub teleport
             if (Input.GetKeyDown(KeyCode.F7))
             {
@@ -287,16 +306,30 @@ namespace GooseGameAP
         {
             if (Client == null) return;
             
-            // Handle pending gate sync
+            // Handle pending gate sync - now does multiple attempts
             if (Client.PendingGateSync && GameManager.instance != null && 
                 GameManager.instance.allGeese != null && GameManager.instance.allGeese.Count > 0)
             {
                 Client.GateSyncTimer += Time.deltaTime;
                 if (Client.GateSyncTimer >= 2.0f)
                 {
-                    Client.PendingGateSync = false;
+                    Client.GateSyncAttempts++;
                     Client.GateSyncTimer = 0f;
+                    
+                    Log.LogInfo($"Gate sync attempt {Client.GateSyncAttempts}/{ArchipelagoClient.MAX_GATE_SYNC_ATTEMPTS}...");
+                    
+                    // Clear hub blockers on each attempt
+                    ClearHubBlockers();
+                    
+                    // Sync gates
                     GateManager?.SyncGatesFromAccessFlags();
+                    
+                    // Check if we've done all attempts
+                    if (Client.GateSyncAttempts >= ArchipelagoClient.MAX_GATE_SYNC_ATTEMPTS)
+                    {
+                        Client.PendingGateSync = false;
+                        Log.LogInfo("Gate sync complete after " + Client.GateSyncAttempts + " attempts");
+                    }
                 }
             }
             
@@ -516,6 +549,17 @@ namespace GooseGameAP
                 HasGoldenBell = PlayerPrefs.GetInt("AP_GoldenBell") == 1;
                 Log.LogInfo("[LOAD] Access flags loaded from PlayerPrefs");
             }
+        }
+        
+        /// <summary>
+        /// Public method to reload access flags - called on reconnect
+        /// </summary>
+        public void ReloadAccessFlags()
+        {
+            Log.LogInfo("[RELOAD] Reloading access flags from PlayerPrefs...");
+            LoadAccessFlags();
+            Log.LogInfo($"[RELOAD] Flags: Garden={HasGardenAccess} HighStreet={HasHighStreetAccess} " +
+                $"BackGardens={HasBackGardensAccess} Pub={HasPubAccess} ModelVillage={HasModelVillageAccess}");
         }
         
         private void ClearSavedAccessFlags()

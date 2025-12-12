@@ -20,7 +20,6 @@ namespace GooseGameAP
         // Items we want to track as unique
         private static readonly string[] TrackedItemTypes = new string[]
         {
-            "carrot",
             "umbrella",
             "fertiliser",  // UK spelling used in game
             "fertilizer"   // Just in case
@@ -54,6 +53,9 @@ namespace GooseGameAP
             Log?.LogInfo("[POSITION] Scanning scene for duplicate items...");
             cachedItems.Clear();
             
+            // First, rename carrots to give them unique names
+            RenameCarrots();
+            
             // Find all Prop objects in scene
             var allProps = UnityEngine.Object.FindObjectsOfType<Prop>();
             Log?.LogInfo($"[POSITION] Found {allProps.Length} total Props in scene");
@@ -64,24 +66,9 @@ namespace GooseGameAP
                 
                 string itemName = prop.gameObject.name.ToLower().Replace("(clone)", "").Trim();
                 
-                // Special handling for carrots - only track "carrot", not "carrotnogreen"
-                if (itemName == "carrot")
-                {
-                    CacheItem("carrot", prop);
-                    continue;
-                }
-                
-                // Skip carrotnogreen - these are shop carrots with their own IDs
-                if (itemName.Contains("carrotnogreen"))
-                {
-                    continue;
-                }
-                
-                // Check other tracked item types
+                // Check tracked item types
                 foreach (string trackedType in TrackedItemTypes)
                 {
-                    if (trackedType == "carrot") continue; // Already handled above
-                    
                     if (itemName.Contains(trackedType))
                     {
                         CacheItem(trackedType, prop);
@@ -100,6 +87,66 @@ namespace GooseGameAP
                     Log?.LogInfo($"[POSITION]   {kvp.Key} #{item.Index}: ({item.OriginalPosition.x:F2}, {item.OriginalPosition.y:F2}, {item.OriginalPosition.z:F2})");
                 }
             }
+        }
+        
+        /// <summary>
+        /// Find all carrots in the scene and rename them to carrot_1, carrot_2, etc.
+        /// This gives each carrot a unique name for tracking purposes.
+        /// </summary>
+        public void RenameCarrots()
+        {
+            Log?.LogInfo("[RENAME] Looking for carrots to rename...");
+            
+            var allProps = UnityEngine.Object.FindObjectsOfType<Prop>();
+            var carrots = new List<Prop>();
+            
+            foreach (var prop in allProps)
+            {
+                if (prop == null || prop.gameObject == null) continue;
+                
+                string name = prop.gameObject.name.ToLower().Trim();
+                
+                // Only rename carrots that are exactly "carrot" (not already renamed, not carrotnogreen)
+                if (name == "carrot")
+                {
+                    carrots.Add(prop);
+                }
+            }
+            
+            if (carrots.Count == 0)
+            {
+                Log?.LogInfo("[RENAME] No carrots found to rename");
+                return;
+            }
+            
+            // Sort by position for consistent ordering (x, then z, then y)
+            carrots.Sort((a, b) => {
+                Vector3 posA = a.transform.position;
+                Vector3 posB = b.transform.position;
+                
+                // First sort by X (large difference = different areas)
+                if (Mathf.Abs(posA.x - posB.x) > 1.0f)
+                    return posA.x.CompareTo(posB.x);
+                
+                // Then by Z
+                if (Mathf.Abs(posA.z - posB.z) > 0.5f)
+                    return posA.z.CompareTo(posB.z);
+                
+                // Then by Y
+                return posA.y.CompareTo(posB.y);
+            });
+            
+            // Rename each carrot
+            for (int i = 0; i < carrots.Count; i++)
+            {
+                string newName = $"carrot_{i + 1}";
+                Vector3 pos = carrots[i].transform.position;
+                
+                Log?.LogInfo($"[RENAME] Renaming '{carrots[i].gameObject.name}' to '{newName}' at ({pos.x:F2}, {pos.y:F2}, {pos.z:F2})");
+                carrots[i].gameObject.name = newName;
+            }
+            
+            Log?.LogInfo($"[RENAME] Renamed {carrots.Count} carrots");
         }
         
         private void CacheItem(string itemType, Prop prop)
@@ -181,23 +228,9 @@ namespace GooseGameAP
         {
             string lower = itemName.ToLower();
             
-            // Special handling for carrots - only track "carrot", not "carrotnogreen"
-            if (lower.Contains("carrotnogreen"))
-            {
-                return null; // Shop carrots have their own IDs
-            }
-            
-            // Check if it's exactly "carrot" (with possible _N suffix from our tracking)
-            if (lower == "carrot" || lower.StartsWith("carrot_"))
-            {
-                return "carrot";
-            }
-            
-            // Check other tracked types
+            // Check tracked types
             foreach (string trackedType in TrackedItemTypes)
             {
-                if (trackedType == "carrot") continue; // Already handled above
-                
                 if (lower.Contains(trackedType))
                 {
                     return trackedType;

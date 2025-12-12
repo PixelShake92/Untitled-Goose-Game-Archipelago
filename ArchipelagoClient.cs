@@ -30,9 +30,11 @@ namespace GooseGameAP
         
         public bool IsConnected { get; private set; } = false;
         
-        // Gate sync timing
+        // Gate sync timing - now does multiple attempts
         public bool PendingGateSync { get; set; } = false;
         public float GateSyncTimer { get; set; } = 0f;
+        public int GateSyncAttempts { get; set; } = 0;
+        public const int MAX_GATE_SYNC_ATTEMPTS = 3;
         public bool WaitingForReceivedItems { get; set; } = false;
         public float ReceivedItemsTimeout { get; set; } = 0f;
         
@@ -251,11 +253,15 @@ namespace GooseGameAP
                         int.TryParse(data.Substring(start, end - start), out playerSlot);
                 }
                 
+                // Reload access flags from disk first - in case they were saved but not in memory
+                plugin.ReloadAccessFlags();
+                
                 // Clear and prepare for fresh sync
                 receivedItemIds.Clear();
                 Log.LogInfo("Cleared receivedItemIds for fresh sync from AP");
                 
                 GateSyncTimer = 0f;
+                GateSyncAttempts = 0;
                 PendingGateSync = false;
                 WaitingForReceivedItems = true;
                 ReceivedItemsTimeout = 0f;
@@ -270,9 +276,10 @@ namespace GooseGameAP
                 WaitingForReceivedItems = false;
                 ParseReceivedItems(data);
                 
-                Log.LogInfo("Received items processed, queuing gate sync...");
+                Log.LogInfo("Received items processed, queuing gate sync (3 attempts)...");
                 PendingGateSync = true;
                 GateSyncTimer = 0f;
+                GateSyncAttempts = 0;
             }
             else if (data.Contains("\"cmd\":\"Bounced\"") && data.Contains("\"DeathLink\""))
             {

@@ -153,8 +153,8 @@ namespace GooseGameAP
             
             Log.LogInfo("[ITEM LOOKUP] Raw: '" + itemName + "' | Cleaned: '" + lowerName + "'");
             
-            // Check for unique tracked items FIRST (carrots with position-based IDs)
-            // Garden Carrots: carrot_1 through carrot_10 (IDs 1401-1410)
+            // Check for renamed carrots first (carrot_1 through carrot_13)
+            // Sorted by X position: 1-10 are Garden, 11-13 are High Street shop
             switch (lowerName)
             {
                 case "carrot_1": return BASE_ID + 1401;
@@ -167,6 +167,9 @@ namespace GooseGameAP
                 case "carrot_8": return BASE_ID + 1408;
                 case "carrot_9": return BASE_ID + 1409;
                 case "carrot_10": return BASE_ID + 1410;
+                case "carrot_11": return BASE_ID + 1411;  // Shop carrot
+                case "carrot_12": return BASE_ID + 1412;  // Shop carrot
+                case "carrot_13": return BASE_ID + 1413;  // Shop carrot
             }
             
             switch (lowerName)
@@ -176,7 +179,7 @@ namespace GooseGameAP
                 case "radiosmall": return BASE_ID + 1002;
                 case "trowel": return BASE_ID + 1003;
                 case "keys": return BASE_ID + 1004;
-                case "carrot": return BASE_ID + 1005;  // Fallback for any unmatched carrot
+                case "carrot": return BASE_ID + 1005;  // Fallback for any unrenamed carrot
                 case "tulip": return BASE_ID + 1006;
                 case "apple": return BASE_ID + 1007;
                 case "jam": return BASE_ID + 1008;
@@ -260,7 +263,7 @@ namespace GooseGameAP
                 case "badmintonracket": return BASE_ID + 1093;
                 case "roseprop": return BASE_ID + 1094;  // Spawns when rose is pruned
                 
-                // Pub items (1101-1124)
+                // Pub items (1101-1130)
                 case "fishingbobberprop": return BASE_ID + 1101;
                 case "exitletterprop":
                 case "exitletter": return BASE_ID + 1102;
@@ -268,8 +271,12 @@ namespace GooseGameAP
                 case "plate": return BASE_ID + 1104;
                 case "plate (1)": return BASE_ID + 1105;
                 case "plate (2)": return BASE_ID + 1106;
-                case "quoitgreen (2)": return BASE_ID + 1107;
-                case "quoitred (1)": return BASE_ID + 1108;
+                case "quoitgreen": return BASE_ID + 1107;
+                case "quoitgreen (1)": return BASE_ID + 1125;
+                case "quoitgreen (2)": return BASE_ID + 1126;
+                case "quoitred": return BASE_ID + 1108;
+                case "quoitred (1)": return BASE_ID + 1127;
+                case "quoitred (2)": return BASE_ID + 1128;
                 case "fork": return BASE_ID + 1109;
                 case "fork (1)": return BASE_ID + 1110;
                 case "knife": return BASE_ID + 1111;

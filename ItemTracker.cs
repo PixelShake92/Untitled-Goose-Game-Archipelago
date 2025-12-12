@@ -104,9 +104,9 @@ namespace GooseGameAP
                     {
                         var current = currentProp.transform;
                         string hierarchy = "";
-                        for (int i = 0; i < 6 && current != null; i++)
+                        for (int i = 0; i < 12 && current != null; i++)
                         {
-                            hierarchy += current.gameObject?.name + " | ";
+                            hierarchy += $"[{i}]{current.gameObject?.name} | ";
                             current = current.parent;
                         }
                         Log.LogInfo($"[DEBUG PICKUP] Hierarchy for {itemName}: {hierarchy}");
