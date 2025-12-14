@@ -37,7 +37,6 @@ namespace GooseGameAP
             draggerActiveField = null;
             lastDraggedProp = null;
             draggerRefreshTimer = 0f;
-            Log.LogInfo("[DRAGGER] Cache reset");
         }
         
         public void Update()
@@ -63,7 +62,6 @@ namespace GooseGameAP
             // Check if goose changed (happens after area reset) - reset cache
             if (cachedGoose != null && cachedGoose != goose)
             {
-                Log.LogInfo("[DRAGGER] Goose changed! Resetting cache...");
                 ResetDraggerCache();
             }
             cachedGoose = goose;
@@ -83,7 +81,6 @@ namespace GooseGameAP
                     int instanceId = currentProp.gameObject.GetInstanceID();
                     Vector3 pos = currentProp.transform.position;
                     
-                    Log.LogInfo("[AUTO] Picked up: " + itemName + " (cleaned: " + itemKey + ")");
                     
                     // Check if this is a tracked item type that needs position-based identification
                     var posTracker = plugin.PositionTracker;
@@ -94,7 +91,6 @@ namespace GooseGameAP
                         {
                             // Use unique key with index (e.g., "carrot_1", "carrot_2")
                             itemKey = itemKey + "_" + itemIndex;
-                            Log.LogInfo($"[AUTO] Identified as unique item: {itemKey}");
                         }
                     }
                     
@@ -109,22 +105,16 @@ namespace GooseGameAP
                             hierarchy += $"[{i}]{current.gameObject?.name} | ";
                             current = current.parent;
                         }
-                        Log.LogInfo($"[DEBUG PICKUP] Hierarchy for {itemName}: {hierarchy}");
-                        Log.LogInfo($"[DEBUG PICKUP] InstanceID: {instanceId}");
-                        Log.LogInfo($"[DEBUG PICKUP] Full path: {itemPath}");
-                        Log.LogInfo($"[DEBUG PICKUP] World Position: ({pos.x:F2}, {pos.y:F2}, {pos.z:F2})");
                     }
                     
                     if (firstTimePickups.Add(itemKey))
                     {
-                        Log.LogInfo("[AUTO] >>> FIRST TIME PICKUP: " + itemName + " (key: " + itemKey + ") <<<");
                         OnFirstTimePickup(itemKey, itemPath);
                     }
                 }
                 // Detect drop (was holding, now null)
                 else if (currentProp == null && lastHeldProp != null)
                 {
-                    Log.LogInfo("[AUTO] Dropped: " + lastHeldProp.gameObject.name);
                 }
                 // Detect swap (holding different item)
                 else if (currentProp != null && lastHeldProp != null && currentProp != lastHeldProp)
@@ -134,7 +124,6 @@ namespace GooseGameAP
                     int instanceId = currentProp.gameObject.GetInstanceID();
                     Vector3 pos = currentProp.transform.position;
                     
-                    Log.LogInfo("[AUTO] Swapped to: " + itemName + " (cleaned: " + itemKey + ")");
                     
                     // Check if this is a tracked item type that needs position-based identification
                     var posTracker = plugin.PositionTracker;
@@ -144,7 +133,6 @@ namespace GooseGameAP
                         if (itemIndex > 0)
                         {
                             itemKey = itemKey + "_" + itemIndex;
-                            Log.LogInfo($"[AUTO] Identified as unique item: {itemKey}");
                         }
                     }
                     
@@ -159,16 +147,12 @@ namespace GooseGameAP
                             hierarchy += current.gameObject?.name + " | ";
                             current = current.parent;
                         }
-                        Log.LogInfo($"[DEBUG PICKUP] Hierarchy for {itemName}: {hierarchy}");
-                        Log.LogInfo($"[DEBUG PICKUP] InstanceID: {instanceId}");
                         string itemPath = GetGameObjectPath(currentProp.gameObject);
-                        Log.LogInfo($"[DEBUG PICKUP] Full path: {itemPath}");
                     }
                     
                     if (firstTimePickups.Add(itemKey))
                     {
                         string itemPath = GetGameObjectPath(currentProp.gameObject);
-                        Log.LogInfo("[AUTO] >>> FIRST TIME PICKUP: " + itemName + " (key: " + itemKey + ") <<<");
                         OnFirstTimePickup(itemKey, itemPath);
                     }
                 }
@@ -184,7 +168,6 @@ namespace GooseGameAP
                 draggerRefreshTimer = 0f;
                 if (cachedDragger != null)
                 {
-                    Log.LogInfo("[DRAGGER] Periodic cache refresh");
                     ResetDraggerCache();
                 }
             }
@@ -201,7 +184,6 @@ namespace GooseGameAP
                     {
                         if (unityObj == null)
                         {
-                            Log.LogInfo("[DRAGGER] Cached dragger was destroyed, refreshing...");
                             needsRefresh = true;
                             ResetDraggerCache();
                         }
@@ -221,9 +203,8 @@ namespace GooseGameAP
                         var holdable = draggerHoldableField.GetValue(cachedDragger);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Log.LogInfo("[DRAGGER] Cache validation failed: " + ex.Message);
                     needsRefresh = true;
                     ResetDraggerCache();
                 }
@@ -231,14 +212,12 @@ namespace GooseGameAP
             
             if (needsRefresh)
             {
-                Log.LogInfo("[DRAGGER] Attempting to find dragger...");
                 
                 // Method 1: Try GetComponent<Dragger>()
                 var draggerComp = goose.GetComponent<Dragger>();
                 if (draggerComp != null)
                 {
                     cachedDragger = draggerComp;
-                    Log.LogInfo("[DRAGGER] Found via GetComponent<Dragger>");
                 }
                 
                 // Method 2: Look for "dragger" field on Goose component
@@ -258,7 +237,6 @@ namespace GooseGameAP
                                 cachedDragger = draggerField.GetValue(comp);
                                 if (cachedDragger != null)
                                 {
-                                    Log.LogInfo("[DRAGGER] Found via Goose.dragger field");
                                 }
                             }
                             break;
@@ -281,7 +259,6 @@ namespace GooseGameAP
                     
                     if (draggerHoldableField != null && draggerActiveField != null)
                     {
-                        Log.LogInfo("[DRAGGER] Successfully cached dragger fields");
                     }
                     else
                     {
@@ -310,7 +287,6 @@ namespace GooseGameAP
                     int instanceId = effectiveDragProp.gameObject.GetInstanceID();
                     Vector3 pos = effectiveDragProp.transform.position;
                     
-                    Log.LogInfo("[AUTO] Dragging: " + itemName + " (cleaned: " + itemKey + ")");
                     
                     // Check if this is a tracked item type that needs position-based identification
                     var posTracker = plugin.PositionTracker;
@@ -320,7 +296,6 @@ namespace GooseGameAP
                         if (itemIndex > 0)
                         {
                             itemKey = itemKey + "_" + itemIndex;
-                            Log.LogInfo($"[AUTO] Identified as unique item: {itemKey}");
                         }
                     }
                     
@@ -335,22 +310,16 @@ namespace GooseGameAP
                             hierarchy += current.gameObject?.name + " | ";
                             current = current.parent;
                         }
-                        Log.LogInfo($"[DEBUG DRAG] Hierarchy for {itemName}: {hierarchy}");
-                        Log.LogInfo($"[DEBUG DRAG] InstanceID: {instanceId}");
-                        Log.LogInfo($"[DEBUG DRAG] Full path: {itemPath}");
-                        Log.LogInfo($"[DEBUG DRAG] World Position: ({pos.x:F2}, {pos.y:F2}, {pos.z:F2})");
                     }
                     
                     if (firstTimeDrags.Add(itemKey))
                     {
-                        Log.LogInfo("[AUTO] >>> FIRST TIME DRAG: " + itemName + " (key: " + itemKey + ") <<<");
                         OnFirstTimeDrag(itemKey, itemPath);
                     }
                 }
                 // Detect release
                 else if (effectiveDragProp == null && lastDraggedProp != null)
                 {
-                    Log.LogInfo("[AUTO] Released: " + lastDraggedProp.gameObject.name);
                 }
                 // Detect swap drag
                 else if (effectiveDragProp != null && lastDraggedProp != null && effectiveDragProp != lastDraggedProp)
@@ -360,7 +329,6 @@ namespace GooseGameAP
                     int instanceId = effectiveDragProp.gameObject.GetInstanceID();
                     Vector3 pos = effectiveDragProp.transform.position;
                     
-                    Log.LogInfo("[AUTO] Swapped drag to: " + itemName);
                     
                     // Check if this is a tracked item type that needs position-based identification
                     var posTracker = plugin.PositionTracker;
@@ -370,7 +338,6 @@ namespace GooseGameAP
                         if (itemIndex > 0)
                         {
                             itemKey = itemKey + "_" + itemIndex;
-                            Log.LogInfo($"[AUTO] Identified as unique item: {itemKey}");
                         }
                     }
                     
@@ -385,14 +352,11 @@ namespace GooseGameAP
                             hierarchy += current.gameObject?.name + " | ";
                             current = current.parent;
                         }
-                        Log.LogInfo($"[DEBUG DRAG] Hierarchy for {itemName}: {hierarchy}");
-                        Log.LogInfo($"[DEBUG DRAG] InstanceID: {instanceId}");
                     }
                     
                     if (firstTimeDrags.Add(itemKey))
                     {
                         string itemPath = GetGameObjectPath(effectiveDragProp.gameObject);
-                        Log.LogInfo("[AUTO] >>> FIRST TIME DRAG: " + itemName + " (key: " + itemKey + ") <<<");
                         OnFirstTimeDrag(itemKey, itemPath);
                     }
                 }
@@ -403,27 +367,19 @@ namespace GooseGameAP
         
         private void OnFirstTimePickup(string itemName, string itemPath)
         {
-            plugin.UI.ShowNotification("First pickup: " + itemName);
-            plugin.UI.AddChatMessage("Picked up: " + itemName);
-            
             long? locationId = LocationMappings.GetItemLocationId(itemName);
             if (locationId.HasValue)
             {
                 plugin.SendLocationCheck(locationId.Value);
-                Log.LogInfo("[AUTO] Sent location check for item: " + itemName + " (ID: " + locationId.Value + ")");
             }
         }
         
         private void OnFirstTimeDrag(string itemName, string itemPath)
         {
-            plugin.UI.ShowNotification("First drag: " + itemName);
-            plugin.UI.AddChatMessage("Dragged: " + itemName);
-            
             long? locationId = LocationMappings.GetDragLocationId(itemName);
             if (locationId.HasValue)
             {
                 plugin.SendLocationCheck(locationId.Value);
-                Log.LogInfo("[AUTO] Sent location check for drag: " + itemName + " (ID: " + locationId.Value + ")");
             }
         }
         

@@ -151,7 +151,6 @@ namespace GooseGameAP
                 lowerName = lowerName.Replace("(clone)", "").Trim();
             }
             
-            Log.LogInfo("[ITEM LOOKUP] Raw: '" + itemName + "' | Cleaned: '" + lowerName + "'");
             
             // Check for renamed carrots first (carrot_1 through carrot_13)
             // Sorted by X position: 1-10 are Garden, 11-13 are High Street shop
@@ -359,7 +358,6 @@ namespace GooseGameAP
                 lowerName = lowerName.Replace("(clone)", "").Trim();
             }
             
-            Log.LogInfo("[DRAG LOOKUP] Raw: '" + itemName + "' | Cleaned: '" + lowerName + "'");
             
             // Check for unique tracked items FIRST (before stripping underscore suffix)
             // Umbrellas: umbrella_1 (black), umbrella_2 (rainbow), umbrella_3 (red)
@@ -506,9 +504,210 @@ namespace GooseGameAP
                 case "PubTap": return BASE_ID + 1334;        // Turn on pub sink tap
                 
                 default:
-                    Log.LogWarning("[INTERACTION] Unknown interaction not mapped: " + interactionName);
                     return null;
             }
+        }
+        
+        /// <summary>
+        /// Get human-readable location name from location ID
+        /// </summary>
+        public static string GetLocationName(long locationId)
+        {
+            long offset = locationId - BASE_ID;
+            
+            // Goals (1-80)
+            switch (offset)
+            {
+                case 1: return "Get into the Garden";
+                case 2: return "Get the Groundskeeper Wet";
+                case 3: return "Steal the Garden Keys";
+                case 4: return "Make the Groundskeeper Wear His Hat";
+                case 5: return "Rake in the Lake";
+                case 6: return "Have a Picnic";
+                case 7: return "Make Groundskeeper Hammer Thumb";
+                case 10: return "Break the Broom";
+                case 11: return "Trap the Boy in the Phone Booth";
+                case 12: return "Make Boy Buy Back His Toy";
+                case 13: return "Get the Boy to Do His Shopping";
+                case 14: return "Get into the Shop";
+                case 15: return "Get Woman to Put On Wrong Glasses";
+                case 16: return "Make Someone Buy Garage Thing";
+                case 20: return "Break the Vase";
+                case 21: return "Dress Up the Statue";
+                case 22: return "Make Someone Ring the Bell";
+                case 23: return "Win Ribbon";
+                case 24: return "Make Man Go Barefoot";
+                case 25: return "Do the Washing";
+                case 26: return "Make Prune Prune";
+                case 30: return "Get Into the Pub";
+                case 31: return "Steal Old Man's Woolly Hat";
+                case 32: return "Set Sail the Toy Boat";
+                case 33: return "Get Old Man to Fall on Ground";
+                case 34: return "Be Awarded a Flower";
+                case 35: return "Steal a Pint Glass";
+                case 36: return "Set the Table";
+                case 37: return "Drop a Bucket on Burly Man";
+                case 40: return "Get Into the Model Village";
+                case 41: return "Steal the Bell";
+                case 42: return "Return the Bell";
+                case 50: return "Lock Groundskeeper Out";
+                case 51: return "Cabbage Picnic";
+                case 52: return "Trip the Boy in Puddle";
+                case 53: return "Weigh on Scales";
+                case 54: return "Make Man with Umbrella Fall";
+                case 55: return "Collect 5 Items from Shops";
+                case 56: return "Trap Shop Lady in Garage";
+                case 60: return "Get Wimp Shut in Garage";
+                case 61: return "Get Caught by Man Over Fence";
+                case 62: return "Get Thrown Over Fence";
+                case 63: return "Dress Up Second Bust";
+                case 64: return "Score a Goal";
+                case 65: return "Sail Boat Under Bridge";
+                case 66: return "Perform on TV with Ribbon";
+                case 67: return "Steal Old Man's Watch";
+                case 70: return "Garden Speedrun";
+                case 71: return "High Street Speedrun";
+                case 72: return "Back Gardens Speedrun";
+                case 73: return "Pub Speedrun";
+                case 80: return "100% Completion";
+                
+                // Pickups - generic names since there are many
+                case 1001: return "Pickup Boot";
+                case 1002: return "Pickup Radio";
+                case 1003: return "Pickup Trowel";
+                case 1004: return "Pickup Keys";
+                case 1005: return "Pickup Carrot";
+                case 1006: return "Pickup Tulip";
+                case 1007: return "Pickup Apple";
+                case 1008: return "Pickup Jam";
+                case 1009: return "Pickup Mug";
+                case 1010: return "Pickup Thermos";
+                case 1011: return "Pickup Sandwich (R)";
+                case 1012: return "Pickup Sandwich (L)";
+                case 1013: return "Pickup Fork";
+                case 1014: return "Pickup Straw Hat";
+                case 1015: return "Pickup Drink Can";
+                case 1016: return "Pickup Tennis Ball";
+                case 1017: return "Pickup Gardener Hat";
+                case 1018: return "Pickup Apple";
+                
+                // Drags - generic names
+                case 1201: return "Drag Shovel";
+                case 1202: return "Drag Watering Can";
+                case 1203: return "Drag Trug";
+                case 1204: return "Drag Garden Gnome";
+                case 1205: return "Drag Plant Pot";
+                case 1206: return "Drag Rake";
+                case 1207: return "Drag Sprinkler";
+                case 1208: return "Drag Boot 1";
+                case 1209: return "Drag Boot 2";
+                case 1210: return "Drag Mallet";
+                case 1211: return "Drag Wheelbarrow";
+                case 1212: return "Drag Topsoil 1";
+                case 1213: return "Drag Topsoil 2";
+                case 1214: return "Drag Topsoil 3";
+                case 1215: return "Drag Radio";
+                case 1216: return "Drag Wooden Crate";
+                case 1217: return "Drag Traffic Cone";
+                case 1218: return "Drag Green Bottle";
+                case 1219: return "Drag Bin";
+                case 1220: return "Drag Broom";
+                case 1221: return "Drag Dustpan";
+                case 1222: return "Drag Bucket";
+                case 1223: return "Drag Soap";
+                case 1224: return "Drag Golden Statue";
+                case 1225: return "Drag Bust 1";
+                case 1226: return "Drag Bust 2";
+                case 1227: return "Drag Vase";
+                case 1228: return "Drag Watering Can (Gardens)";
+                case 1229: return "Drag Toy Boat";
+                case 1230: return "Drag Pub Bucket";
+                case 1231: return "Drag Pub Box";
+                
+                // Interactions (1301-1350)
+                case 1301: return "Ring Bell";
+                case 1302: return "Honk at Speaker";
+                case 1303: return "Doorbell";
+                case 1304: return "Garden Gate";
+                case 1305: return "Greenhouse Window";
+                case 1306: return "Intro Gate";
+                case 1307: return "TV Remote";
+                case 1308: return "Open Umbrella (Black)";
+                case 1309: return "Turn on Tap";
+                case 1310: return "Open Phone Booth";
+                case 1311: return "Spin Propeller";
+                case 1312: return "Kick Football";
+                case 1313: return "Open Umbrella (Black)";
+                case 1314: return "Open Umbrella (Rainbow)";
+                case 1315: return "Open Umbrella (Red)";
+                case 1316: return "Honk at Wimp";
+                case 1317: return "Honk at Burly Kid";
+                case 1318: return "Kick Football";
+                case 1319: return "Turn on Sprinkler";
+                case 1320: return "Untie Wimp's Left Laces";
+                case 1321: return "Untie Wimp's Right Laces";
+                case 1322: return "Untie Pub Man's Left Laces";
+                case 1323: return "Untie Pub Man's Right Laces";
+                case 1324: return "Spin Windmill";
+                case 1325: return "Wheel Barrow Handle";
+                case 1326: return "Spin Purple Flower";
+                case 1327: return "Spin Sunflower";
+                case 1328: return "Spin TV Dial";
+                case 1329: return "Ring Service Bell";
+                case 1330: return "Close Van Door (Left)";
+                case 1331: return "Close Van Door (Right)";
+                case 1332: return "Untie Burly Man's Left Laces";
+                case 1333: return "Untie Burly Man's Right Laces";
+                case 1334: return "Turn on Pub Tap";
+                case 1340: return "Wind Chime G";
+                case 1341: return "Wind Chime F";
+                case 1342: return "Wind Chime E";
+                case 1343: return "Wind Chime D";
+                case 1344: return "Wind Chime C";
+                case 1345: return "Wind Chime B";
+                case 1346: return "Wind Chime A";
+                
+                // Renamed pickups (1401-1452)
+                case 1401: return "Pickup Carrot 1";
+                case 1402: return "Pickup Carrot 2";
+                case 1403: return "Pickup Carrot 3";
+                case 1404: return "Pickup Carrot 4";
+                case 1405: return "Pickup Carrot 5";
+                case 1406: return "Pickup Carrot 6";
+                case 1407: return "Pickup Carrot 7";
+                case 1408: return "Pickup Carrot 8";
+                case 1409: return "Pickup Carrot 9";
+                case 1410: return "Pickup Carrot 10";
+                case 1411: return "Pickup Carrot 11";
+                case 1412: return "Pickup Carrot 12";
+                case 1413: return "Pickup Carrot 13";
+                case 1421: return "Pickup Pub Tomato 1";
+                case 1422: return "Pickup Pub Tomato 2";
+                case 1423: return "Pickup Pub Tomato 3";
+                case 1424: return "Pickup Pub Tomato 4";
+                case 1425: return "Pickup Pub Tomato 5";
+                case 1426: return "Pickup Pub Tomato 6";
+                case 1427: return "Pickup Pub Tomato 7";
+                case 1428: return "Pickup Pub Tomato 8";
+                case 1429: return "Pickup Pub Tomato 9";
+                case 1430: return "Pickup Pub Tomato 10";
+                case 1431: return "Pickup Pub Tomato 11";
+                case 1440: return "Pickup Boot 1";
+                case 1441: return "Pickup Boot 2";
+                case 1450: return "Pickup Topsoil Bag 1";
+                case 1451: return "Pickup Topsoil Bag 2";
+                case 1452: return "Pickup Topsoil Bag 3";
+            }
+            
+            // Generic fallbacks for ID ranges
+            if (offset >= 1001 && offset <= 1199)
+                return "Pickup Item";
+            if (offset >= 1201 && offset <= 1299)
+                return "Drag Item";
+            if (offset >= 1301 && offset <= 1399)
+                return "Interaction";
+            
+            return "Location " + offset;
         }
     }
 }

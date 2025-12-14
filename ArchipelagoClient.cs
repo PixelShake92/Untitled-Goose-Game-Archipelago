@@ -28,6 +28,11 @@ namespace GooseGameAP
         private Queue<string> messageQueue = new Queue<string>();
         private int lastProcessedIndex = -1;  // Track last processed item index, not IDs
         private int playerSlot = 0;
+        private string slotName = "";
+        private int slotNumber = 0;
+        
+        // Name lookups from server
+        private Dictionary<int, string> playerNames = new Dictionary<int, string>();
         
         public bool IsConnected { get; private set; } = false;
         
@@ -50,6 +55,9 @@ namespace GooseGameAP
             {
                 plugin.UI.Status = "Starting proxy...";
                 
+                // Store slot name for message display
+                slotName = slot;
+                
                 StopProxy();
                 
                 string gameDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
@@ -62,9 +70,6 @@ namespace GooseGameAP
                     plugin.UI.AddChatMessage("Place APProxy.exe in BepInEx/plugins/");
                     return;
                 }
-                
-                Log.LogInfo("Launching proxy: " + proxyPath);
-                Log.LogInfo("Connecting to: " + serverAddress + ":" + serverPort);
                 
                 var startInfo = new System.Diagnostics.ProcessStartInfo
                 {
@@ -206,7 +211,6 @@ namespace GooseGameAP
             lastProcessedIndex = -1;
             PlayerPrefs.SetInt("AP_LastItemIndex", -1);
             PlayerPrefs.Save();
-            Log.LogInfo("Reset lastProcessedIndex to -1");
         }
         
         private void ReceiveLoop(string slot, string password, bool deathLinkEnabled, string serverAddress, string serverPort)
@@ -254,37 +258,38 @@ namespace GooseGameAP
                     int start = idx + 7;
                     int end = data.IndexOf(",", start);
                     if (end > start)
+                    {
                         int.TryParse(data.Substring(start, end - start), out playerSlot);
+                        slotNumber = playerSlot;
+                    }
                 }
+                
+                // Parse player names from "players" array
+                ParsePlayerNames(data);
                 
                 // Reload access flags from disk first - in case they were saved but not in memory
                 plugin.ReloadAccessFlags();
                 
                 // Load last processed index from persistence
                 lastProcessedIndex = PlayerPrefs.GetInt("AP_LastItemIndex", -1);
-                Log.LogInfo($"Loaded lastProcessedIndex: {lastProcessedIndex}");
                 
                 // IMMEDIATELY queue a gate sync using saved flags
                 // This ensures gates work even if AP doesn't resend items
                 GateSyncTimer = 0f;
                 GateSyncAttempts = 0;
                 PendingGateSync = true;  // Start syncing now with saved flags
-                Log.LogInfo("Queued immediate gate sync from saved access flags");
                 
                 WaitingForReceivedItems = true;
                 ReceivedItemsTimeout = 0f;
                 
                 // Request sync
                 SendPacket("[{\"cmd\":\"Sync\"}]");
-                Log.LogInfo("Sent Sync request to AP server");
             }
             else if (data.Contains("\"cmd\":\"ReceivedItems\""))
             {
-                Log.LogInfo(">>> RECEIVED ITEMS MESSAGE FROM AP <<<");
                 WaitingForReceivedItems = false;
                 ParseReceivedItems(data);
                 
-                Log.LogInfo("Received items processed, queuing gate sync (3 attempts)...");
                 PendingGateSync = true;
                 GateSyncTimer = 0f;
                 GateSyncAttempts = 0;
@@ -296,20 +301,6 @@ namespace GooseGameAP
                     plugin.TriggerDeathLink();
                 }
             }
-            else if (data.Contains("\"cmd\":\"PrintJSON\""))
-            {
-                int idx = data.IndexOf("\"text\":\"");
-                if (idx > 0)
-                {
-                    int start = idx + 8;
-                    int end = data.IndexOf("\"", start);
-                    if (end > start)
-                    {
-                        string msg = data.Substring(start, Math.Min(55, end - start));
-                        plugin.UI.AddChatMessage(msg);
-                    }
-                }
-            }
             else if (data.Contains("\"cmd\":\"ConnectionRefused\""))
             {
                 plugin.UI.Status = "Connection Refused!";
@@ -318,9 +309,6 @@ namespace GooseGameAP
         
         private void ParseReceivedItems(string data)
         {
-            Log.LogInfo("=== PARSING RECEIVED ITEMS ===");
-            Log.LogInfo($"Current lastProcessedIndex: {lastProcessedIndex}");
-            
             // Parse the starting index from the message
             int startingIndex = 0;
             int indexPos = data.IndexOf("\"index\":");
@@ -334,9 +322,7 @@ namespace GooseGameAP
                     int.TryParse(indexStr, out startingIndex);
                 }
             }
-            Log.LogInfo($"ReceivedItems starting index: {startingIndex}");
             
-            int itemCount = 0;
             int pos = 0;
             int currentIndex = startingIndex;
             
@@ -351,15 +337,12 @@ namespace GooseGameAP
                     string idStr = data.Substring(start, end - start).Trim();
                     if (long.TryParse(idStr, out long itemId))
                     {
-                        itemCount++;
                         string itemName = LocationMappings.GetItemName(itemId);
                         
                         // Only process items we haven't seen yet (by index)
                         if (currentIndex > lastProcessedIndex)
                         {
-                            Log.LogInfo($"[RECEIVED NEW] Index {currentIndex}: {itemName} (ID: {itemId})");
                             plugin.UI.AddReceivedItem(itemName);
-                            plugin.UI.AddChatMessage("Got: " + itemName);
                             plugin.ProcessReceivedItem(itemId);
                             
                             // Update last processed index
@@ -367,16 +350,97 @@ namespace GooseGameAP
                             PlayerPrefs.SetInt("AP_LastItemIndex", lastProcessedIndex);
                             PlayerPrefs.Save();
                         }
-                        else
-                        {
-                            Log.LogInfo($"[RECEIVED SKIP] Index {currentIndex}: {itemName} (already processed)");
-                        }
                         
                         currentIndex++;
                     }
                 }
             }
-            Log.LogInfo($"=== RECEIVED {itemCount} ITEMS, lastProcessedIndex now {lastProcessedIndex} ===");
+        }
+        
+        private void ParsePlayerNames(string data)
+        {
+            // Parse "players" array: [{"team":0,"slot":1,"alias":"PlayerName","name":"PlayerName"}]
+            playerNames.Clear();
+            
+            int playersIdx = data.IndexOf("\"players\":");
+            if (playersIdx < 0) return;
+            
+            int arrStart = data.IndexOf("[", playersIdx);
+            if (arrStart < 0) return;
+            
+            // Find matching ]
+            int bracketCount = 0;
+            int arrEnd = arrStart;
+            for (int i = arrStart; i < data.Length; i++)
+            {
+                if (data[i] == '[') bracketCount++;
+                else if (data[i] == ']')
+                {
+                    bracketCount--;
+                    if (bracketCount == 0)
+                    {
+                        arrEnd = i;
+                        break;
+                    }
+                }
+            }
+            
+            string playersArr = data.Substring(arrStart, arrEnd - arrStart + 1);
+            
+            // Parse each player object
+            int pos = 0;
+            while (pos < playersArr.Length)
+            {
+                int objStart = playersArr.IndexOf("{", pos);
+                if (objStart < 0) break;
+                
+                int objEnd = playersArr.IndexOf("}", objStart);
+                if (objEnd < 0) break;
+                
+                string obj = playersArr.Substring(objStart, objEnd - objStart + 1);
+                
+                // Get slot number
+                int slotIdx = obj.IndexOf("\"slot\":");
+                int slot = 0;
+                if (slotIdx >= 0)
+                {
+                    int start = slotIdx + 7;
+                    int end = start;
+                    while (end < obj.Length && (char.IsDigit(obj[end]) || obj[end] == '-'))
+                        end++;
+                    int.TryParse(obj.Substring(start, end - start), out slot);
+                }
+                
+                // Get name (prefer "alias" over "name")
+                string name = "";
+                int aliasIdx = obj.IndexOf("\"alias\":\"");
+                if (aliasIdx >= 0)
+                {
+                    int start = aliasIdx + 9;
+                    int end = obj.IndexOf("\"", start);
+                    if (end > start)
+                        name = obj.Substring(start, end - start);
+                }
+                
+                if (string.IsNullOrEmpty(name))
+                {
+                    int nameIdx = obj.IndexOf("\"name\":\"");
+                    if (nameIdx >= 0)
+                    {
+                        int start = nameIdx + 8;
+                        int end = obj.IndexOf("\"", start);
+                        if (end > start)
+                            name = obj.Substring(start, end - start);
+                    }
+                }
+                
+                if (slot >= 0 && !string.IsNullOrEmpty(name))
+                {
+                    playerNames[slot] = name;
+                }
+                
+                pos = objEnd + 1;
+            }
         }
     }
 }

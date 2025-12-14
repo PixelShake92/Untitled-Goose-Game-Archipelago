@@ -77,7 +77,6 @@ namespace GooseGameAP
             MegaHonkCount = Math.Min(PlayerPrefs.GetInt("AP_MegaHonk", 0), 3);       // Max 3
             storedGooseDays = Math.Min(PlayerPrefs.GetInt("AP_GooseDays", 0), MAX_GOOSE_DAYS);  // Max 3
             IsSilent = PlayerPrefs.GetInt("AP_SilentSteps", 0) == 1;
-            Plugin.Log?.LogInfo($"[LOAD] Progressive items: Speedy={SpeedyFeetCount}, Honk={MegaHonkCount}, GooseDays={storedGooseDays}, Silent={IsSilent}");
         }
         
         /// <summary>
@@ -95,7 +94,6 @@ namespace GooseGameAP
             PlayerPrefs.SetInt("AP_GooseDays", storedGooseDays);
             PlayerPrefs.SetInt("AP_SilentSteps", IsSilent ? 1 : 0);
             PlayerPrefs.Save();
-            Plugin.Log?.LogInfo($"[SAVE] Progressive items: Speedy={SpeedyFeetCount}, Honk={MegaHonkCount}, GooseDays={storedGooseDays}, Silent={IsSilent}");
         }
         
         public float GetEffectiveSpeedMultiplier()
@@ -151,7 +149,6 @@ namespace GooseGameAP
             confusedTimer = duration;
             confusedShuffleTimer = CONFUSED_SHUFFLE_INTERVAL;  // First shuffle after 5s
             ShuffleConfusedAngle();  // Set initial random angle
-            Log.LogInfo("[CONFUSED] Controls scrambled!");
             plugin.UI.ShowNotification("CONFUSED FEET! Controls scrambled for " + duration + "s!");
         }
         
@@ -163,7 +160,6 @@ namespace GooseGameAP
             // Random angle between 90-270 degrees (avoids 0 which feels normal)
             int[] angles = { 90, 120, 150, 180, 210, 240, 270 };
             confusedAngle = angles[UnityEngine.Random.Range(0, angles.Length)];
-            Log.LogInfo($"[CONFUSED] New direction: {confusedAngle} degrees");
             plugin.UI.ShowNotification($"DIRECTIONS SHIFTED!");
         }
         
@@ -198,12 +194,10 @@ namespace GooseGameAP
             {
                 storedGooseDays++;
                 SaveProgressiveItems();
-                Log.LogInfo($"[GOOSE DAY] Stored! Now have {storedGooseDays}/{MAX_GOOSE_DAYS}");
                 plugin.UI.ShowNotification($"Goose Day stored! ({storedGooseDays}/{MAX_GOOSE_DAYS}) - Press G to use");
             }
             else
             {
-                Log.LogInfo("[GOOSE DAY] Already at max storage, using immediately");
                 UseGooseDay(duration);
             }
         }
@@ -229,7 +223,6 @@ namespace GooseGameAP
             
             storedGooseDays--;
             SaveProgressiveItems();
-            Log.LogInfo($"[GOOSE DAY] Using! {storedGooseDays} remaining");
             
             hasGooseDay = true;
             gooseDayTimer = duration;
@@ -246,7 +239,6 @@ namespace GooseGameAP
         /// </summary>
         public void ForceActivateGooseDay(float duration = 15f)
         {
-            Log.LogInfo("[GOOSE DAY] Force activated (debug)!");
             hasGooseDay = true;
             gooseDayTimer = duration;
             gooseDayCalmTimer = 0f;
@@ -390,7 +382,6 @@ namespace GooseGameAP
                             if (dropMethod != null)
                             {
                                 dropMethod.Invoke(holder, null);
-                                Log.LogInfo("[BUTTERBEAK] Forced drop (held)!");
                             }
                         }
                         catch { }
@@ -420,7 +411,6 @@ namespace GooseGameAP
                                 if (dropMethod != null)
                                 {
                                     dropMethod.Invoke(dragger, null);
-                                    Log.LogInfo("[BUTTERBEAK] Forced drop (dragged)!");
                                 }
                                 else
                                 {
@@ -433,12 +423,10 @@ namespace GooseGameAP
                                     if (releaseMethod != null)
                                     {
                                         releaseMethod.Invoke(dragger, null);
-                                        Log.LogInfo("[BUTTERBEAK] Forced release (dragged)!");
                                     }
                                     else if (activeField != null)
                                     {
                                         activeField.SetValue(dragger, false);
-                                        Log.LogInfo("[BUTTERBEAK] Set drag active=false!");
                                     }
                                 }
                             }
@@ -546,7 +534,6 @@ namespace GooseGameAP
                     }
                     catch { }
                     
-                    Log.LogInfo("[SUSPICIOUS] Forced honk!");
                 }
             }
             catch (Exception ex)

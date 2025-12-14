@@ -22,7 +22,6 @@ namespace GooseGameAP
                 string goalName = __instance.goalInfo.goalName;
                 if (!string.IsNullOrEmpty(goalName))
                 {
-                    Plugin.Log.LogInfo("Goal completed: " + goalName);
                     Plugin.Instance?.OnGoalCompleted(goalName);
                     
                     if (goalName == "goalFinale")
@@ -51,12 +50,10 @@ namespace GooseGameAP
                 
                 if (!Plugin.Instance.CanEnterArea(newArea))
                 {
-                    Plugin.Log.LogInfo("Blocked entry to: " + newArea);
                     Plugin.Instance.OnAreaBlocked(newArea);
                     return false;
                 }
                 
-                Plugin.Log.LogInfo("Allowed entry to: " + newArea);
                 return true;
             }
             catch (Exception ex)
@@ -76,7 +73,6 @@ namespace GooseGameAP
         {
             try
             {
-                Plugin.Log.LogInfo("Goose was shooed by: " + shooer?.name);
                 Plugin.Instance?.OnGooseShooed();
             }
             catch (Exception ex)
@@ -104,13 +100,11 @@ namespace GooseGameAP
                 if (!seenEvents.Contains(id))
                 {
                     seenEvents.Add(id);
-                    Plugin.Log?.LogInfo($"[EVENT DISCOVERY] New event: {id}");
                 }
                 
                 // Reset dragger cache on area transitions (helps after resets)
                 if (id.StartsWith("enterArea") || id.StartsWith("resetArea") || id.Contains("Reset"))
                 {
-                    Plugin.Log.LogInfo("[EVENT] Area event detected: " + id + " - resetting caches");
                     Plugin.Instance.ItemTracker?.ResetDraggerCache();
                     Plugin.Instance.GooseColour?.RefreshRenderers();
                     
@@ -126,7 +120,6 @@ namespace GooseGameAP
                     case "enterAreaGarden":
                         if (!Plugin.Instance.HasGardenAccess)
                         {
-                            Plugin.Log.LogInfo("Blocked event: " + id);
                             Plugin.Instance.OnAreaBlocked(GoalListArea.Garden);
                             Plugin.Instance.GateManager?.TeleportGooseToWell();
                             return false;
@@ -135,7 +128,6 @@ namespace GooseGameAP
                     case "enterAreaHighstreet":
                         if (!Plugin.Instance.HasHighStreetAccess)
                         {
-                            Plugin.Log.LogInfo("Blocked event: " + id);
                             Plugin.Instance.OnAreaBlocked(GoalListArea.Shops);
                             Plugin.Instance.GateManager?.TeleportGooseToWell();
                             return false;
@@ -144,7 +136,6 @@ namespace GooseGameAP
                     case "enterAreaBackyards":
                         if (!Plugin.Instance.HasBackGardensAccess)
                         {
-                            Plugin.Log.LogInfo("Blocked event: " + id);
                             Plugin.Instance.OnAreaBlocked(GoalListArea.Backyards);
                             Plugin.Instance.GateManager?.TeleportGooseToWell();
                             return false;
@@ -153,7 +144,6 @@ namespace GooseGameAP
                     case "enterAreaPub":
                         if (!Plugin.Instance.HasPubAccess)
                         {
-                            Plugin.Log.LogInfo("Blocked event: " + id);
                             Plugin.Instance.OnAreaBlocked(GoalListArea.Pub);
                             Plugin.Instance.GateManager?.TeleportGooseToWell();
                             return false;
@@ -162,7 +152,6 @@ namespace GooseGameAP
                     case "enterAreaFinale":
                         if (!Plugin.Instance.HasModelVillageAccess)
                         {
-                            Plugin.Log.LogInfo("Blocked event: " + id);
                             Plugin.Instance.OnAreaBlocked(GoalListArea.Finale);
                             Plugin.Instance.GateManager?.TeleportGooseToWell();
                             return false;
@@ -191,42 +180,36 @@ namespace GooseGameAP
                 // Bike bell detection
                 if (lower.Contains("bell") && (lower.Contains("bike") || lower.Contains("bicycle") || lower.Contains("ring")))
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Bike bell event detected: {id}");
                     Plugin.Instance?.InteractionTracker?.OnBikeBellRung();
                 }
                 
                 // Windmill detection
                 if (lower.Contains("windmill") || lower.Contains("pinwheel"))
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Windmill event detected: {id}");
                     Plugin.Instance?.InteractionTracker?.OnWindmillSpun();
                 }
                 
                 // Wind chimes detection
                 if (lower.Contains("chime") || lower.Contains("windchime"))
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Wind chimes event detected: {id}");
                     Plugin.Instance?.InteractionTracker?.OnWindChimesPlayed();
                 }
                 
                 // Radio unplug detection
                 if (lower.Contains("radio") && (lower.Contains("unplug") || lower.Contains("off") || lower.Contains("stop")))
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Radio unplug event detected: {id}");
                     Plugin.Instance?.InteractionTracker?.OnRadioUnplugged();
                 }
                 
                 // Board break detection (entrance to back gardens)
                 if (lower.Contains("board") && (lower.Contains("break") || lower.Contains("smash") || lower.Contains("destroy")))
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Board break event detected: {id}");
                     Plugin.Instance?.InteractionTracker?.OnBoardsBroken();
                 }
                 
                 // Also check for generic fence/gate events that might be the boards
                 if (lower.Contains("fence") && lower.Contains("break"))
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Fence break event detected: {id}");
                     Plugin.Instance?.InteractionTracker?.OnBoardsBroken();
                 }
             }
@@ -265,7 +248,6 @@ namespace GooseGameAP
                 if (!loggedSwitches.Contains(key))
                 {
                     loggedSwitches.Add(key);
-                    Plugin.Log?.LogInfo($"[SWITCH PECK] Object: {objName}, Parent: {parentName}");
                 }
                 
                 CheckInteraction(__instance, objName, parentName);
@@ -294,7 +276,6 @@ namespace GooseGameAP
                 if (!loggedSwitches.Contains(key))
                 {
                     loggedSwitches.Add(key);
-                    Plugin.Log?.LogInfo($"[SWITCH SETSTATE] Object: {objName}, Parent: {parentName}");
                 }
                 
                 CheckInteraction(__instance, objName, parentName);
@@ -319,21 +300,18 @@ namespace GooseGameAP
             // Bike bell - bikeBellSwitchSystem with parent "bike"
             if (objLower.Contains("bikebell") && parentLower == "bike")
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Bike Bell: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("BikeBell");
             }
             
             // Garden tap/valve
             if (objLower == "valve" && parentLower == "gardendynamic")
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Garden Tap: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("GardenTap");
             }
             
             // Sprinkler
             if (objLower.Contains("sprinkler") && parentLower == "sprinkler")
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Sprinkler: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("Sprinkler");
             }
             
@@ -342,7 +320,6 @@ namespace GooseGameAP
             // Intro gate (first gate at game start)
             if (objLower == "shoosystem" && parentLower == "introgate")
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Intro Gate: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("IntroGate");
             }
             
@@ -351,14 +328,12 @@ namespace GooseGameAP
             // Radio - bigRadioWithCable
             if (objLower.Contains("bigradio"))
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Radio: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("UnplugRadio");
             }
             
             // Boards - brokenBit objects
             if (objLower.Contains("brokenbit") || parentLower.Contains("brokenbit"))
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Boards: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("BreakBoards");
             }
             
@@ -367,17 +342,14 @@ namespace GooseGameAP
             {
                 if (objLower == "umbrellaonstand1")
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Umbrella Stand 1: {objName}, parent: {parentName}");
                     Plugin.Instance?.InteractionTracker?.OnInteraction("UmbrellaStand1");
                 }
                 else if (objLower == "umbrellaonstand2")
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Umbrella Stand 2: {objName}, parent: {parentName}");
                     Plugin.Instance?.InteractionTracker?.OnInteraction("UmbrellaStand2");
                 }
                 else if (objLower == "umbrellaonstand3")
                 {
-                    Plugin.Log?.LogInfo($"[INTERACT] Umbrella Stand 3: {objName}, parent: {parentName}");
                     Plugin.Instance?.InteractionTracker?.OnInteraction("UmbrellaStand3");
                 }
             }
@@ -387,7 +359,6 @@ namespace GooseGameAP
             // Big Garden Bell - StrikerSwitchSystem/BellSwitchSystem with parent "bell"
             if (parentLower == "bell" && (objLower.Contains("striker") || objLower.Contains("bellswitch")))
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Garden Bell: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("GardenBell");
             }
             
@@ -397,7 +368,6 @@ namespace GooseGameAP
                 // Get grandparent to distinguish between chimes
                 string grandparent = instance.transform.parent?.parent?.name?.ToLower() ?? "";
                 
-                Plugin.Log?.LogInfo($"[INTERACT] Wind Chimes: {objName}, grandparent: {grandparent}");
                 
                 // Each chime is named by musical note (a-g)
                 if (grandparent == "chime-a")
@@ -421,7 +391,6 @@ namespace GooseGameAP
             // Windmill - switchsystem with parent "Plane"
             if (parentLower == "plane" && objLower.Contains("switchsystem"))
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Windmill: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("Windmill");
             }
             
@@ -435,7 +404,6 @@ namespace GooseGameAP
                     grandparentName = instance.transform.parent.parent.name.ToLower();
                 }
                 
-                Plugin.Log?.LogInfo($"[INTERACT] Flower: {objName}, grandparent: {grandparentName}");
                 
                 // Distinguish by grandparent name
                 // fakeflowerpointy = sunflower (pointy petals)
@@ -451,7 +419,6 @@ namespace GooseGameAP
                 else
                 {
                     // Fallback - log grandparent for debugging
-                    Plugin.Log?.LogInfo($"[INTERACT] Unknown flower grandparent: {grandparentName}");
                     Plugin.Instance?.InteractionTracker?.OnInteraction("SpinFlower");
                 }
             }
@@ -459,7 +426,6 @@ namespace GooseGameAP
             // Trellis/fence to messy neighbour
             if (parentLower == "trellisblockersystem" && objLower.Contains("peck"))
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Trellis: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("BreakTrellis");
             }
             
@@ -468,19 +434,16 @@ namespace GooseGameAP
             // Van doors
             if (objLower == "switchsystem" && parentLower == "doorleft")
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Van Door Left: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("VanDoorLeft");
             }
             if (objLower == "switchsystem" && parentLower == "doorright")
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Van Door Right: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("VanDoorRight");
             }
             
             // Pub sink tap
             if (objLower == "goosesswitch" && parentLower == "taphandlepositioner")
             {
-                Plugin.Log?.LogInfo($"[INTERACT] Pub Tap: {objName}");
                 Plugin.Instance?.InteractionTracker?.OnInteraction("PubTap");
             }
         }
@@ -517,12 +480,10 @@ namespace GooseGameAP
                 {
                     if (objLower.Contains("left"))
                     {
-                        Plugin.Log?.LogInfo($"[INTERACT] Wimp Laces Left: {objName}");
                         Plugin.Instance?.InteractionTracker?.OnInteraction("WimpLacesLeft");
                     }
                     else if (objLower.Contains("right"))
                     {
-                        Plugin.Log?.LogInfo($"[INTERACT] Wimp Laces Right: {objName}");
                         Plugin.Instance?.InteractionTracker?.OnInteraction("WimpLacesRight");
                     }
                     return;
@@ -533,19 +494,16 @@ namespace GooseGameAP
                 {
                     if (objLower.Contains("left"))
                     {
-                        Plugin.Log?.LogInfo($"[INTERACT] Burly Laces Left: {objName}");
                         Plugin.Instance?.InteractionTracker?.OnInteraction("BurlyLacesLeft");
                     }
                     else if (objLower.Contains("right"))
                     {
-                        Plugin.Log?.LogInfo($"[INTERACT] Burly Laces Right: {objName}");
                         Plugin.Instance?.InteractionTracker?.OnInteraction("BurlyLacesRight");
                     }
                     return;
                 }
                 
                 // Unknown NPC - log for discovery
-                Plugin.Log?.LogInfo($"[INTERACT] Unknown Laces: {objName}, hierarchy: {allNames}");
             }
             catch (Exception ex)
             {
@@ -643,7 +601,6 @@ namespace GooseGameAP
                 if (Time.time - lastLogTime > 2.0f && __result.sqrMagnitude > 0.01f)
                 {
                     lastLogTime = Time.time;
-                    Plugin.Log?.LogInfo($"[CONFUSED] Input rotated by {angle}°");
                 }
             }
             catch { }
@@ -802,12 +759,10 @@ namespace GooseGameAP
                 if (brain?.holder != null && brain.holder.holding != null)
                 {
                     brain.holder.Drop();
-                    Plugin.Log?.LogInfo($"[MEGA HONK] {brain.gameObject.name} dropped item from fear!");
                 }
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-                Plugin.Log?.LogInfo($"[MEGA HONK] Error: {ex.Message}");
             }
         }
         
@@ -872,9 +827,8 @@ namespace GooseGameAP
                     main.startColor = originalStartColor.Value;
                 }
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-                Plugin.Log?.LogInfo($"[MEGA HONK] Prefix error: {ex.Message}");
             }
         }
         
@@ -938,9 +892,8 @@ namespace GooseGameAP
                     particleSystem.SetParticles(allParticles, newCount);
                 }
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-                Plugin.Log?.LogInfo($"[MEGA HONK] Postfix error: {ex.Message}");
             }
         }
     }
@@ -961,7 +914,6 @@ namespace GooseGameAP
             {
                 if (Plugin.Instance?.TrapManager?.HasButterfingers == true)
                 {
-                    Plugin.Log?.LogInfo("[BUTTERBEAK] Blocked drag PickUp!");
                     return false; // Skip original - can't pick up
                 }
             }

@@ -48,48 +48,22 @@ namespace GooseGameAP
         
         public void SyncGatesFromAccessFlags()
         {
-            Log.LogInfo("=== SYNCING GATES FROM ACCESS FLAGS ===");
-            Log.LogInfo("  Garden: " + plugin.HasGardenAccess);
-            Log.LogInfo("  High Street: " + plugin.HasHighStreetAccess);
-            Log.LogInfo("  Back Gardens: " + plugin.HasBackGardensAccess);
-            Log.LogInfo("  Pub: " + plugin.HasPubAccess);
-            Log.LogInfo("  Model Village: " + plugin.HasModelVillageAccess);
-            
             // Clear hub blockers first - hub should always be walkable
-            Log.LogInfo("  Clearing Hub blockers...");
             DisableAreaBlockers("Hub");
             
             if (plugin.HasGardenAccess)
-            {
                 OpenGatesForArea("Garden");
-                Log.LogInfo("  Opened Garden gates");
-            }
             if (plugin.HasHighStreetAccess)
-            {
                 OpenGatesForArea("HighStreet");
-                Log.LogInfo("  Opened High Street gates");
-            }
             if (plugin.HasBackGardensAccess)
-            {
                 OpenGatesForArea("Backyards");
-                Log.LogInfo("  Opened Back Gardens gates");
-            }
             if (plugin.HasPubAccess)
-            {
                 OpenGatesForArea("Pub");
-                Log.LogInfo("  Opened Pub gates");
-            }
             if (plugin.HasModelVillageAccess)
-            {
                 OpenGatesForArea("Finale");
-                Log.LogInfo("  Opened Model Village gates");
-            }
             
             // Ensure hub paths are open
             DisableHubBlocker();
-            
-            plugin.UI.ShowNotification("Gates synced from server!");
-            Log.LogInfo("=== GATE SYNC COMPLETE ===");
         }
         
         private void DisableHubBlocker()
@@ -98,7 +72,6 @@ namespace GooseGameAP
             if (parkHubBlocker != null)
             {
                 parkHubBlocker.SetActive(false);
-                Log.LogInfo("  Disabled ParkHubGateExtraCollider");
             }
         }
         
@@ -110,7 +83,6 @@ namespace GooseGameAP
                 return;
             }
 
-            Log.LogInfo("Opening gates for area: " + areaName);
             
             // Trigger relevant switch events
             string[] eventsToTry = GetEventsForArea(areaName);
@@ -121,7 +93,6 @@ namespace GooseGameAP
                     try 
                     { 
                         SwitchEventManager.TriggerEvent(evt);
-                        Log.LogInfo("  Triggered event: " + evt);
                     } 
                     catch { }
                 }
@@ -192,7 +163,6 @@ namespace GooseGameAP
                 }
                 
                 switchSystem.SetState(1, null);
-                Log.LogInfo("  Set switch state to 1 for: " + gatePath);
             }
             
             // Disable colliders
@@ -296,13 +266,11 @@ namespace GooseGameAP
                     col.enabled = false;
                 }
                 obj.SetActive(false);
-                Log.LogInfo($"  Disabled: {path} ({colliders.Length} colliders)");
             }
         }
         
         public void ClearHubBlockers()
         {
-            Log.LogInfo("=== CLEARING HUB BLOCKERS ===");
             DisableAreaBlockers("Hub");
             
             // Also set all hub gate SwitchSystems to open
@@ -317,7 +285,6 @@ namespace GooseGameAP
                     if (sw.currentState == 0)
                     {
                         sw.SetState(1, null);
-                        Log.LogInfo($"  Opened hub gate: {path}");
                     }
                 }
             }
@@ -339,7 +306,6 @@ namespace GooseGameAP
         public void TeleportGooseToWell()
         {
             TeleportGoose(WellPosition);
-            Log.LogInfo("Teleported goose to hub at: " + WellPosition);
         }
         
         public void TeleportGoose(Vector3 position)
@@ -367,7 +333,6 @@ namespace GooseGameAP
                             }
                             
                             goose.transform.position = position;
-                            Log.LogInfo("Teleported goose to: " + position);
                         }
                     }
                 }
@@ -384,7 +349,6 @@ namespace GooseGameAP
             try
             {
                 SwitchEventManager.TriggerEvent(eventName);
-                Log.LogInfo("Triggered area unlock event: " + eventName);
             }
             catch (Exception ex)
             {
@@ -394,7 +358,6 @@ namespace GooseGameAP
         
         public void OpenAllGates()
         {
-            Log.LogInfo("=== OPENING ALL GATES ===");
             foreach (var area in AreaGates.Keys)
             {
                 OpenGatesForArea(area);

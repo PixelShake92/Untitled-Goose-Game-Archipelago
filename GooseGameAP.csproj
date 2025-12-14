@@ -21,10 +21,6 @@
       <HintPath>..\Untitled Goose Game_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>..\Untitled Goose Game_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
       <HintPath>..\Untitled Goose Game_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>false</Private>

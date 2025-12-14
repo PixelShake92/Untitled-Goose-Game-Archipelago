@@ -5,29 +5,25 @@ using UnityEngine;
 
 namespace GooseGameAP
 {
-    /// <summary>
-    /// Handles all UI rendering and notifications
-    /// </summary>
     public class UIManager
     {
         private static ManualLogSource Log => Plugin.Log;
         
-        // Notification queue
-        private List<string> chatMessages = new List<string>();
         private List<string> receivedItemNames = new List<string>();
         
-        // Connection UI fields
         public string ServerAddress = "archipelago.gg";
         public string ServerPort = "38281";
-        public string SlotName = "Goosel";
+        public string SlotName = "Goose";
         public string Password = "";
         public string Status = "Not connected";
         
+        private string currentNotification = "";
+        private float notificationTimer = 0f;
+        
         public void ShowNotification(string message)
         {
-            Log.LogInfo("[NOTIFICATION] " + message);
-            chatMessages.Add(message);
-            if (chatMessages.Count > 20) chatMessages.RemoveAt(0);
+            currentNotification = message;
+            notificationTimer = 4f;
         }
         
         public void AddReceivedItem(string itemName)
@@ -37,8 +33,13 @@ namespace GooseGameAP
         
         public void AddChatMessage(string message)
         {
-            chatMessages.Add(message);
-            if (chatMessages.Count > 20) chatMessages.RemoveAt(0);
+            // Disabled - log removed
+        }
+        
+        public void UpdateNotification(float deltaTime)
+        {
+            if (notificationTimer > 0)
+                notificationTimer -= deltaTime;
         }
         
         public void ClearReceivedItems()
@@ -50,104 +51,170 @@ namespace GooseGameAP
         
         public void DrawUI(Plugin plugin)
         {
-            GUI.Box(new Rect(10, 10, 550, 620), "Archipelago - Goose Game v1.0");
+            // Window dimensions
+            float winX = 15;
+            float winY = 15;
+            float winW = 750;
+            float winH = 540;
             
-            // Connection settings
-            GUI.Label(new Rect(20, 40, 100, 20), "Server:");
-            ServerAddress = GUI.TextField(new Rect(120, 40, 200, 20), ServerAddress);
-            GUI.Label(new Rect(325, 40, 10, 20), ":");
-            ServerPort = GUI.TextField(new Rect(340, 40, 60, 20), ServerPort);
+            // Dark background
+            GUI.color = new Color(0.12f, 0.12f, 0.12f, 0.97f);
+            GUI.DrawTexture(new Rect(winX, winY, winW, winH), Texture2D.whiteTexture);
             
-            GUI.Label(new Rect(20, 65, 100, 20), "Slot Name:");
-            SlotName = GUI.TextField(new Rect(120, 65, 280, 20), SlotName);
+            // Gold border
+            GUI.color = new Color(0.7f, 0.55f, 0.2f, 1f);
+            GUI.DrawTexture(new Rect(winX, winY, winW, 3), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(winX, winY, 3, winH), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(winX, winY + winH - 3, winW, 3), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(winX + winW - 3, winY, 3, winH), Texture2D.whiteTexture);
+            GUI.color = Color.white;
             
-            GUI.Label(new Rect(20, 90, 100, 20), "Password:");
-            Password = GUI.PasswordField(new Rect(120, 90, 280, 20), Password, '*');
-
-            // Connection buttons
-            if (GUI.Button(new Rect(20, 120, 180, 30), plugin.IsConnected ? "Connected!" : "Connect"))
+            float x = winX + 15;
+            float y = winY + 12;
+            float w = winW - 30;
+            
+            // === TITLE ===
+            GUI.color = new Color(1f, 0.85f, 0.35f);
+            GUI.Label(new Rect(x, y, w, 28), "<size=18><b>ARCHIPELAGO - UNTITLED GOOSE GAME</b></size>");
+            GUI.color = Color.white;
+            y += 32;
+            
+            // === CONNECTION ===
+            GUI.Label(new Rect(x, y, 55, 24), "Server:");
+            ServerAddress = GUI.TextField(new Rect(x + 60, y, 480, 24), ServerAddress);
+            GUI.Label(new Rect(x + 545, y, 15, 24), ":");
+            ServerPort = GUI.TextField(new Rect(x + 560, y, 100, 24), ServerPort);
+            y += 28;
+            
+            GUI.Label(new Rect(x, y, 55, 24), "Slot:");
+            SlotName = GUI.TextField(new Rect(x + 60, y, 600, 24), SlotName);
+            y += 28;
+            
+            GUI.Label(new Rect(x, y, 70, 24), "Password:");
+            Password = GUI.PasswordField(new Rect(x + 75, y, 585, 24), Password, '*');
+            y += 32;
+            
+            // Buttons
+            if (GUI.Button(new Rect(x, y, 150, 30), plugin.IsConnected ? "Connected!" : "Connect"))
             {
                 if (!plugin.IsConnected) plugin.Connect();
             }
-            
-            if (GUI.Button(new Rect(210, 120, 90, 30), "Disconnect"))
+            if (GUI.Button(new Rect(x + 160, y, 140, 30), "Disconnect"))
             {
                 plugin.Disconnect();
             }
-            
-            if (GUI.Button(new Rect(310, 120, 90, 30), "Sync Gates"))
+            if (GUI.Button(new Rect(x + 310, y, 140, 30), "Sync Gates"))
             {
-                plugin.GateManager.SyncGatesFromAccessFlags();
+                plugin.GateManager?.SyncGatesFromAccessFlags();
+                ShowNotification("Gates synced!");
             }
-            
-            if (GUI.Button(new Rect(410, 120, 80, 30), "Reset"))
+            if (GUI.Button(new Rect(x + 460, y, 100, 30), "Reset"))
             {
                 plugin.ResetAllAccess();
-                ShowNotification("Access flags reset! Reconnect to sync.");
+                ShowNotification("Progress reset!");
             }
-
-            GUI.Label(new Rect(20, 158, 410, 20), Status);
+            y += 36;
             
-            int y = 183;
-            
-            // Area access display
-            GUI.Label(new Rect(20, y, 380, 20), "=== Area Access (Hub = Start) ===");
+            // Status line
+            GUI.color = plugin.IsConnected ? new Color(0.3f, 1f, 0.3f) : new Color(1f, 0.5f, 0.3f);
+            GUI.Label(new Rect(x, y, w, 22), "<size=13><b>" + Status + "</b></size>");
+            GUI.color = Color.white;
             y += 22;
             
-            GUI.Label(new Rect(20, y, 380, 20), "Garden: " + (plugin.HasGardenAccess ? "YES" : "NO") + " | High Street: " + (plugin.HasHighStreetAccess ? "YES" : "NO"));
-            y += 20;
-            GUI.Label(new Rect(20, y, 380, 20), "Back Gardens: " + (plugin.HasBackGardensAccess ? "YES" : "NO") + " | Pub: " + (plugin.HasPubAccess ? "YES" : "NO"));
-            y += 20;
-            GUI.Label(new Rect(20, y, 380, 20), "Model Village: " + (plugin.HasModelVillageAccess ? "YES" : "NO") + " | Golden Bell: " + (plugin.HasGoldenBell ? "YES" : "NO"));
+            // Notification
+            if (notificationTimer > 0 && !string.IsNullOrEmpty(currentNotification))
+            {
+                GUI.color = new Color(1f, 0.9f, 0.2f);
+                GUI.Label(new Rect(x, y, w, 20), "<size=12><b>▶ " + currentNotification + "</b></size>");
+                GUI.color = Color.white;
+            }
+            y += 26;
             
-            // Buffs display
-            y += 25;
-            GUI.Label(new Rect(20, y, 380, 20), "=== Buffs/Effects ===");
+            // === AREA ACCESS ===
+            GUI.color = new Color(0.85f, 0.85f, 0.85f);
+            GUI.Label(new Rect(x, y, w, 20), "<size=12><b>AREA ACCESS</b></size>");
+            GUI.color = Color.white;
             y += 22;
-            GUI.Label(new Rect(20, y, 380, 20), "Speed: " + (plugin.TrapManager.GetEffectiveSpeedMultiplier() * 100).ToString("F0") + "% | Silent: " + plugin.IsSilent + " | Mega Honks: " + plugin.MegaHonkCount);
+            
+            float col1 = x;
+            float col2 = x + 240;
+            float col3 = x + 480;
+            
+            DrawAccess(col1, y, "Garden", plugin.HasGardenAccess);
+            DrawAccess(col2, y, "High Street", plugin.HasHighStreetAccess);
+            DrawAccess(col3, y, "Back Gardens", plugin.HasBackGardensAccess);
+            y += 20;
+            DrawAccess(col1, y, "Pub", plugin.HasPubAccess);
+            DrawAccess(col2, y, "Model Village", plugin.HasModelVillageAccess);
+            DrawAccess(col3, y, "Golden Bell", plugin.HasGoldenBell);
+            y += 26;
+            
+            // === BUFFS ===
+            GUI.color = new Color(0.85f, 0.85f, 0.85f);
+            GUI.Label(new Rect(x, y, w, 20), "<size=12><b>BUFFS & STATUS</b></size>");
+            GUI.color = Color.white;
+            y += 22;
+            
+            int speed = (int)(plugin.TrapManager.GetEffectiveSpeedMultiplier() * 100);
+            string buffs = $"Speed: {speed}%  |  Silent: {(plugin.IsSilent ? "ON" : "OFF")}  |  Mega Honk: Lv{plugin.MegaHonkCount}";
+            GUI.Label(new Rect(x, y, w, 18), buffs);
             y += 20;
             
-            // Active traps
             string trapText = plugin.TrapManager.GetActiveTrapText();
             if (!string.IsNullOrEmpty(trapText))
             {
-                GUI.Label(new Rect(20, y, 380, 20), trapText);
+                GUI.color = new Color(1f, 0.5f, 0.5f);
+                GUI.Label(new Rect(x, y, w, 18), trapText);
+                GUI.color = Color.white;
                 y += 20;
             }
             
-            // Stats
-            y += 5;
-            GUI.Label(new Rect(20, y, 380, 20), "Locations: " + plugin.CheckedLocationCount + " | Items: " + receivedItemNames.Count);
+            GUI.Label(new Rect(x, y, w, 18), $"Locations: {plugin.CheckedLocationCount}  |  Items: {receivedItemNames.Count}");
+            y += 26;
             
-            // Recent items
-            y += 25;
-            GUI.Label(new Rect(20, y, 100, 20), "Recent Items:");
-            y += 20;
-            for (int i = Math.Max(0, receivedItemNames.Count - 4); i < receivedItemNames.Count; i++)
+            // === RECENT ITEMS ===
+            GUI.color = new Color(0.85f, 0.85f, 0.85f);
+            GUI.Label(new Rect(x, y, w, 20), "<size=12><b>RECENT ITEMS</b></size>");
+            GUI.color = Color.white;
+            y += 22;
+            
+            int itemsToShow = Math.Min(4, receivedItemNames.Count);
+            if (itemsToShow == 0)
             {
-                GUI.Label(new Rect(30, y, 370, 18), receivedItemNames[i]);
+                GUI.color = new Color(0.5f, 0.5f, 0.5f);
+                GUI.Label(new Rect(x + 8, y, w, 18), "No items yet");
+                GUI.color = Color.white;
                 y += 18;
             }
-            
-            // Chat messages
+            else
+            {
+                for (int i = receivedItemNames.Count - itemsToShow; i < receivedItemNames.Count; i++)
+                {
+                    GUI.Label(new Rect(x + 8, y, w - 16, 18), "• " + receivedItemNames[i]);
+                    y += 18;
+                }
+            }
             y += 10;
-            GUI.Label(new Rect(20, y, 100, 20), "Messages:");
-            y += 20;
-            for (int i = Math.Max(0, chatMessages.Count - 4); i < chatMessages.Count; i++)
-            {
-                GUI.Label(new Rect(30, y, 370, 18), chatMessages[i]);
-                y += 18;
-            }
             
-            // Debug info
-            y += 15;
-            GUI.Label(new Rect(20, y, 420, 20), "=== Debug Keys ===");
-            y += 20;
-            GUI.Label(new Rect(20, y, 420, 20), "F6=Pos Shift+F6=Drag Alt+F6=Audio F7=Hub F8=Gates");
-            y += 18;
-            GUI.Label(new Rect(20, y, 420, 20), "Shift+F8=BlockerSearch Shift+F9=Draggables F9=Before F10=After");
-            y += 18;
-            GUI.Label(new Rect(20, y, 420, 20), "F11=OpenAll F12=TestPos Ctrl+1-5=Traps Ctrl+9=ResetDrag Ctrl+0=Clear");
+            // Controls
+            GUI.color = new Color(0.55f, 0.55f, 0.55f);
+            GUI.Label(new Rect(x, y, w, 18), "<size=11>G = Goose Day  |  C = Colour  |  Ctrl+C = Reset  |  F9 = Resync Gates</size>");
+            GUI.color = Color.white;
+        }
+        
+        private void DrawAccess(float x, float y, string label, bool hasAccess)
+        {
+            if (hasAccess)
+            {
+                GUI.color = new Color(0.3f, 1f, 0.3f);
+                GUI.Label(new Rect(x, y, 230, 18), "✓ " + label);
+            }
+            else
+            {
+                GUI.color = new Color(0.5f, 0.5f, 0.5f);
+                GUI.Label(new Rect(x, y, 230, 18), "✗ " + label);
+            }
+            GUI.color = Color.white;
         }
     }
 }
