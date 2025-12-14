@@ -21,12 +21,14 @@ This mod turns Untitled Goose Game into an Archipelago multiworld game where:
 3. Run the game once to generate necesarry files and folder for Bepin
 4. Close the game
 
-### Installing the AP Mod
-1. Download the latest release from the Releases page
+### Installing the AP Mod and World
+1. Download the latest release files from the Releases page
 2. Copy `GooseGameAP.dll` to `BepInEx/plugins/`
 3. Copy `APProxy.exe` to `BepInEx/plugins/` 
 4. Copy `APProxy.runtimeconfig.json` to `BepInEx/plugins/` 
-5. Copy `APProxy.dll` to `BepInEx/plugins/` 
+5. Copy `APProxy.dll` to `BepInEx/plugins/`
+6. Double-click the APWorld file or drag it into custom worlds folder to install. 
+
 
 ## Usage
 
