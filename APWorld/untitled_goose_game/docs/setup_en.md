@@ -2,7 +2,7 @@
 
 ## Required Software
 
-- Untitled Goose Game (Steam or Epic Games version)
+- Untitled Goose Game (Steam)
 - BepInEx 5.x for Unity Mono
 - .NET 6.0 Runtime (for the proxy server)
 - Archipelago client files (from releases)
