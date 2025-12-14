@@ -3,7 +3,7 @@
 ## Required Software
 
 - Untitled Goose Game (Steam)
-- BepInEx 5.4.9.0 for Unity Mono
+- BepInEx 5.4.9.0 x 64 for Unity Mono
 - .NET 6.0 Runtime (for the proxy server)
 - Archipelago client files (from releases)
 - Archipelago server 0.5.0 or higher
@@ -12,10 +12,9 @@
 
 ### Step 1: Install BepInEx
 
-1. Download https://github.com/BepInEx/BepInEx/releases/tag/v5.4.9 
+1. Download https://github.com/BepInEx/BepInEx/releases/tag/v5.4.9 x64
 2. Extract the contents into your Untitled Goose Game folder
    - Steam: `C:\Program Files (x86)\Steam\steamapps\common\Untitled Goose Game\`
-   - Epic: Check your Epic Games library for the install location
 3. Run the game once and close it - this creates the BepInEx folder structure
 
 ### Step 2: Install .NET 6.0 Runtime
@@ -79,7 +78,7 @@ Untitled Goose Game:
 |-----|--------|
 | F1 | Toggle UI visibility |
 | G | Use stored Goose Day |
-| C | Cycle goose colour |
+| C | Cycle goose colour | (Keep in mind this will end up as a black void eventually for now)
 | Ctrl+C | Reset goose colour |
 | F9 | Resync gates (use if gates get stuck after reconnect) |
 
