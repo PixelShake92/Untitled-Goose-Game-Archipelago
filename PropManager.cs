@@ -32,7 +32,9 @@ namespace GooseGameAP
             { "pumpkin", "Pumpkin Soul" },
             { "topsoilbag", "Topsoil Bag Soul" },
             { "topsoil", "Topsoil Bag Soul" },
-            { "top", "Topsoil Bag Soul" },
+            { "fertiliser", "Topsoil Bag Soul" },
+            { "fertliser", "Topsoil Bag Soul" },  // Typo variant
+            { "fertilizer", "Topsoil Bag Soul" },
             { "quoit", "Quoit Soul" },
             { "plate", "Plate Soul" },
             { "orange", "Orange Soul" },
@@ -82,6 +84,8 @@ namespace GooseGameAP
             { "gardenerssunhat", "Gardener Hat Soul" },
             { "rake", "Rake Soul" },
             { "picnicbasket", "Picnic Basket Soul" },
+            { "picnicbaskethandle", "Picnic Basket Soul" },
+            { "baskethandle", "Picnic Basket Soul" },
             { "esky", "Esky Soul" },
             { "coolbox", "Esky Soul" },
             { "shovel", "Shovel Soul" },
@@ -116,7 +120,7 @@ namespace GooseGameAP
             { "chalk", "Chalk Soul" },
             { "dustbinlid", "Dustbin Lid Soul" },
             { "shoppingbasket", "Shopping Basket Soul" },
-            { "basket", "Shopping Basket Soul" },
+            { "shopbasket", "Shopping Basket Soul" },
             { "basketprop", "Picnic Basket Soul" },
             { "pushbroom", "Push Broom Soul" },
             { "brokenbroomhead", "Broken Broom Head Soul" },
@@ -127,6 +131,7 @@ namespace GooseGameAP
             { "addingmachine", "Adding Machine Soul" },
             
             // Back Gardens one-offs
+            { "bra", "Bra Soul" },
             { "dummy", "Dummy Soul" },
             { "cricketball", "Cricket Ball Soul" },
             { "bustpipe", "Bust Pipe Soul" },
@@ -146,7 +151,9 @@ namespace GooseGameAP
             { "teapot", "Tea Pot Soul" },
             { "clippers", "Clippers Soul" },
             { "duckstatue", "Duck Statue Soul" },
+            { "duck", "Duck Statue Soul" },
             { "frogstatue", "Frog Statue Soul" },
+            { "frog", "Frog Statue Soul" },
             { "jeremyfish", "Jeremy Fish Soul" },
             { "messysign", "Messy Sign Soul" },
             { "drawer", "Drawer Soul" },
@@ -177,11 +184,12 @@ namespace GooseGameAP
             { "portablestool", "Portable Stool Soul" },
             { "dartboard", "Dartboard Soul" },
             { "mopbucket", "Mop Bucket Soul" },
-            { "pail", "Mop Bucket Soul" },
+            { "pail", "Burly Mans Bucket Soul" },
             { "bucket", "Mop Bucket Soul" },
             { "mop", "Mop Soul" },
+            { "mophandle", "Mop Soul" },
+            { "mophead", "Mop Soul" },
             { "deliverybox", "Delivery Box Soul" },
-            { "tomatobox", "Tomato Box Soul" },
             
             // Model Village one-offs
             { "minimailpillar", "Mini Mail Pillar Soul" },
@@ -320,6 +328,15 @@ namespace GooseGameAP
                         Log.LogInfo($"[Prop DEBUG] Raw: '{prop.name}' -> Clean: '{cleanName}'");
                         logCount++;
                     }
+                    
+                    // Debug logging for problematic props
+                    string lowerName = prop.name.ToLower();
+                    if (lowerName.Contains("mop") || lowerName.Contains("basket") || 
+                        lowerName.Contains("top") || lowerName.Contains("duck"))
+                    {
+                        string hierarchy = GetHierarchy(prop.transform);
+                        Log.LogInfo($"[Prop HIERARCHY] {prop.name}: {hierarchy}");
+                    }
                 }
                 
                 int matched = 0;
@@ -337,7 +354,9 @@ namespace GooseGameAP
                         if (!propCache.ContainsKey(soul))
                             propCache[soul] = new List<GameObject>();
                         
-                        propCache[soul].Add(prop.gameObject);
+                        // Get the appropriate object to disable - check for parent containers
+                        GameObject objToCache = GetDisableTarget(prop.gameObject, cleanName);
+                        propCache[soul].Add(objToCache);
                         matched++;
                     }
                     else
@@ -360,6 +379,56 @@ namespace GooseGameAP
             }
         }
         
+        /// <summary>
+        /// Get the appropriate GameObject to disable for this prop.
+        /// Some props have parent containers that include handles, meshes, etc.
+        /// </summary>
+        private GameObject GetDisableTarget(GameObject propObj, string cleanName)
+        {
+            // For certain props, we need to disable a parent container
+            // to get all child parts (handles, mesh renderers, physics)
+            
+            Transform current = propObj.transform;
+            
+            // Check if parent has a meaningful name that suggests it's the container
+            // e.g., "mopProp" might be under "mop" parent with handle as sibling
+            if (current.parent != null)
+            {
+                string parentName = current.parent.name.ToLower();
+                
+                // Mop - the mopProp is the handle, we need parent for both parts
+                if (cleanName.Contains("mop") && !cleanName.Contains("bucket"))
+                {
+                    // Check if parent has multiple children (mop head + handle)
+                    if (current.parent.childCount > 1)
+                    {
+                        Log.LogInfo($"[Prop] Using parent '{current.parent.name}' for mop (has {current.parent.childCount} children)");
+                        return current.parent.gameObject;
+                    }
+                }
+                
+                // Picnic basket - BasketProp might have handle as sibling
+                if (cleanName.Contains("basket") && parentName.Contains("picnic"))
+                {
+                    if (current.parent.childCount > 1)
+                    {
+                        Log.LogInfo($"[Prop] Using parent '{current.parent.name}' for picnic basket");
+                        return current.parent.gameObject;
+                    }
+                }
+                
+                // Topsoil bags - check if there's a parent with mesh/collider
+                if (cleanName.Contains("top") && (parentName.Contains("top") || parentName.Contains("soil") || parentName.Contains("fertil")))
+                {
+                    Log.LogInfo($"[Prop] Using parent '{current.parent.name}' for topsoil");
+                    return current.parent.gameObject;
+                }
+            }
+            
+            // Default - just use the prop's own GameObject
+            return propObj;
+        }
+        
         private string CleanPropName(string name)
         {
             string clean = name.ToLower()
@@ -374,6 +443,21 @@ namespace GooseGameAP
                 clean = clean.Substring(0, clean.Length - 1);
             
             return clean;
+        }
+        
+        private string GetHierarchy(Transform t)
+        {
+            List<string> parts = new List<string>();
+            Transform current = t;
+            int depth = 0;
+            while (current != null && depth < 6)
+            {
+                parts.Add(current.name + $"[{current.childCount}ch]");
+                current = current.parent;
+                depth++;
+            }
+            parts.Reverse();
+            return string.Join(" > ", parts);
         }
         
         private string GetSoulForProp(string cleanName)

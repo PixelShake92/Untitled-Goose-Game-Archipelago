@@ -224,7 +224,7 @@ class GooseGameWorld(World):
             "Mop Bucket Soul",
             "Mop Soul",
             "Delivery Box Soul",
-           # "Burly Mans Bucket Soul",
+            "Burly Mans Bucket Soul",
             
             # Model Village Prop Souls (11)
             "Mini Mail Pillar Soul",

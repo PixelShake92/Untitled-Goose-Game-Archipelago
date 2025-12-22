@@ -196,7 +196,7 @@ namespace GooseGameAP
                 case 598: return "Mop Bucket Soul";
                 case 599: return "Mop Soul";
                 case 600: return "Delivery Box Soul";
-                case 601: return "Tomato Box Soul";
+                case 601: return "Burly Mans Bucket Soul";
                 
                 // Model Village One-Off Prop Souls (610-620)
                 case 610: return "Mini Mail Pillar Soul";
@@ -596,7 +596,7 @@ namespace GooseGameAP
                 case "mopbucket": return BASE_ID + 1277;
                 case "mopprop": return BASE_ID + 1278;
                 case "infinitebox": return BASE_ID + 1279;
-                case "tomatobox": return BASE_ID + 1280;
+                case "pail": return BASE_ID + 1280;
                 
                 // Model Village drags (1290-1295)
                 case "minibenchprop": return BASE_ID + 1290;
@@ -781,6 +781,7 @@ namespace GooseGameAP
                 case 1229: return "Drag Toy Boat";
                 case 1230: return "Drag Pub Bucket";
                 case 1231: return "Drag Pub Box";
+                case 1280: return "Drag Burly Mans Bucket";
                 
                 // Model Village items
                 case 1144: return "Pick up Mini Person (Goose)";

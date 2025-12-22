@@ -140,6 +140,9 @@ namespace GooseGameAP
             // Handle gate sync timing
             HandleGateSyncTiming();
             
+            // Check for finale trigger (goose holding golden bell in pub area)
+            CheckFinaleStart();
+            
             // Handle DeathLink
             if (deathLinkPending)
             {
@@ -167,10 +170,44 @@ namespace GooseGameAP
         
         private void HandleDebugKeys()
         {
+            // F2 key: Toggle soul tracker overlay
+            if (Input.GetKeyDown(KeyCode.F2))
+            {
+                UI?.ToggleSoulTracker();
+            }
+            
             // G key: Use a stored Goose Day
             if (Input.GetKeyDown(KeyCode.G) && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl))
             {
                 TrapManager?.UseGooseDay(15f);
+            }
+            
+            // H key: Warp to Hub (only if not holding anything)
+            if (Input.GetKeyDown(KeyCode.H) && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl))
+            {
+                WarpToHub();
+            }
+            
+            // Number keys 1-5: Warp to areas (if unlocked and not holding anything)
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+            {
+                WarpToArea("Garden", HasGardenAccess, GateManager.GardenPosition);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+            {
+                WarpToArea("High Street", HasHighStreetAccess, GateManager.HighStreetPosition);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+            {
+                WarpToArea("Back Gardens", HasBackGardensAccess, GateManager.BackGardensPosition);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4))
+            {
+                WarpToArea("Pub", HasPubAccess, GateManager.PubPosition);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5))
+            {
+                WarpToArea("Model Village", HasModelVillageAccess, GateManager.ModelVillagePosition);
             }
             
             // C key: Cycle goose color
@@ -195,6 +232,201 @@ namespace GooseGameAP
                 GateManager?.SyncGatesFromAccessFlags();
                 UI?.ShowNotification("Gates re-synced!");
             }
+            
+            // F10: Log current goose position
+            if (Input.GetKeyDown(KeyCode.F10))
+            {
+                if (GameManager.instance?.allGeese != null)
+                {
+                    foreach (var goose in GameManager.instance.allGeese)
+                    {
+                        if (goose != null && goose.isActiveAndEnabled)
+                        {
+                            Vector3 pos = goose.transform.position;
+                            string posStr = $"({pos.x:F1}f, {pos.y:F1}f, {pos.z:F1}f)";
+                            Log.LogInfo($"[DEBUG] Goose position: {posStr}");
+                            UI?.ShowNotification($"Pos: {posStr}");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Warp to a specific area if unlocked and not holding anything
+        /// </summary>
+        private void WarpToArea(string areaName, bool hasAccess, Vector3 position)
+        {
+            if (!hasAccess)
+            {
+                UI?.ShowNotification($"{areaName} is not unlocked!");
+                return;
+            }
+            
+            if (!CanWarp(out string reason))
+            {
+                UI?.ShowNotification(reason);
+                return;
+            }
+            
+            GateManager?.TeleportGoose(position);
+            UI?.ShowNotification($"Warped to {areaName}!");
+        }
+        
+        /// <summary>
+        /// Check if the goose can warp (not holding or dragging anything)
+        /// </summary>
+        private bool CanWarp(out string reason)
+        {
+            reason = "";
+            
+            if (GameManager.instance?.allGeese == null || GameManager.instance.allGeese.Count == 0)
+            {
+                reason = "No goose found!";
+                return false;
+            }
+            
+            Goose goose = null;
+            foreach (var g in GameManager.instance.allGeese)
+            {
+                if (g != null && g.isActiveAndEnabled)
+                {
+                    goose = g;
+                    break;
+                }
+            }
+            
+            if (goose == null)
+            {
+                reason = "No active goose found!";
+                return false;
+            }
+            
+            // Check if holding something in beak
+            var holder = goose.GetComponent<Holder>();
+            if (holder != null && holder.holding != null)
+            {
+                reason = "Can't warp while holding something!";
+                return false;
+            }
+            
+            // Check if dragging something
+            bool isDragging = false;
+            
+            var dragger = goose.GetComponent<Dragger>();
+            if (dragger != null)
+            {
+                var activeField = dragger.GetType().GetField("active",
+                    System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.Instance);
+                
+                if (activeField != null)
+                {
+                    isDragging = (bool)activeField.GetValue(dragger);
+                }
+            }
+            
+            if (!isDragging)
+            {
+                foreach (var comp in goose.GetComponents<Component>())
+                {
+                    if (comp.GetType().Name == "Goose")
+                    {
+                        var draggerField = comp.GetType().GetField("dragger",
+                            System.Reflection.BindingFlags.Public |
+                            System.Reflection.BindingFlags.NonPublic |
+                            System.Reflection.BindingFlags.Instance);
+                        
+                        if (draggerField != null)
+                        {
+                            var draggerObj = draggerField.GetValue(comp);
+                            if (draggerObj != null)
+                            {
+                                var activeField = draggerObj.GetType().GetField("active",
+                                    System.Reflection.BindingFlags.Public |
+                                    System.Reflection.BindingFlags.NonPublic |
+                                    System.Reflection.BindingFlags.Instance);
+                                
+                                if (activeField != null)
+                                {
+                                    isDragging = (bool)activeField.GetValue(draggerObj);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            if (isDragging)
+            {
+                reason = "Can't warp while dragging something!";
+                return false;
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Check if the finale should start (goose holding golden bell enters pub area)
+        /// </summary>
+        private void CheckFinaleStart()
+        {
+            // Skip if finale already active or GateManager not ready
+            if (GateManager == null || GateManager.FinaleActive) return;
+            
+            try
+            {
+                if (GameManager.instance?.allGeese == null) return;
+                
+                foreach (var goose in GameManager.instance.allGeese)
+                {
+                    if (goose == null || !goose.isActiveAndEnabled) continue;
+                    
+                    // Check if goose is holding the golden bell
+                    var holder = goose.GetComponent<Holder>();
+                    if (holder == null || holder.holding == null) continue;
+                    
+                    string heldName = holder.holding.name.ToLower();
+                    if (!heldName.Contains("goldenbell") && !heldName.Contains("golden") && !heldName.Contains("bell")) continue;
+                    
+                    // Goose is holding the bell - check position
+                    // Pub area is roughly around x: -20 to -40, z: 0 to 20
+                    Vector3 pos = goose.transform.position;
+                    
+                    // If goose with bell is in pub area (coming back from model village)
+                    // The pub entrance from model village is around x: -25, z: 10
+                    if (pos.x < -15f && pos.z > -5f && pos.z < 25f)
+                    {
+                        Log.LogInfo("[FINALE] Golden bell detected in pub area - triggering finale!");
+                        GateManager.OnFinaleStart();
+                        UI?.ShowNotification("FINALE! The chase begins!");
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogError($"[FINALE] CheckFinaleStart error: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Warp the goose to the Hub (well position) - only works if not holding/dragging anything
+        /// </summary>
+        public void WarpToHub()
+        {
+            if (!CanWarp(out string reason))
+            {
+                UI?.ShowNotification(reason);
+                return;
+            }
+            
+            // All clear - teleport to hub
+            GateManager?.TeleportGooseToWell();
+            UI?.ShowNotification("Warped to Hub!");
         }
         
         private void HandleGateSyncTiming()
@@ -236,6 +468,9 @@ namespace GooseGameAP
 
         private void OnGUI()
         {
+            // Draw soul tracker overlay (always if visible, even when main UI is hidden)
+            UI?.DrawSoulTracker(this);
+            
             if (!showUI) return;
             UI?.DrawUI(this);
         }

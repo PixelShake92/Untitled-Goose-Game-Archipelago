@@ -293,7 +293,7 @@ drag_item_locations: Dict[str, GooseGameLocationData] = {
     "Drag Mop Bucket": GooseGameLocationData(BASE_ID + 1277, "Pub"),
     "Drag Mop": GooseGameLocationData(BASE_ID + 1278, "Pub"),
     "Drag Delivery Box": GooseGameLocationData(BASE_ID + 1279, "Pub"),
-    # "Drag Burly Mans Bucket": GooseGameLocationData(BASE_ID + 1280, "Pub"),
+    "Drag Burly Mans Bucket": GooseGameLocationData(BASE_ID + 1280, "Pub"),
     
     # Model Village drags (1290-1295)
     "Drag Mini Bench": GooseGameLocationData(BASE_ID + 1290, "Model Village"),

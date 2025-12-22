@@ -15,6 +15,13 @@ namespace GooseGameAP
         
         public static readonly Vector3 WellPosition = new Vector3(1.0f, 1.5f, -1.5f);
         
+        // Area warp positions (approximate entry points)
+        public static readonly Vector3 GardenPosition = new Vector3(-16.3f, 0.5f, -17.5f);     // Near garden entrance (OOB)
+        public static readonly Vector3 HighStreetPosition = new Vector3(13.9f, 0.9f, -17.7f);  // High street area (OOB)
+        public static readonly Vector3 BackGardensPosition = new Vector3(18.7f, 1.4f, 14.0f); // Back gardens (Currently coming out at the right edge of high street near the walky talkies.)
+        public static readonly Vector3 PubPosition = new Vector3(-15.9f, 1.2f, 1.6f); // Back area of the Pub right near the Pub tomatoes. 
+        public static readonly Vector3 ModelVillagePosition = new Vector3(-49.3f, 0.5f, 2.1f); // Model village (actually in the village at the high street part of it.)
+        
         // Track if finale is active - gates should close
         public bool FinaleActive { get; private set; } = false;
         
@@ -60,6 +67,7 @@ namespace GooseGameAP
         {
             if (FinaleActive) return;
             FinaleActive = true;
+            Log.LogInfo("[FINALE] Finale started - closing hub gates!");
             
             // Close all hub gates except pub
             CloseHubGatesForFinale();
@@ -75,6 +83,8 @@ namespace GooseGameAP
         
         private void CloseHubGatesForFinale()
         {
+            Log.LogInfo("[FINALE] Closing hub gates for finale...");
+            
             var allSwitches = UnityEngine.Object.FindObjectsOfType<SwitchSystem>();
             
             foreach (var sw in allSwitches)
@@ -90,6 +100,8 @@ namespace GooseGameAP
                 // Handle hub gates
                 if (lowerPath.Contains("hub") && lowerPath.Contains("gate"))
                 {
+                    Log.LogInfo($"[FINALE] Closing gate: {path}");
+                    
                     // Lock systems - activate them to lock the gate
                     if (lowerPath.Contains("lock"))
                     {
@@ -116,16 +128,26 @@ namespace GooseGameAP
         
         private void ReenableHubBlockers()
         {
-            // Re-enable the colliders/blockers we disabled for Hub area access
+            Log.LogInfo("[FINALE] Re-enabling hub blockers...");
+            
+            // Re-enable ALL the colliders/blockers we disabled for Hub area access
             // These block the gaps around the gates
+            // Must match what DisableAreaBlockers("Hub") disables, EXCEPT pub
             string[] hubBlockerPaths = new[]
             {
-                // HallToHub (High Street connection)
+                // From DisableAreaBlockers("Hub") - except pub paths
+                "highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders/AlleyHubGateExtraCollider",
+                "highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders/ParkHubGateExtraCollider",
+                "highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders",
                 "overworldStatic/GROUP_Hub/HallToHubGateSystem/gateFrame/colllidersNegScalingFlipped",
                 "overworldStatic/GROUP_Hub/HallToHubGateSystem/gateFrame",
-                // HubGate (Garden connection)  
                 "overworldStatic/GROUP_Hub/HubGateSystem/HubGateMainSystem/gateFrame",
-                // Note: NOT re-enabling PubToHubGateSystem - that stays open
+                // Note: NOT re-enabling PubToHubGateSystem - that stays open for the chase
+                
+                // Also re-enable the invisible walls for area transitions (except pub)
+                "gardenDynamic/GROUP_Hammering/InvisibleWall",
+                "gardenDynamic/GROUP_Hammering/gateTall/GateExtraColliders",
+                "highStreetDynamic/GROUP_Garage/InvisibleWall",
             };
             
             foreach (string path in hubBlockerPaths)
@@ -147,6 +169,7 @@ namespace GooseGameAP
                 {
                     col.enabled = true;
                 }
+                Log.LogInfo($"[FINALE] Enabled blocker: {path}");
             }
             else
             {
@@ -166,6 +189,7 @@ namespace GooseGameAP
                         {
                             col.enabled = true;
                         }
+                        Log.LogInfo($"[FINALE] Enabled blocker via parent: {path}");
                     }
                 }
             }
@@ -174,7 +198,11 @@ namespace GooseGameAP
         public void SyncGatesFromAccessFlags()
         {
             // Don't reopen gates during finale
-            if (FinaleActive) return;
+            if (FinaleActive)
+            {
+                Log.LogInfo("[GATE] Skipping gate sync - finale is active");
+                return;
+            }
             
             // Clear hub blockers first - hub should always be walkable
             DisableAreaBlockers("Hub");

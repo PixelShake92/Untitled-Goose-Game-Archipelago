@@ -401,8 +401,7 @@ def get_goal_rules(player):
         "Make someone prune the prize rose":
             lambda state: (
                 has_back_gardens(state, player) 
-                and has_tidy_neighbour(state, player) 
-                and has_messy_neighbour(state, player) 
+                and can_complete_back_gardens_todos(state, player)
                 and has_soul(state, player, "Clippers") 
                 and has_soul(state, player, "Rose")
             ),
@@ -477,7 +476,8 @@ def get_goal_rules(player):
                 and has_high_street(state, player) 
                 and has_back_gardens(state, player) 
                 and has_pub(state, player) 
-                and has_model_village(state, player) 
+                and has_model_village(state, player)
+                and has_soul(state, player, "Timber Handle") 
                 and has_soul(state, player, "Golden Bell")
                 and state.has("Golden Bell", player)
             ),
@@ -691,6 +691,7 @@ def get_pickup_rules(player):
         "Pick up Keys":
             lambda state: (
                 has_garden(state, player) 
+                and has_groundskeeper(state, player)
                 and has_soul(state, player, "Keys")
             ),
         "Pick up Carrot":
@@ -1128,7 +1129,8 @@ def get_pickup_rules(player):
             ),
         "Pick up Chalk":
             lambda state: (
-                has_high_street(state, player) 
+                has_high_street(state, player)
+                and can_complete_high_street_todos(state, player) 
                 and has_soul(state, player, "Chalk")
             ),
 
@@ -1444,7 +1446,8 @@ def get_pickup_rules(player):
             ),
         "Pick up Flower for Vase":
             lambda state: (
-                has_pub(state, player) 
+                has_pub(state, player)
+                and has_fancy_ladies(state, player) 
                 and has_soul(state, player, "Flower for Vase")
             ),
         "Pick up Dart 1":
@@ -1480,7 +1483,8 @@ def get_pickup_rules(player):
         "Pick up Wooly Hat":
             lambda state: (
                 has_pub(state, player) 
-                and has_soul(state, player, "Wooly Hat") 
+                and has_soul(state, player, "Wooly Hat")
+                and has_soul(state, player, "Portable Stool") 
                 and has_old_man(state, player)
             ),
         "Pick up Pepper Grinder":
@@ -1499,56 +1503,67 @@ def get_pickup_rules(player):
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 2":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 3":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 4":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 5":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 6":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 7":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 8":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 9":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 10":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         "Pick up Pub Tomato 11":
             lambda state: (
                 has_pub(state, player) 
                 and has_soul(state, player, "Tomato")
+                and can_complete_pub_todos(state, player)
             ),
         
         # PUB DRAGS
@@ -1574,7 +1589,8 @@ def get_pickup_rules(player):
             ),
         "Drag No Goose Sign":
             lambda state: (
-                has_pub(state, player) 
+                has_pub(state, player)
+                and can_complete_pub_todos(state, player) 
                 and has_soul(state, player, "No Goose Sign")
             ),
         "Drag Portable Stool":
@@ -1584,7 +1600,8 @@ def get_pickup_rules(player):
             ),
         "Drag Dartboard":
             lambda state: (
-                has_pub(state, player) 
+                has_pub(state, player)
+                and has_old_man(state, player) 
                 and has_soul(state, player, "Dartboard")
             ),
         "Drag Mop Bucket":
@@ -1602,11 +1619,11 @@ def get_pickup_rules(player):
                 has_pub(state, player) 
                 and has_soul(state, player, "Delivery Box")
             ),
-        # "Drag Tomato Box":
-        #     lambda state: (
-        #         has_pub(state, player) 
-        #         and has_soul(state, player, "Tomato Box")
-        #     ),
+        "Drag Burly Mans Bucket":
+            lambda state: (
+                has_pub(state, player) 
+                and has_soul(state, player, "Burly Mans Bucket")
+            ),
         
         # MODEL VILLAGE PICKUPS
         "Pick up Mini Person (Child)":

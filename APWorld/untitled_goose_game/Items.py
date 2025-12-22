@@ -162,7 +162,7 @@ item_table: Dict[str, GooseGameItemData] = {
     "Mop Bucket Soul": GooseGameItemData(BASE_ID + 598, ItemClassification.progression),
     "Mop Soul": GooseGameItemData(BASE_ID + 599, ItemClassification.progression),
     "Delivery Box Soul": GooseGameItemData(BASE_ID + 600, ItemClassification.progression),
-    # "Burly Mans Bucket Soul": GooseGameItemData(BASE_ID + 601, ItemClassification.progression),
+    "Burly Mans Bucket Soul": GooseGameItemData(BASE_ID + 601, ItemClassification.progression),
     
     # === MODEL VILLAGE ONE-OFF PROP SOULS (IDs 610-629) ===
     "Mini Mail Pillar Soul": GooseGameItemData(BASE_ID + 610, ItemClassification.progression),
@@ -345,7 +345,7 @@ ITEM_GROUPS = {
         "Mop Bucket Soul",
         "Mop Soul",
         "Delivery Box Soul",
-        "Tomato Box Soul",
+        "Burly Mans Bucket Soul",
     },
     "Model Village Prop Souls": {
         "Mini Mail Pillar Soul",
