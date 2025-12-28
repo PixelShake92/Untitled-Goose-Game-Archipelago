@@ -176,6 +176,13 @@ namespace GooseGameAP
                 UI?.ToggleSoulTracker();
             }
             
+            // F3 key: Toggle server log overlay
+            if (Input.GetKeyDown(KeyCode.F3))
+            {
+                UI?.ToggleServerLog();
+            }
+
+
             // G key: Use a stored Goose Day
             if (Input.GetKeyDown(KeyCode.G) && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl))
             {
@@ -471,10 +478,14 @@ namespace GooseGameAP
             // Draw soul tracker overlay (always if visible, even when main UI is hidden)
             UI?.DrawSoulTracker(this);
             
+            // Draw server log overlay (always if visible, even when main UI is hidden)
+            UI?.DrawServerLog(this);
+            
             if (!showUI) return;
             UI?.DrawUI(this);
         }
         
+
         // === PUBLIC API FOR OTHER COMPONENTS ===
         
         public void Connect()

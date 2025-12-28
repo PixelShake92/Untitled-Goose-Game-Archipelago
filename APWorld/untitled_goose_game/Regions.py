@@ -102,12 +102,28 @@ def create_regions(world: "GooseGameWorld") -> None:
     for loc_name, loc_data in sandcastle_peck_locations.items():
         add_location(loc_name, loc_data.id, loc_data.region)
     
-    # Victory condition - need the Golden Bell AND all access items to carry it home
-    multiworld.completion_condition[player] = lambda state, p=player: (
-        state.has("Golden Bell", p) and
-        state.has("Garden Access", p) and
-        state.has("High Street Access", p) and
-        state.has("Back Gardens Access", p) and
-        state.has("Pub Access", p) and
-        state.has("Model Village Access", p)
-    )
+    # Victory condition - need the Golden Bell and all access items
+    # Timber Handle Soul and Golden Bell Soul are always required (can't complete without them)
+    include_prop_souls = bool(world.options.include_prop_souls.value)
+    
+    if include_prop_souls:
+        multiworld.completion_condition[player] = lambda state, p=player: (
+            state.has("Golden Bell", p) and
+            state.has("Timber Handle Soul", p) and
+            state.has("Golden Bell Soul", p) and
+            state.has("Garden Access", p) and
+            state.has("High Street Access", p) and
+            state.has("Back Gardens Access", p) and
+            state.has("Pub Access", p) and
+            state.has("Model Village Access", p)
+        )
+    else:
+        # Without prop souls, just need the bell and access
+        multiworld.completion_condition[player] = lambda state, p=player: (
+            state.has("Golden Bell", p) and
+            state.has("Garden Access", p) and
+            state.has("High Street Access", p) and
+            state.has("Back Gardens Access", p) and
+            state.has("Pub Access", p) and
+            state.has("Model Village Access", p)
+        )

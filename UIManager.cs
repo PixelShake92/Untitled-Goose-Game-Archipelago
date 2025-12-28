@@ -20,15 +20,66 @@ namespace GooseGameAP
         private string currentNotification = "";
         private float notificationTimer = 0f;
         
-        // Soul tracker state
-        private bool showSoulTracker = false;
-        private Vector2 soulScrollPosition = Vector2.zero;
+        // Connection window
+        private Rect connectionWindowRect;
+        private bool isDraggingConnection = false;
+        private Vector2 connectionDragOffset = Vector2.zero;
+        private bool connectionPositionInitialized = false;
+        private float connectionScale = 1.0f;
+        private const string CONNECTION_SCALE_KEY = "AP_ConnectionScale";
+        private const string CONNECTION_X_KEY = "AP_ConnectionX";
+        private const string CONNECTION_Y_KEY = "AP_ConnectionY";
         
-        // Soul tracker window position and dragging
+        // Server log window (notebook style)
+        private bool showServerLog = true;
+        private Rect serverLogWindowRect;
+        private bool isDraggingServerLog = false;
+        private Vector2 serverLogDragOffset = Vector2.zero;
+        private bool serverLogPositionInitialized = false;
+        private float serverLogScale = 1.0f;
+        private Vector2 serverLogScrollPosition = Vector2.zero;
+        private const string SERVERLOG_SCALE_KEY = "AP_ServerLogScale";
+        private const string SERVERLOG_X_KEY = "AP_ServerLogX";
+        private const string SERVERLOG_Y_KEY = "AP_ServerLogY";
+        
+        // Soul tracker window
+        private bool showSoulTracker = false;
         private Rect soulTrackerWindowRect;
         private bool isDraggingSoulTracker = false;
-        private Vector2 dragOffset = Vector2.zero;
+        private Vector2 soulDragOffset = Vector2.zero;
         private bool soulTrackerPositionInitialized = false;
+        private float soulTrackerScale = 1.0f;
+        private Vector2 soulScrollPosition = Vector2.zero;
+        private const string SOUL_SCALE_KEY = "AP_SoulTrackerScale";
+        private const string SOUL_X_KEY = "AP_SoulTrackerX";
+        private const string SOUL_Y_KEY = "AP_SoulTrackerY";
+        
+        private const float MIN_SCALE = 0.5f;
+        private const float MAX_SCALE = 2.0f;
+        
+        // Textures for notebook style
+        private Texture2D paperTexture;
+        private Texture2D lineTexture;
+        private bool texturesInitialized = false;
+        
+        // Custom styles
+        private GUIStyle customVerticalScrollbar;
+        private GUIStyle customVerticalScrollbarThumb;
+        private GUIStyle customHorizontalSlider;
+        private GUIStyle customHorizontalSliderThumb;
+        private bool scrollbarStylesInitialized = false;
+        
+        public UIManager()
+        {
+            connectionScale = PlayerPrefs.GetFloat(CONNECTION_SCALE_KEY, 1.0f);
+            connectionScale = Mathf.Clamp(connectionScale, MIN_SCALE, MAX_SCALE);
+            
+            serverLogScale = PlayerPrefs.GetFloat(SERVERLOG_SCALE_KEY, 1.0f);
+            serverLogScale = Mathf.Clamp(serverLogScale, MIN_SCALE, MAX_SCALE);
+            
+            soulTrackerScale = PlayerPrefs.GetFloat(SOUL_SCALE_KEY, 1.0f);
+            soulTrackerScale = Mathf.Clamp(soulTrackerScale, MIN_SCALE, MAX_SCALE);
+        }
         
         public void ShowNotification(string message)
         {
@@ -36,618 +87,914 @@ namespace GooseGameAP
             notificationTimer = 4f;
         }
         
-        public void AddReceivedItem(string itemName)
-        {
-            receivedItemNames.Add(itemName);
-        }
-        
-        public void AddChatMessage(string message)
-        {
-            // Disabled - log removed
-        }
-        
-        public void UpdateNotification(float deltaTime)
-        {
-            if (notificationTimer > 0)
-                notificationTimer -= deltaTime;
-        }
-        
-        public void ClearReceivedItems()
-        {
-            receivedItemNames.Clear();
-        }
-        
+        public void AddReceivedItem(string itemName) { receivedItemNames.Add(itemName); }
+        public void AddChatMessage(string message) { }
+        public void UpdateNotification(float deltaTime) { if (notificationTimer > 0) notificationTimer -= deltaTime; }
+        public void ClearReceivedItems() { receivedItemNames.Clear(); }
         public int ReceivedItemCount => receivedItemNames.Count;
+        public void ToggleSoulTracker() { showSoulTracker = !showSoulTracker; }
+        public void ToggleServerLog() { showServerLog = !showServerLog; }
+        public bool IsSoulTrackerVisible => showSoulTracker;
+        public bool IsServerLogVisible => showServerLog;
         
-        /// <summary>
-        /// Toggle the soul tracker overlay (called from Plugin on F2)
-        /// </summary>
-        public void ToggleSoulTracker()
+        private void InitializeTextures()
         {
-            showSoulTracker = !showSoulTracker;
+            if (texturesInitialized) return;
+            
+            // Create paper texture (cream/beige colored)
+            paperTexture = new Texture2D(1, 1);
+            paperTexture.SetPixel(0, 0, new Color(0.96f, 0.94f, 0.88f, 0.98f));
+            paperTexture.Apply();
+            
+            // Create line texture for ruled paper effect
+            lineTexture = new Texture2D(1, 1);
+            lineTexture.SetPixel(0, 0, new Color(0.7f, 0.85f, 0.95f, 0.4f));
+            lineTexture.Apply();
+            
+            texturesInitialized = true;
         }
         
-        public bool IsSoulTrackerVisible => showSoulTracker;
+        private void InitializeScrollbarStyles()
+        {
+            if (scrollbarStylesInitialized) return;
+            
+            Texture2D scrollbarBg = new Texture2D(1, 1);
+            scrollbarBg.SetPixel(0, 0, new Color(0.8f, 0.78f, 0.72f, 0.8f));
+            scrollbarBg.Apply();
+            
+            Texture2D thumbNormal = new Texture2D(1, 1);
+            thumbNormal.SetPixel(0, 0, new Color(0.6f, 0.55f, 0.45f, 1f));
+            thumbNormal.Apply();
+            
+            Texture2D thumbHover = new Texture2D(1, 1);
+            thumbHover.SetPixel(0, 0, new Color(0.5f, 0.45f, 0.35f, 1f));
+            thumbHover.Apply();
+            
+            Texture2D thumbActive = new Texture2D(1, 1);
+            thumbActive.SetPixel(0, 0, new Color(0.4f, 0.35f, 0.25f, 1f));
+            thumbActive.Apply();
+            
+            customVerticalScrollbar = new GUIStyle(GUI.skin.verticalScrollbar);
+            customVerticalScrollbar.normal.background = scrollbarBg;
+            customVerticalScrollbar.fixedWidth = 0;
+            
+            customVerticalScrollbarThumb = new GUIStyle(GUI.skin.verticalScrollbarThumb);
+            customVerticalScrollbarThumb.normal.background = thumbNormal;
+            customVerticalScrollbarThumb.hover.background = thumbHover;
+            customVerticalScrollbarThumb.active.background = thumbActive;
+            customVerticalScrollbarThumb.fixedWidth = 0;
+            
+            Texture2D sliderBg = new Texture2D(1, 1);
+            sliderBg.SetPixel(0, 0, new Color(0.2f, 0.2f, 0.25f, 1f));
+            sliderBg.Apply();
+            
+            Texture2D sliderThumbNormal = new Texture2D(1, 1);
+            sliderThumbNormal.SetPixel(0, 0, new Color(0.6f, 0.5f, 0.8f, 1f));
+            sliderThumbNormal.Apply();
+            
+            Texture2D sliderThumbHover = new Texture2D(1, 1);
+            sliderThumbHover.SetPixel(0, 0, new Color(0.7f, 0.6f, 0.9f, 1f));
+            sliderThumbHover.Apply();
+            
+            Texture2D sliderThumbActive = new Texture2D(1, 1);
+            sliderThumbActive.SetPixel(0, 0, new Color(0.8f, 0.7f, 1f, 1f));
+            sliderThumbActive.Apply();
+            
+            customHorizontalSlider = new GUIStyle(GUI.skin.horizontalSlider);
+            customHorizontalSlider.normal.background = sliderBg;
+            customHorizontalSlider.fixedHeight = 0;
+            
+            customHorizontalSliderThumb = new GUIStyle(GUI.skin.horizontalSliderThumb);
+            customHorizontalSliderThumb.normal.background = sliderThumbNormal;
+            customHorizontalSliderThumb.hover.background = sliderThumbHover;
+            customHorizontalSliderThumb.active.background = sliderThumbActive;
+            customHorizontalSliderThumb.fixedHeight = 0;
+            customHorizontalSliderThumb.fixedWidth = 0;
+            
+            scrollbarStylesInitialized = true;
+        }
+        
+        // ============== CONNECTION WINDOW (Notebook Style) ==============
         
         public void DrawUI(Plugin plugin)
         {
-            // Window dimensions
-            float winX = 15;
-            float winY = 15;
-            float winW = 750;
-            float winH = 540;
+            InitializeScrollbarStyles();
             
-            // Dark background
-            GUI.color = new Color(0.12f, 0.12f, 0.12f, 0.97f);
+            float baseW = 400, baseH = 480;
+            float winW = baseW * connectionScale;
+            float winH = baseH * connectionScale;
+            
+            if (!connectionPositionInitialized)
+            {
+                float savedX = PlayerPrefs.GetFloat(CONNECTION_X_KEY, 15);
+                float savedY = PlayerPrefs.GetFloat(CONNECTION_Y_KEY, 15);
+                connectionWindowRect = new Rect(savedX, savedY, winW, winH);
+                connectionPositionInitialized = true;
+            }
+            
+            connectionWindowRect.width = winW;
+            connectionWindowRect.height = winH;
+            connectionWindowRect.x = Mathf.Clamp(connectionWindowRect.x, 0, Screen.width - winW);
+            connectionWindowRect.y = Mathf.Clamp(connectionWindowRect.y, 0, Screen.height - winH);
+            
+            float s = connectionScale;
+            int titleSize = Mathf.RoundToInt(16 * s);
+            int headerSize = Mathf.RoundToInt(13 * s);
+            int textSize = Mathf.RoundToInt(12 * s);
+            int fieldTextSize = Mathf.RoundToInt(14 * s);
+            float lineH = 28 * s;
+            float inputH = 26 * s;
+            float buttonH = 28 * s;
+            
+            float winX = connectionWindowRect.x;
+            float winY = connectionWindowRect.y;
+            
+            // Paper background (white/very light)
+            GUI.color = new Color(0.99f, 0.99f, 0.97f, 1f);
             GUI.DrawTexture(new Rect(winX, winY, winW, winH), Texture2D.whiteTexture);
-            
-            // Gold border
-            GUI.color = new Color(0.7f, 0.55f, 0.2f, 1f);
-            GUI.DrawTexture(new Rect(winX, winY, winW, 3), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(winX, winY, 3, winH), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(winX, winY + winH - 3, winW, 3), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(winX + winW - 3, winY, 3, winH), Texture2D.whiteTexture);
             GUI.color = Color.white;
             
-            float x = winX + 15;
-            float y = winY + 12;
-            float w = winW - 30;
-            
-            // === TITLE ===
-            GUI.color = new Color(1f, 0.85f, 0.35f);
-            GUI.Label(new Rect(x, y, w, 28), "<size=18><b>ARCHIPELAGO - UNTITLED GOOSE GAME</b></size>");
+            // Red margin line on the left
+            float marginX = winX + 30 * s;
+            GUI.color = new Color(0.9f, 0.6f, 0.6f, 1f);
+            GUI.DrawTexture(new Rect(marginX, winY, 2 * s, winH), Texture2D.whiteTexture);
             GUI.color = Color.white;
-            y += 32;
             
-            // === CONNECTION ===
-            GUI.Label(new Rect(x, y, 55, 24), "Server:");
-            ServerAddress = GUI.TextField(new Rect(x + 60, y, 480, 24), ServerAddress);
-            GUI.Label(new Rect(x + 545, y, 15, 24), ":");
-            ServerPort = GUI.TextField(new Rect(x + 560, y, 100, 24), ServerPort);
-            y += 28;
+            // Blue horizontal ruled lines
+            float ruleSpacing = 24 * s;
+            GUI.color = new Color(0.6f, 0.75f, 0.9f, 0.8f);
+            for (float ly = winY + ruleSpacing; ly < winY + winH - 5 * s; ly += ruleSpacing)
+            {
+                GUI.DrawTexture(new Rect(winX + 5 * s, ly, winW - 10 * s, 1), Texture2D.whiteTexture);
+            }
+            GUI.color = Color.white;
             
-            GUI.Label(new Rect(x, y, 55, 24), "Slot:");
-            SlotName = GUI.TextField(new Rect(x + 60, y, 600, 24), SlotName);
-            y += 28;
+            // Content area
+            float x = marginX + 10 * s;
+            float y = winY + 8 * s;
+            float w = winW - (marginX - winX) - 20 * s;
             
-            GUI.Label(new Rect(x, y, 70, 24), "Password:");
-            Password = GUI.PasswordField(new Rect(x + 75, y, 585, 24), Password, '*');
-            y += 32;
+            // Title
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(x, y, w * 0.7f, 24 * s), $"<size={titleSize}><i>Archipelago</i></size>");
+            GUI.color = Color.white;
+            
+            y += 28 * s;
+            
+            // Scale slider
+            GUI.color = new Color(0.3f, 0.3f, 0.35f);
+            GUI.Label(new Rect(x, y + 3 * s, 36 * s, 20 * s), $"<size={Mathf.RoundToInt(10 * s)}>Size:</size>");
+            GUI.color = Color.white;
+            
+            float sliderX = x + 38 * s;
+            float sliderW = w - 95 * s;
+            
+            GUI.color = new Color(0.8f, 0.8f, 0.82f, 1f);
+            GUI.DrawTexture(new Rect(sliderX, y + 8 * s, sliderW, 8 * s), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            
+            float newScale = GUI.HorizontalSlider(new Rect(sliderX, y, sliderW, 22 * s), connectionScale, MIN_SCALE, MAX_SCALE);
+            
+            GUI.color = new Color(0.3f, 0.3f, 0.35f);
+            GUI.Label(new Rect(sliderX + sliderW + 6 * s, y + 3 * s, 45 * s, 20 * s), $"<size={Mathf.RoundToInt(10 * s)}>{Mathf.RoundToInt(connectionScale * 100)}%</size>");
+            GUI.color = Color.white;
+            
+            if (Mathf.Abs(newScale - connectionScale) > 0.01f)
+            {
+                connectionScale = newScale;
+                PlayerPrefs.SetFloat(CONNECTION_SCALE_KEY, connectionScale);
+                PlayerPrefs.Save();
+            }
+            
+            y += 26 * s;
+            
+            // Create style for text fields
+            GUIStyle fieldStyle = new GUIStyle(GUI.skin.textField);
+            fieldStyle.fontSize = fieldTextSize;
+            
+            // Connection fields
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(x, y + 3 * s, 55 * s, inputH), $"<size={textSize}>Server:</size>");
+            GUI.color = Color.white;
+            ServerAddress = GUI.TextField(new Rect(x + 55 * s, y, w - 120 * s, inputH), ServerAddress, fieldStyle);
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(x + w - 60 * s, y + 3 * s, 15 * s, inputH), $"<size={textSize}>:</size>");
+            GUI.color = Color.white;
+            ServerPort = GUI.TextField(new Rect(x + w - 45 * s, y, 45 * s, inputH), ServerPort, fieldStyle);
+            y += inputH + 6 * s;
+            
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(x, y + 3 * s, 55 * s, inputH), $"<size={textSize}>Slot:</size>");
+            GUI.color = Color.white;
+            SlotName = GUI.TextField(new Rect(x + 55 * s, y, w - 55 * s, inputH), SlotName, fieldStyle);
+            y += inputH + 6 * s;
+            
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(x, y + 3 * s, 68 * s, inputH), $"<size={textSize}>Password:</size>");
+            GUI.color = Color.white;
+            Password = GUI.PasswordField(new Rect(x + 70 * s, y, w - 70 * s, inputH), Password, '*', fieldStyle);
+            y += inputH + 12 * s;
             
             // Buttons
-            if (GUI.Button(new Rect(x, y, 150, 30), plugin.IsConnected ? "Connected!" : "Connect"))
-            {
+            float btnW = (w - 12 * s) / 4;
+            if (GUI.Button(new Rect(x, y, btnW, buttonH), plugin.IsConnected ? "Connected!" : "Connect"))
                 if (!plugin.IsConnected) plugin.Connect();
-            }
-            if (GUI.Button(new Rect(x + 160, y, 140, 30), "Disconnect"))
-            {
+            if (GUI.Button(new Rect(x + btnW + 4 * s, y, btnW, buttonH), "Disconnect"))
                 plugin.Disconnect();
-            }
-            if (GUI.Button(new Rect(x + 310, y, 140, 30), "Sync Gates"))
+            if (GUI.Button(new Rect(x + (btnW + 4 * s) * 2, y, btnW, buttonH), "Sync"))
             {
                 plugin.GateManager?.SyncGatesFromAccessFlags();
                 ShowNotification("Gates synced!");
             }
-            if (GUI.Button(new Rect(x + 460, y, 100, 30), "Reset"))
+            if (GUI.Button(new Rect(x + (btnW + 4 * s) * 3, y, btnW, buttonH), "Reset"))
             {
                 plugin.ResetAllAccess();
-                plugin.NPCManager?.RefreshNPCStates(); // Re-apply (all disabled now)
+                plugin.NPCManager?.RefreshNPCStates();
                 ShowNotification("Progress reset!");
             }
-            y += 36;
+            y += buttonH + 10 * s;
             
-            // Status line
-            GUI.color = plugin.IsConnected ? new Color(0.3f, 1f, 0.3f) : new Color(1f, 0.5f, 0.3f);
-            GUI.Label(new Rect(x, y, w, 22), "<size=13><b>" + Status + "</b></size>");
+            // Status
+            GUI.color = plugin.IsConnected ? new Color(0.2f, 0.55f, 0.2f) : new Color(0.7f, 0.3f, 0.2f);
+            GUI.Label(new Rect(x, y, w, lineH), $"<size={headerSize}><b>{Status}</b></size>");
             GUI.color = Color.white;
-            y += 22;
+            y += lineH;
             
             // Notification
             if (notificationTimer > 0 && !string.IsNullOrEmpty(currentNotification))
             {
-                GUI.color = new Color(1f, 0.9f, 0.2f);
-                GUI.Label(new Rect(x, y, w, 20), "<size=12><b>▶ " + currentNotification + "</b></size>");
+                GUI.color = new Color(0.55f, 0.45f, 0.1f);
+                GUI.Label(new Rect(x, y, w, lineH), $"<size={textSize}><b>▶ {currentNotification}</b></size>");
                 GUI.color = Color.white;
+                y += lineH;
             }
-            y += 26;
             
-            // === AREA ACCESS ===
-            GUI.color = new Color(0.85f, 0.85f, 0.85f);
-            GUI.Label(new Rect(x, y, w, 20), "<size=12><b>AREA ACCESS</b></size>");
+            y += 6 * s;
+            
+            // Area Access Header
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(x, y, w, lineH), $"<size={headerSize}><b>Area Access</b></size>");
             GUI.color = Color.white;
-            y += 22;
+            y += lineH;
             
-            float col1 = x;
-            float col2 = x + 240;
-            float col3 = x + 480;
+            // Area Access Grid
+            float accessColW = w / 3f;
+            float accessRowH = 26 * s;
+            int accessTextSize = Mathf.RoundToInt(11 * s);
             
-            DrawAccess(col1, y, "Garden", plugin.HasGardenAccess);
-            DrawAccess(col2, y, "High Street", plugin.HasHighStreetAccess);
-            DrawAccess(col3, y, "Back Gardens", plugin.HasBackGardensAccess);
-            y += 20;
-            DrawAccess(col1, y, "Pub", plugin.HasPubAccess);
-            DrawAccess(col2, y, "Model Village", plugin.HasModelVillageAccess);
-            DrawAccess(col3, y, "Golden Bell", plugin.HasGoldenBell);
-            y += 26;
+            DrawAccessCompact(x, y, accessColW, "Garden", plugin.HasGardenAccess, accessTextSize);
+            DrawAccessCompact(x + accessColW, y, accessColW, "High St", plugin.HasHighStreetAccess, accessTextSize);
+            DrawAccessCompact(x + accessColW * 2, y, accessColW, "Back Gdn", plugin.HasBackGardensAccess, accessTextSize);
+            y += accessRowH;
             
-            // === BUFFS ===
-            GUI.color = new Color(0.85f, 0.85f, 0.85f);
-            GUI.Label(new Rect(x, y, w, 20), "<size=12><b>BUFFS & STATUS</b></size>");
-            GUI.color = Color.white;
-            y += 22;
+            DrawAccessCompact(x, y, accessColW, "Pub", plugin.HasPubAccess, accessTextSize);
+            DrawAccessCompact(x + accessColW, y, accessColW, "Model V", plugin.HasModelVillageAccess, accessTextSize);
+            DrawAccessCompact(x + accessColW * 2, y, accessColW, "Bell", plugin.HasGoldenBell, accessTextSize);
+            y += accessRowH + 8 * s;
             
+            // Stats
             int speed = (int)(plugin.TrapManager.GetEffectiveSpeedMultiplier() * 100);
-            string buffs = $"Speed: {speed}%  |  Silent: {(plugin.IsSilent ? "ON" : "OFF")}  |  Mega Honk: Lv{plugin.MegaHonkCount}";
-            GUI.Label(new Rect(x, y, w, 18), buffs);
-            y += 20;
-            
             string trapText = plugin.TrapManager.GetActiveTrapText();
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
             if (!string.IsNullOrEmpty(trapText))
             {
-                GUI.color = new Color(1f, 0.5f, 0.5f);
-                GUI.Label(new Rect(x, y, w, 18), trapText);
-                GUI.color = Color.white;
-                y += 20;
-            }
-            
-            GUI.Label(new Rect(x, y, w, 18), $"Locations: {plugin.CheckedLocationCount}  |  Items: {receivedItemNames.Count}");
-            y += 26;
-            
-            // === RECENT ITEMS ===
-            GUI.color = new Color(0.85f, 0.85f, 0.85f);
-            GUI.Label(new Rect(x, y, w, 20), "<size=12><b>RECENT ITEMS</b></size>");
-            GUI.color = Color.white;
-            y += 22;
-            
-            int itemsToShow = Math.Min(4, receivedItemNames.Count);
-            if (itemsToShow == 0)
-            {
-                GUI.color = new Color(0.5f, 0.5f, 0.5f);
-                GUI.Label(new Rect(x + 8, y, w, 18), "No items yet");
-                GUI.color = Color.white;
-                y += 18;
+                GUI.color = new Color(0.7f, 0.25f, 0.2f);
+                GUI.Label(new Rect(x, y, w, lineH), $"<size={textSize}>{trapText}</size>");
             }
             else
             {
-                for (int i = receivedItemNames.Count - itemsToShow; i < receivedItemNames.Count; i++)
-                {
-                    GUI.Label(new Rect(x + 8, y, w - 16, 18), "• " + receivedItemNames[i]);
-                    y += 18;
-                }
+                GUI.Label(new Rect(x, y, w, lineH), $"<size={textSize}>Spd:{speed}% | Silent:{(plugin.IsSilent ? "ON" : "OFF")} | Honk:Lv{plugin.MegaHonkCount} | Locs:{plugin.CheckedLocationCount}</size>");
             }
-            y += 10;
-            
-            // Controls
-            GUI.color = new Color(0.55f, 0.55f, 0.55f);
-            GUI.Label(new Rect(x, y, w, 18), "<size=11>G = Goose Day  |  C = Colour  |  Ctrl+C = Reset  |  F2 = Soul Tracker  |  F9 = Resync Gates</size>");
-            GUI.color = Color.white;
-        }
-        
-        /// <summary>
-        /// Draw the soul tracker overlay (separate from main UI)
-        /// </summary>
-        public void DrawSoulTracker(Plugin plugin)
-        {
-            if (!showSoulTracker) return;
-            
-            // Window dimensions
-            float winW = 380;
-            float winH = 550;
-            
-            // Initialize position to top-right corner on first show
-            if (!soulTrackerPositionInitialized)
-            {
-                soulTrackerWindowRect = new Rect(Screen.width - winW - 15, 15, winW, winH);
-                soulTrackerPositionInitialized = true;
-            }
-            
-            // Ensure window stays on screen
-            soulTrackerWindowRect.x = Mathf.Clamp(soulTrackerWindowRect.x, 0, Screen.width - winW);
-            soulTrackerWindowRect.y = Mathf.Clamp(soulTrackerWindowRect.y, 0, Screen.height - winH);
-            soulTrackerWindowRect.width = winW;
-            soulTrackerWindowRect.height = winH;
-            
-            // Handle window dragging
-            HandleSoulTrackerDragging();
-            
-            float winX = soulTrackerWindowRect.x;
-            float winY = soulTrackerWindowRect.y;
-            
-            // Semi-transparent dark background
-            GUI.color = new Color(0.08f, 0.08f, 0.12f, 0.92f);
-            GUI.DrawTexture(new Rect(winX, winY, winW, winH), Texture2D.whiteTexture);
-            
-            // Purple/blue border for soul theme
-            GUI.color = new Color(0.5f, 0.3f, 0.8f, 1f);
-            GUI.DrawTexture(new Rect(winX, winY, winW, 2), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(winX, winY, 2, winH), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(winX, winY + winH - 2, winW, 2), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(winX + winW - 2, winY, 2, winH), Texture2D.whiteTexture);
             GUI.color = Color.white;
             
-            float x = winX + 10;
-            float y = winY + 8;
-            float w = winW - 20;
-            
-            // Title bar (draggable area indicator)
-            float titleBarHeight = 32;
-            GUI.color = new Color(0.15f, 0.12f, 0.2f, 1f);
-            GUI.DrawTexture(new Rect(winX + 2, winY + 2, winW - 4, titleBarHeight), Texture2D.whiteTexture);
+            // Footer
+            GUI.color = new Color(0.4f, 0.4f, 0.45f);
+            GUI.Label(new Rect(x, winY + winH - 22 * s, w, 20 * s), 
+                $"<size={Mathf.RoundToInt(9 * s)}>F1=Toggle | F2=Souls | F3=Log | G=GooseDay | C=Colour</size>");
             GUI.color = Color.white;
             
-            // Title
-            GUI.color = new Color(0.7f, 0.5f, 1f);
-            GUI.Label(new Rect(x, y, w - 60, 28), "<size=18><b>👻 SOUL TRACKER</b></size>");
-            GUI.color = Color.white;
-            
-            // Drag hint
-            GUI.color = new Color(0.5f, 0.5f, 0.5f);
-            GUI.Label(new Rect(winX + winW - 70, y + 4, 60, 20), "<size=10>[drag me]</size>");
-            GUI.color = Color.white;
-            
-            y += 34;
-            
-            // Close hint
-            GUI.color = new Color(0.5f, 0.5f, 0.5f);
-            GUI.Label(new Rect(x, y, w, 18), "<size=12>Press F2 to close</size>");
-            GUI.color = Color.white;
-            y += 22;
-            
-            // Scroll view for souls
-            float scrollHeight = winH - 70;
-            float contentHeight = CalculateSoulContentHeight(plugin);
-            
-            soulScrollPosition = GUI.BeginScrollView(
-                new Rect(winX + 5, y, winW - 10, scrollHeight),
-                soulScrollPosition,
-                new Rect(0, 0, winW - 30, contentHeight)
-            );
-            
-            float scrollY = 0;
-            
-            // === NPC SOULS ===
-            scrollY = DrawSoulSection(plugin, scrollY, w - 20, "NPC SOULS", GetNPCSouls(plugin));
-            
-            // === PROP SOULS BY AREA ===
-            if (plugin.PropSoulsEnabled)
-            {
-                scrollY = DrawSoulSection(plugin, scrollY, w - 20, "GARDEN PROPS", GetGardenPropSouls(plugin));
-                scrollY = DrawSoulSection(plugin, scrollY, w - 20, "HIGH STREET PROPS", GetHighStreetPropSouls(plugin));
-                scrollY = DrawSoulSection(plugin, scrollY, w - 20, "BACK GARDENS PROPS", GetBackGardensPropSouls(plugin));
-                scrollY = DrawSoulSection(plugin, scrollY, w - 20, "PUB PROPS", GetPubPropSouls(plugin));
-                scrollY = DrawSoulSection(plugin, scrollY, w - 20, "MODEL VILLAGE PROPS", GetModelVillagePropSouls(plugin));
-                scrollY = DrawSoulSection(plugin, scrollY, w - 20, "SHARED PROPS", GetSharedPropSouls(plugin));
-            }
-            else
-            {
-                GUI.color = new Color(0.4f, 0.8f, 0.4f);
-                GUI.Label(new Rect(5, scrollY, w - 20, 24), "<size=14>Prop Souls: DISABLED (all props available)</size>");
-                GUI.color = Color.white;
-            }
-            
-            GUI.EndScrollView();
-        }
-        
-        /// <summary>
-        /// Handle mouse dragging for the soul tracker window
-        /// </summary>
-        private void HandleSoulTrackerDragging()
-        {
+            // Handle dragging from title area (top 26px) - AFTER all controls
+            float dragAreaH = 26 * s;
             Event e = Event.current;
+            Rect titleBar = new Rect(winX, winY, winW, dragAreaH);
             
-            // Title bar area for dragging
-            float titleBarHeight = 36;
-            Rect titleBarRect = new Rect(
-                soulTrackerWindowRect.x, 
-                soulTrackerWindowRect.y, 
-                soulTrackerWindowRect.width, 
-                titleBarHeight
-            );
-            
-            if (e.type == EventType.MouseDown && e.button == 0)
+            if (e.type == EventType.MouseDown && e.button == 0 && titleBar.Contains(e.mousePosition))
             {
-                if (titleBarRect.Contains(e.mousePosition))
-                {
-                    isDraggingSoulTracker = true;
-                    dragOffset = e.mousePosition - new Vector2(soulTrackerWindowRect.x, soulTrackerWindowRect.y);
-                    e.Use();
-                }
+                isDraggingConnection = true;
+                connectionDragOffset = e.mousePosition - new Vector2(winX, winY);
+                e.Use();
             }
-            else if (e.type == EventType.MouseUp && e.button == 0)
+            else if (e.type == EventType.MouseUp && e.button == 0 && isDraggingConnection)
             {
-                isDraggingSoulTracker = false;
+                isDraggingConnection = false;
+                PlayerPrefs.SetFloat(CONNECTION_X_KEY, connectionWindowRect.x);
+                PlayerPrefs.SetFloat(CONNECTION_Y_KEY, connectionWindowRect.y);
+                PlayerPrefs.Save();
             }
-            else if (e.type == EventType.MouseDrag && isDraggingSoulTracker)
+            else if (e.type == EventType.MouseDrag && isDraggingConnection)
             {
-                soulTrackerWindowRect.x = e.mousePosition.x - dragOffset.x;
-                soulTrackerWindowRect.y = e.mousePosition.y - dragOffset.y;
+                connectionWindowRect.x = e.mousePosition.x - connectionDragOffset.x;
+                connectionWindowRect.y = e.mousePosition.y - connectionDragOffset.y;
                 e.Use();
             }
         }
         
-        private float CalculateSoulContentHeight(Plugin plugin)
+        // ============== SERVER LOG WINDOW (Notebook Style) ==============
+        
+        public void DrawServerLog(Plugin plugin)
         {
-            float height = 0;
+            if (!showServerLog) return;
             
-            // NPC souls section (header 26 + 11 NPCs * 22 + spacing 10)
-            height += 26 + (11 * 22) + 10;
+            InitializeScrollbarStyles();
+            
+            float baseW = 450, baseH = 400;
+            float winW = baseW * serverLogScale;
+            float winH = baseH * serverLogScale;
+            float s = serverLogScale;
+            
+            if (!serverLogPositionInitialized)
+            {
+                float savedX = PlayerPrefs.GetFloat(SERVERLOG_X_KEY, 15);
+                float savedY = PlayerPrefs.GetFloat(SERVERLOG_Y_KEY, 520);
+                serverLogWindowRect = new Rect(savedX, savedY, winW, winH);
+                serverLogPositionInitialized = true;
+            }
+            
+            serverLogWindowRect.width = winW;
+            serverLogWindowRect.height = winH;
+            serverLogWindowRect.x = Mathf.Clamp(serverLogWindowRect.x, 0, Screen.width - winW);
+            serverLogWindowRect.y = Mathf.Clamp(serverLogWindowRect.y, 0, Screen.height - winH);
+            
+            float winX = serverLogWindowRect.x;
+            float winY = serverLogWindowRect.y;
+            
+            // Paper background (white/very light)
+            GUI.color = new Color(0.99f, 0.99f, 0.97f, 1f);
+            GUI.DrawTexture(new Rect(winX, winY, winW, winH), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            
+            // Red margin line on the left
+            float marginX = winX + 35 * s;
+            GUI.color = new Color(0.9f, 0.6f, 0.6f, 1f);
+            GUI.DrawTexture(new Rect(marginX, winY, 2 * s, winH), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            
+            // Blue horizontal ruled lines
+            float lineSpacing = 24 * s;
+            float firstLineY = winY + 60 * s;
+            GUI.color = new Color(0.6f, 0.75f, 0.9f, 0.8f);
+            for (float ly = firstLineY; ly < winY + winH - 5 * s; ly += lineSpacing)
+            {
+                GUI.DrawTexture(new Rect(winX + 5 * s, ly, winW - 10 * s, 1), Texture2D.whiteTexture);
+            }
+            GUI.color = Color.white;
+            
+            // Content area (right of margin)
+            float textX = marginX + 10 * s;
+            float textW = winW - (marginX - winX) - 20 * s;
+            
+            // Title
+            int titleSize = Mathf.RoundToInt(14 * s);
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(textX, winY + 5 * s, textW - 50 * s, 22 * s), 
+                $"<size={titleSize}><i>Server Log</i></size>");
+            GUI.color = Color.white;
+            
+            // Clear button
+            if (GUI.Button(new Rect(winX + winW - 50 * s, winY + 4 * s, 42 * s, 20 * s), "Clear"))
+            {
+                plugin.Client?.ClearServerLog();
+            }
+            
+            // Scale slider
+            float sliderY = winY + 30 * s;
+            float sliderH = 24 * s;
+            int sliderTextSize = Mathf.RoundToInt(11 * s);
+            
+            GUI.color = new Color(0.3f, 0.3f, 0.35f);
+            GUI.Label(new Rect(textX, sliderY + 3 * s, 36 * s, sliderH), $"<size={sliderTextSize}>Size:</size>");
+            GUI.color = Color.white;
+            
+            float sliderX = textX + 38 * s;
+            float sliderW = textW - 100 * s;
+            
+            // Draw slider track background
+            GUI.color = new Color(0.8f, 0.8f, 0.82f, 1f);
+            GUI.DrawTexture(new Rect(sliderX, sliderY + 8 * s, sliderW, 8 * s), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            
+            // The actual slider
+            float newScale = GUI.HorizontalSlider(new Rect(sliderX, sliderY, sliderW, sliderH), 
+                serverLogScale, MIN_SCALE, MAX_SCALE);
+            
+            GUI.color = new Color(0.3f, 0.3f, 0.35f);
+            GUI.Label(new Rect(sliderX + sliderW + 8 * s, sliderY + 3 * s, 50 * s, sliderH), $"<size={sliderTextSize}>{Mathf.RoundToInt(serverLogScale * 100)}%</size>");
+            GUI.color = Color.white;
+            
+            if (Mathf.Abs(newScale - serverLogScale) > 0.01f)
+            {
+                serverLogScale = newScale;
+                PlayerPrefs.SetFloat(SERVERLOG_SCALE_KEY, serverLogScale);
+                PlayerPrefs.Save();
+            }
+            
+            // Log content
+            float contentY = firstLineY;
+            float contentH = winH - (contentY - winY) - 10 * s;
+            DrawServerLogContent(plugin, textX, contentY, textW, contentH, s);
+            
+            // Handle dragging AFTER all other controls - only from title area (top 28px)
+            float dragAreaH = 28 * s;
+            Event e = Event.current;
+            Rect titleBar = new Rect(winX, winY, winW, dragAreaH);
+            
+            if (e.type == EventType.MouseDown && e.button == 0 && titleBar.Contains(e.mousePosition))
+            {
+                isDraggingServerLog = true;
+                serverLogDragOffset = e.mousePosition - new Vector2(winX, winY);
+                e.Use();
+            }
+            else if (e.type == EventType.MouseUp && e.button == 0 && isDraggingServerLog)
+            {
+                isDraggingServerLog = false;
+                PlayerPrefs.SetFloat(SERVERLOG_X_KEY, serverLogWindowRect.x);
+                PlayerPrefs.SetFloat(SERVERLOG_Y_KEY, serverLogWindowRect.y);
+                PlayerPrefs.Save();
+            }
+            else if (e.type == EventType.MouseDrag && isDraggingServerLog)
+            {
+                serverLogWindowRect.x = e.mousePosition.x - serverLogDragOffset.x;
+                serverLogWindowRect.y = e.mousePosition.y - serverLogDragOffset.y;
+                e.Use();
+            }
+        }
+        
+        private void DrawServerLogContent(Plugin plugin, float x, float y, float w, float h, float s)
+        {
+            var serverLog = plugin.Client?.ServerLog;
+            if (serverLog == null || serverLog.Count == 0)
+            {
+                GUI.color = new Color(0.5f, 0.5f, 0.5f);
+                GUI.Label(new Rect(x + 5, y + 10, w - 10, 20), $"<size={Mathf.RoundToInt(11 * s)}><i>Waiting for messages...</i></size>");
+                GUI.color = Color.white;
+                return;
+            }
+            
+            float lineH = 15 * s;  // Tighter line height
+            int textSize = Mathf.RoundToInt(11 * s);
+            float maxTextWidth = w - 16 * s;
+            float entryGap = 3 * s;  // Small gap between entries
+            
+            // Calculate content height
+            float contentH = 8;
+            foreach (var entry in serverLog)
+            {
+                string fullText = $"{entry.Timestamp:HH:mm} {entry.Message}";
+                int lineCount = EstimateLineCount(fullText, maxTextWidth, textSize);
+                contentH += lineH * lineCount + entryGap;
+            }
+            
+            customVerticalScrollbar.fixedWidth = Mathf.Max(10, 10 * s);
+            customVerticalScrollbarThumb.fixedWidth = Mathf.Max(8, 8 * s);
+            
+            GUIStyle origScrollbar = GUI.skin.verticalScrollbar;
+            GUIStyle origThumb = GUI.skin.verticalScrollbarThumb;
+            GUI.skin.verticalScrollbar = customVerticalScrollbar;
+            GUI.skin.verticalScrollbarThumb = customVerticalScrollbarThumb;
+            
+            serverLogScrollPosition = GUI.BeginScrollView(
+                new Rect(x, y, w, h), serverLogScrollPosition,
+                new Rect(0, 0, w - 14 * s, contentH), false, true);
+            
+            GUI.skin.verticalScrollbar = origScrollbar;
+            GUI.skin.verticalScrollbarThumb = origThumb;
+            
+            GUIStyle wrapStyle = new GUIStyle(GUI.skin.label);
+            wrapStyle.wordWrap = true;
+            wrapStyle.richText = true;
+            wrapStyle.fontSize = textSize;
+            wrapStyle.padding = new RectOffset(0, 0, 0, 0);
+            wrapStyle.margin = new RectOffset(0, 0, 0, 0);
+            
+            float logY = 2;
+            foreach (var entry in serverLog)
+            {
+                GUI.color = GetNotebookLogColor(entry.Type);
+                
+                string fullText = $"{entry.Timestamp:HH:mm} {entry.Message}";
+                int lineCount = EstimateLineCount(fullText, maxTextWidth, textSize);
+                float entryH = lineH * lineCount;
+                
+                GUI.Label(new Rect(2, logY, maxTextWidth, entryH + 2), $"<size={textSize}>{fullText}</size>", wrapStyle);
+                logY += entryH + entryGap;
+            }
+            GUI.color = Color.white;
+            
+            GUI.EndScrollView();
+            
+            // Auto-scroll
+            if (contentH > h)
+                serverLogScrollPosition.y = contentH - h;
+        }
+        
+        private Color GetNotebookLogColor(ServerLogType type)
+        {
+            // Notebook-style ink colors
+            switch (type)
+            {
+                case ServerLogType.System: return new Color(0.3f, 0.3f, 0.35f);      // Grey pencil
+                case ServerLogType.Chat: return new Color(0.15f, 0.15f, 0.2f);        // Dark ink
+                case ServerLogType.ItemReceived: return new Color(0.1f, 0.5f, 0.2f);  // Green ink
+                case ServerLogType.LocationSent: return new Color(0.1f, 0.3f, 0.6f);  // Blue ink
+                case ServerLogType.Hint: return new Color(0.6f, 0.4f, 0.1f);          // Brown/orange
+                case ServerLogType.PlayerJoin: return new Color(0.2f, 0.5f, 0.3f);    // Green
+                case ServerLogType.PlayerLeave: return new Color(0.5f, 0.3f, 0.2f);   // Brown
+                case ServerLogType.Goal: return new Color(0.2f, 0.6f, 0.2f);          // Bright green
+                case ServerLogType.DeathLink: return new Color(0.7f, 0.15f, 0.15f);   // Red ink
+                case ServerLogType.Error: return new Color(0.7f, 0.2f, 0.2f);         // Red
+                default: return new Color(0.2f, 0.2f, 0.25f);
+            }
+        }
+        
+        private int EstimateLineCount(string text, float maxWidth, int fontSize)
+        {
+            float charWidth = fontSize * 0.5f;
+            float textWidth = text.Length * charWidth;
+            int lines = Mathf.CeilToInt(textWidth / maxWidth);
+            return Mathf.Max(1, lines);
+        }
+        
+        private void DrawScaleSlider(ref float scale, float x, ref float y, float w, float s, string prefKey)
+        {
+            float sliderH = Mathf.Max(18, 18 * s);
+            float thumbSize = Mathf.Max(22, 22 * s);
+            int textSize = Mathf.RoundToInt(10 * s);
+            
+            GUI.color = new Color(0.5f, 0.5f, 0.5f);
+            GUI.Label(new Rect(x, y, 38 * s, sliderH), $"<size={textSize}>Scale:</size>");
+            GUI.color = Color.white;
+            
+            float sliderX = x + 40 * s;
+            float sliderW = w - 95 * s;
+            
+            customHorizontalSlider.fixedHeight = sliderH * 0.4f;
+            customHorizontalSliderThumb.fixedHeight = sliderH;
+            customHorizontalSliderThumb.fixedWidth = thumbSize;
+            
+            float newScale = GUI.HorizontalSlider(new Rect(sliderX, y, sliderW, sliderH), scale, MIN_SCALE, MAX_SCALE,
+                customHorizontalSlider, customHorizontalSliderThumb);
+            
+            GUI.color = new Color(0.6f, 0.6f, 0.6f);
+            GUI.Label(new Rect(sliderX + sliderW + 4 * s, y, 48 * s, sliderH), $"<size={textSize}>{Mathf.RoundToInt(scale * 100)}%</size>");
+            GUI.color = Color.white;
+            
+            if (Mathf.Abs(newScale - scale) > 0.01f)
+            {
+                scale = newScale;
+                PlayerPrefs.SetFloat(prefKey, scale);
+                PlayerPrefs.Save();
+            }
+            
+            y += sliderH;
+        }
+        
+        private void HandleWindowDrag(ref Rect windowRect, ref bool isDragging, ref Vector2 dragOffset,
+            float titleBarH, string xKey, string yKey)
+        {
+            Rect dragArea = new Rect(windowRect.x, windowRect.y, windowRect.width, titleBarH);
+            HandleWindowDragFromRect(ref windowRect, ref isDragging, ref dragOffset, dragArea, xKey, yKey);
+        }
+        
+        private void HandleWindowDragFromRect(ref Rect windowRect, ref bool isDragging, ref Vector2 dragOffset,
+            Rect dragArea, string xKey, string yKey)
+        {
+            Event e = Event.current;
+            
+            if (e.type == EventType.MouseDown && e.button == 0 && dragArea.Contains(e.mousePosition))
+            {
+                isDragging = true;
+                dragOffset = e.mousePosition - new Vector2(windowRect.x, windowRect.y);
+                e.Use();
+            }
+            else if (e.type == EventType.MouseUp && e.button == 0 && isDragging)
+            {
+                isDragging = false;
+                PlayerPrefs.SetFloat(xKey, windowRect.x);
+                PlayerPrefs.SetFloat(yKey, windowRect.y);
+                PlayerPrefs.Save();
+            }
+            else if (e.type == EventType.MouseDrag && isDragging)
+            {
+                windowRect.x = e.mousePosition.x - dragOffset.x;
+                windowRect.y = e.mousePosition.y - dragOffset.y;
+                e.Use();
+            }
+        }
+        
+        private void DrawAccessCompact(float x, float y, float w, string label, bool hasAccess, int textSize)
+        {
+            int checkSize = textSize + 4;
+            GUI.color = hasAccess ? new Color(0.2f, 0.5f, 0.2f) : new Color(0.5f, 0.5f, 0.5f);
+            GUI.Label(new Rect(x, y, w, 26), $"<size={checkSize}>{(hasAccess ? "✓" : "✗")}</size><size={textSize}> {label}</size>");
+            GUI.color = Color.white;
+        }
+        
+        // ============== SOUL TRACKER WINDOW (Notebook Style) ==============
+        
+        public void DrawSoulTracker(Plugin plugin)
+        {
+            if (!showSoulTracker) return;
+            
+            InitializeScrollbarStyles();
+            
+            float baseW = 320, baseH = 450;
+            float winW = baseW * soulTrackerScale;
+            float winH = baseH * soulTrackerScale;
+            float s = soulTrackerScale;
+            
+            if (!soulTrackerPositionInitialized)
+            {
+                float savedX = PlayerPrefs.GetFloat(SOUL_X_KEY, Screen.width - winW - 15);
+                float savedY = PlayerPrefs.GetFloat(SOUL_Y_KEY, 15);
+                soulTrackerWindowRect = new Rect(savedX, savedY, winW, winH);
+                soulTrackerPositionInitialized = true;
+            }
+            
+            soulTrackerWindowRect.width = winW;
+            soulTrackerWindowRect.height = winH;
+            soulTrackerWindowRect.x = Mathf.Clamp(soulTrackerWindowRect.x, 0, Screen.width - winW);
+            soulTrackerWindowRect.y = Mathf.Clamp(soulTrackerWindowRect.y, 0, Screen.height - winH);
+            
+            int titleSize = Mathf.RoundToInt(15 * s);
+            int headerSize = Mathf.RoundToInt(12 * s);
+            int itemSize = Mathf.RoundToInt(11 * s);
+            float lineH = 18 * s;
+            float headerH = 22 * s;
+            
+            float winX = soulTrackerWindowRect.x;
+            float winY = soulTrackerWindowRect.y;
+            
+            // Paper background (white/very light)
+            GUI.color = new Color(0.99f, 0.99f, 0.97f, 1f);
+            GUI.DrawTexture(new Rect(winX, winY, winW, winH), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            
+            // Red margin line on the left
+            float marginX = winX + 28 * s;
+            GUI.color = new Color(0.9f, 0.6f, 0.6f, 1f);
+            GUI.DrawTexture(new Rect(marginX, winY, 2 * s, winH), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            
+            // Blue horizontal ruled lines
+            float ruleSpacing = 20 * s;
+            GUI.color = new Color(0.6f, 0.75f, 0.9f, 0.8f);
+            for (float ly = winY + ruleSpacing; ly < winY + winH - 5 * s; ly += ruleSpacing)
+            {
+                GUI.DrawTexture(new Rect(winX + 5 * s, ly, winW - 10 * s, 1), Texture2D.whiteTexture);
+            }
+            GUI.color = Color.white;
+            
+            // Content area
+            float x = marginX + 8 * s;
+            float y = winY + 8 * s;
+            float w = winW - (marginX - winX) - 16 * s;
+            
+            // Title
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(x, y, w * 0.6f, 24 * s), $"<size={titleSize}><i>Souls</i></size>");
+            GUI.color = Color.white;
+            
+            y += 26 * s;
+            
+            // Scale slider
+            GUI.color = new Color(0.3f, 0.3f, 0.35f);
+            GUI.Label(new Rect(x, y + 3 * s, 32 * s, 18 * s), $"<size={Mathf.RoundToInt(10 * s)}>Size:</size>");
+            GUI.color = Color.white;
+            
+            float sliderX = x + 34 * s;
+            float sliderW = w - 85 * s;
+            
+            GUI.color = new Color(0.8f, 0.8f, 0.82f, 1f);
+            GUI.DrawTexture(new Rect(sliderX, y + 8 * s, sliderW, 8 * s), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            
+            float newScale = GUI.HorizontalSlider(new Rect(sliderX, y, sliderW, 22 * s), soulTrackerScale, MIN_SCALE, MAX_SCALE);
+            
+            GUI.color = new Color(0.3f, 0.3f, 0.35f);
+            GUI.Label(new Rect(sliderX + sliderW + 6 * s, y + 3 * s, 42 * s, 18 * s), $"<size={Mathf.RoundToInt(10 * s)}>{Mathf.RoundToInt(soulTrackerScale * 100)}%</size>");
+            GUI.color = Color.white;
+            
+            if (Mathf.Abs(newScale - soulTrackerScale) > 0.01f)
+            {
+                soulTrackerScale = newScale;
+                PlayerPrefs.SetFloat(SOUL_SCALE_KEY, soulTrackerScale);
+                PlayerPrefs.Save();
+            }
+            
+            y += 26 * s;
+            
+            // Scroll area
+            float scrollTop = y;
+            float scrollH = winH - (scrollTop - winY) - 8 * s;
+            float contentH = CalculateSoulContentHeight(plugin, lineH, headerH, s);
+            
+            customVerticalScrollbar.fixedWidth = Mathf.Max(12, 12 * s);
+            customVerticalScrollbarThumb.fixedWidth = Mathf.Max(10, 10 * s);
+            
+            GUIStyle origScrollbar = GUI.skin.verticalScrollbar;
+            GUIStyle origThumb = GUI.skin.verticalScrollbarThumb;
+            GUI.skin.verticalScrollbar = customVerticalScrollbar;
+            GUI.skin.verticalScrollbarThumb = customVerticalScrollbarThumb;
+            
+            soulScrollPosition = GUI.BeginScrollView(
+                new Rect(x - 4 * s, scrollTop, w + 8 * s, scrollH),
+                soulScrollPosition,
+                new Rect(0, 0, w - 10 * s, contentH));
+            
+            GUI.skin.verticalScrollbar = origScrollbar;
+            GUI.skin.verticalScrollbarThumb = origThumb;
+            
+            float scrollY = 0;
+            float sectionW = w - 6 * s;
+            
+            scrollY = DrawSoulSection(scrollY, sectionW, "NPC Souls", GetNPCSouls(plugin), headerSize, itemSize, lineH, headerH, s);
             
             if (plugin.PropSoulsEnabled)
             {
-                // Each prop section (header 26 + items * 22 + spacing 10)
-                height += 26 + (20 * 22) + 10; // Garden (~20 props)
-                height += 26 + (24 * 22) + 10; // High Street
-                height += 26 + (25 * 22) + 10; // Back Gardens
-                height += 26 + (22 * 22) + 10; // Pub
-                height += 26 + (12 * 22) + 10; // Model Village
-                height += 26 + (26 * 22) + 10; // Shared
+                scrollY = DrawSoulSection(scrollY, sectionW, "Garden", GetGardenPropSouls(plugin), headerSize, itemSize, lineH, headerH, s);
+                scrollY = DrawSoulSection(scrollY, sectionW, "High Street", GetHighStreetPropSouls(plugin), headerSize, itemSize, lineH, headerH, s);
+                scrollY = DrawSoulSection(scrollY, sectionW, "Back Gardens", GetBackGardensPropSouls(plugin), headerSize, itemSize, lineH, headerH, s);
+                scrollY = DrawSoulSection(scrollY, sectionW, "Pub", GetPubPropSouls(plugin), headerSize, itemSize, lineH, headerH, s);
+                scrollY = DrawSoulSection(scrollY, sectionW, "Model Village", GetModelVillagePropSouls(plugin), headerSize, itemSize, lineH, headerH, s);
+                scrollY = DrawSoulSection(scrollY, sectionW, "Shared", GetSharedPropSouls(plugin), headerSize, itemSize, lineH, headerH, s);
             }
             else
             {
-                height += 30;
+                GUI.color = new Color(0.4f, 0.5f, 0.4f);
+                GUI.Label(new Rect(4 * s, scrollY, sectionW, headerH), $"<size={headerSize}>Prop Souls: DISABLED</size>");
+                GUI.color = Color.white;
             }
             
-            return height + 50; // Extra padding
+            GUI.EndScrollView();
+            
+            // Handle dragging from title area (top 24px) - AFTER all controls
+            float dragAreaH = 24 * s;
+            Event e = Event.current;
+            Rect titleBar = new Rect(winX, winY, winW, dragAreaH);
+            
+            if (e.type == EventType.MouseDown && e.button == 0 && titleBar.Contains(e.mousePosition))
+            {
+                isDraggingSoulTracker = true;
+                soulDragOffset = e.mousePosition - new Vector2(winX, winY);
+                e.Use();
+            }
+            else if (e.type == EventType.MouseUp && e.button == 0 && isDraggingSoulTracker)
+            {
+                isDraggingSoulTracker = false;
+                PlayerPrefs.SetFloat(SOUL_X_KEY, soulTrackerWindowRect.x);
+                PlayerPrefs.SetFloat(SOUL_Y_KEY, soulTrackerWindowRect.y);
+                PlayerPrefs.Save();
+            }
+            else if (e.type == EventType.MouseDrag && isDraggingSoulTracker)
+            {
+                soulTrackerWindowRect.x = e.mousePosition.x - soulDragOffset.x;
+                soulTrackerWindowRect.y = e.mousePosition.y - soulDragOffset.y;
+                e.Use();
+            }
         }
         
-        private float DrawSoulSection(Plugin plugin, float startY, float width, string title, List<SoulInfo> souls)
+        private float CalculateSoulContentHeight(Plugin plugin, float lineH, float headerH, float s)
+        {
+            float h = headerH + 11 * lineH + 6 * s;
+            if (plugin.PropSoulsEnabled)
+            {
+                h += headerH + 20 * lineH + 6 * s;
+                h += headerH + 24 * lineH + 6 * s;
+                h += headerH + 25 * lineH + 6 * s;
+                h += headerH + 22 * lineH + 6 * s;
+                h += headerH + 12 * lineH + 6 * s;
+                h += headerH + 26 * lineH + 6 * s;
+            }
+            return h + 20 * s;
+        }
+        
+        private float DrawSoulSection(float startY, float width, string title, List<SoulInfo> souls,
+            int headerSize, int itemSize, float lineH, float headerH, float s)
         {
             float y = startY;
-            
-            // Count collected
             int collected = 0;
-            foreach (var soul in souls)
-            {
-                if (soul.HasSoul) collected++;
-            }
+            foreach (var soul in souls) if (soul.HasSoul) collected++;
             
-            // Section header with count
-            GUI.color = new Color(0.6f, 0.7f, 0.9f);
-            GUI.Label(new Rect(5, y, width, 24), $"<size=14><b>{title}</b> ({collected}/{souls.Count})</size>");
+            // Header in dark ink
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            GUI.Label(new Rect(4 * s, y, width, headerH), $"<size={headerSize}><b>{title}</b> ({collected}/{souls.Count})</size>");
             GUI.color = Color.white;
-            y += 26;
+            y += headerH;
             
-            // Draw each soul
+            int checkSize = itemSize + 4;
             foreach (var soul in souls)
             {
-                if (soul.HasSoul)
-                {
-                    GUI.color = new Color(0.3f, 1f, 0.4f);
-                    GUI.Label(new Rect(10, y, width - 10, 22), "<size=14>✓ " + soul.Name + "</size>");
-                }
-                else
-                {
-                    GUI.color = new Color(0.45f, 0.45f, 0.45f);
-                    GUI.Label(new Rect(10, y, width - 10, 22), "<size=14>✗ " + soul.Name + "</size>");
-                }
+                // Green for collected, gray for not
+                GUI.color = soul.HasSoul ? new Color(0.2f, 0.5f, 0.2f) : new Color(0.5f, 0.5f, 0.5f);
+                GUI.Label(new Rect(8 * s, y, width - 8 * s, lineH), $"<size={checkSize}>{(soul.HasSoul ? "✓" : "✗")}</size><size={itemSize}> {soul.Name}</size>");
                 GUI.color = Color.white;
-                y += 22;
+                y += lineH;
             }
-            
-            y += 8; // Section spacing
-            return y;
+            return y + 4 * s;
         }
         
-        private struct SoulInfo
-        {
-            public string Name;
-            public bool HasSoul;
-            
-            public SoulInfo(string name, bool hasSoul)
-            {
-                Name = name;
-                HasSoul = hasSoul;
-            }
-        }
+        private struct SoulInfo { public string Name; public bool HasSoul; public SoulInfo(string n, bool h) { Name = n; HasSoul = h; } }
         
-        private List<SoulInfo> GetNPCSouls(Plugin plugin)
-        {
-            return new List<SoulInfo>
-            {
-                new SoulInfo("Groundskeeper", plugin.HasGroundskeeperSoul),
-                new SoulInfo("Boy", plugin.HasBoySoul),
-                new SoulInfo("TV Shop Owner", plugin.HasTVShopOwnerSoul),
-                new SoulInfo("Market Lady", plugin.HasMarketLadySoul),
-                new SoulInfo("Tidy Neighbour", plugin.HasTidyNeighbourSoul),
-                new SoulInfo("Messy Neighbour", plugin.HasMessyNeighbourSoul),
-                new SoulInfo("Burly Man", plugin.HasBurlyManSoul),
-                new SoulInfo("Old Man", plugin.HasOldManSoul),
-                new SoulInfo("Pub Lady", plugin.HasPubLadySoul),
-                new SoulInfo("Fancy Ladies", plugin.HasFancyLadiesSoul),
-                new SoulInfo("Cook", plugin.HasCookSoul),
-            };
-        }
+        private List<SoulInfo> GetNPCSouls(Plugin p) => new List<SoulInfo> {
+            new SoulInfo("Groundskeeper", p.HasGroundskeeperSoul), new SoulInfo("Boy", p.HasBoySoul),
+            new SoulInfo("TV Shop Owner", p.HasTVShopOwnerSoul), new SoulInfo("Market Lady", p.HasMarketLadySoul),
+            new SoulInfo("Tidy Neighbour", p.HasTidyNeighbourSoul), new SoulInfo("Messy Neighbour", p.HasMessyNeighbourSoul),
+            new SoulInfo("Burly Man", p.HasBurlyManSoul), new SoulInfo("Old Man", p.HasOldManSoul),
+            new SoulInfo("Pub Lady", p.HasPubLadySoul), new SoulInfo("Fancy Ladies", p.HasFancyLadiesSoul),
+            new SoulInfo("Cook", p.HasCookSoul)
+        };
         
-        private List<SoulInfo> GetGardenPropSouls(Plugin plugin)
-        {
-            var propMgr = plugin.PropManager;
-            return new List<SoulInfo>
-            {
-                new SoulInfo("Radio", propMgr?.HasSoul("Radio Soul") ?? false),
-                new SoulInfo("Trowel", propMgr?.HasSoul("Trowel Soul") ?? false),
-                new SoulInfo("Keys", propMgr?.HasSoul("Keys Soul") ?? false),
-                new SoulInfo("Tulip", propMgr?.HasSoul("Tulip Soul") ?? false),
-                new SoulInfo("Jam", propMgr?.HasSoul("Jam Soul") ?? false),
-                new SoulInfo("Picnic Mug", propMgr?.HasSoul("Picnic Mug Soul") ?? false),
-                new SoulInfo("Thermos", propMgr?.HasSoul("Thermos Soul") ?? false),
-                new SoulInfo("Straw Hat", propMgr?.HasSoul("Straw Hat Soul") ?? false),
-                new SoulInfo("Drink Can", propMgr?.HasSoul("Drink Can Soul") ?? false),
-                new SoulInfo("Tennis Ball", propMgr?.HasSoul("Tennis Ball Soul") ?? false),
-                new SoulInfo("Gardener Hat", propMgr?.HasSoul("Gardener Hat Soul") ?? false),
-                new SoulInfo("Rake", propMgr?.HasSoul("Rake Soul") ?? false),
-                new SoulInfo("Picnic Basket", propMgr?.HasSoul("Picnic Basket Soul") ?? false),
-                new SoulInfo("Esky", propMgr?.HasSoul("Esky Soul") ?? false),
-                new SoulInfo("Shovel", propMgr?.HasSoul("Shovel Soul") ?? false),
-                new SoulInfo("Watering Can", propMgr?.HasSoul("Watering Can Soul") ?? false),
-                new SoulInfo("Fence Bolt", propMgr?.HasSoul("Fence Bolt Soul") ?? false),
-                new SoulInfo("Mallet", propMgr?.HasSoul("Mallet Soul") ?? false),
-                new SoulInfo("Wooden Crate", propMgr?.HasSoul("Wooden Crate Soul") ?? false),
-                new SoulInfo("Gardener Sign", propMgr?.HasSoul("Gardener Sign Soul") ?? false),
-            };
-        }
+        private List<SoulInfo> GetGardenPropSouls(Plugin p) { var m = p.PropManager; return new List<SoulInfo> {
+            new SoulInfo("Radio", m?.HasSoul("Radio Soul") ?? false), new SoulInfo("Trowel", m?.HasSoul("Trowel Soul") ?? false),
+            new SoulInfo("Keys", m?.HasSoul("Keys Soul") ?? false), new SoulInfo("Tulip", m?.HasSoul("Tulip Soul") ?? false),
+            new SoulInfo("Jam", m?.HasSoul("Jam Soul") ?? false), new SoulInfo("Picnic Mug", m?.HasSoul("Picnic Mug Soul") ?? false),
+            new SoulInfo("Thermos", m?.HasSoul("Thermos Soul") ?? false), new SoulInfo("Straw Hat", m?.HasSoul("Straw Hat Soul") ?? false),
+            new SoulInfo("Drink Can", m?.HasSoul("Drink Can Soul") ?? false), new SoulInfo("Tennis Ball", m?.HasSoul("Tennis Ball Soul") ?? false),
+            new SoulInfo("Gardener Hat", m?.HasSoul("Gardener Hat Soul") ?? false), new SoulInfo("Rake", m?.HasSoul("Rake Soul") ?? false),
+            new SoulInfo("Picnic Basket", m?.HasSoul("Picnic Basket Soul") ?? false), new SoulInfo("Esky", m?.HasSoul("Esky Soul") ?? false),
+            new SoulInfo("Shovel", m?.HasSoul("Shovel Soul") ?? false), new SoulInfo("Watering Can", m?.HasSoul("Watering Can Soul") ?? false),
+            new SoulInfo("Fence Bolt", m?.HasSoul("Fence Bolt Soul") ?? false), new SoulInfo("Mallet", m?.HasSoul("Mallet Soul") ?? false),
+            new SoulInfo("Wooden Crate", m?.HasSoul("Wooden Crate Soul") ?? false), new SoulInfo("Gardener Sign", m?.HasSoul("Gardener Sign Soul") ?? false)
+        }; }
         
-        private List<SoulInfo> GetHighStreetPropSouls(Plugin plugin)
-        {
-            var propMgr = plugin.PropManager;
-            return new List<SoulInfo>
-            {
-                new SoulInfo("Boy's Glasses", propMgr?.HasSoul("Boy's Glasses Soul") ?? false),
-                new SoulInfo("Horn-Rimmed Glasses", propMgr?.HasSoul("Horn-Rimmed Glasses Soul") ?? false),
-                new SoulInfo("Red Glasses", propMgr?.HasSoul("Red Glasses Soul") ?? false),
-                new SoulInfo("Sunglasses", propMgr?.HasSoul("Sunglasses Soul") ?? false),
-                new SoulInfo("Toilet Paper", propMgr?.HasSoul("Toilet Paper Soul") ?? false),
-                new SoulInfo("Toy Car", propMgr?.HasSoul("Toy Car Soul") ?? false),
-                new SoulInfo("Hairbrush", propMgr?.HasSoul("Hairbrush Soul") ?? false),
-                new SoulInfo("Toothbrush", propMgr?.HasSoul("Toothbrush Soul") ?? false),
-                new SoulInfo("Stereoscope", propMgr?.HasSoul("Stereoscope Soul") ?? false),
-                new SoulInfo("Dish Soap Bottle", propMgr?.HasSoul("Dish Soap Bottle Soul") ?? false),
-                new SoulInfo("Spray Bottle", propMgr?.HasSoul("Spray Bottle Soul") ?? false),
-                new SoulInfo("Weed Tool", propMgr?.HasSoul("Weed Tool Soul") ?? false),
-                new SoulInfo("Lily Flower", propMgr?.HasSoul("Lily Flower Soul") ?? false),
-                new SoulInfo("Fusilage", propMgr?.HasSoul("Fusilage Soul") ?? false),
-                new SoulInfo("Coin", propMgr?.HasSoul("Coin Soul") ?? false),
-                new SoulInfo("Chalk", propMgr?.HasSoul("Chalk Soul") ?? false),
-                new SoulInfo("Dustbin Lid", propMgr?.HasSoul("Dustbin Lid Soul") ?? false),
-                new SoulInfo("Shopping Basket", propMgr?.HasSoul("Shopping Basket Soul") ?? false),
-                new SoulInfo("Push Broom", propMgr?.HasSoul("Push Broom Soul") ?? false),
-                new SoulInfo("Broken Broom Head", propMgr?.HasSoul("Broken Broom Head Soul") ?? false),
-                new SoulInfo("Dustbin", propMgr?.HasSoul("Dustbin Soul") ?? false),
-                new SoulInfo("Baby Doll", propMgr?.HasSoul("Baby Doll Soul") ?? false),
-                new SoulInfo("Pricing Gun", propMgr?.HasSoul("Pricing Gun Soul") ?? false),
-                new SoulInfo("Adding Machine", propMgr?.HasSoul("Adding Machine Soul") ?? false),
-            };
-        }
+        private List<SoulInfo> GetHighStreetPropSouls(Plugin p) { var m = p.PropManager; return new List<SoulInfo> {
+            new SoulInfo("Boy's Glasses", m?.HasSoul("Boy's Glasses Soul") ?? false), new SoulInfo("Horn-Rimmed Glasses", m?.HasSoul("Horn-Rimmed Glasses Soul") ?? false),
+            new SoulInfo("Red Glasses", m?.HasSoul("Red Glasses Soul") ?? false), new SoulInfo("Sunglasses", m?.HasSoul("Sunglasses Soul") ?? false),
+            new SoulInfo("Toilet Paper", m?.HasSoul("Toilet Paper Soul") ?? false), new SoulInfo("Toy Car", m?.HasSoul("Toy Car Soul") ?? false),
+            new SoulInfo("Hairbrush", m?.HasSoul("Hairbrush Soul") ?? false), new SoulInfo("Toothbrush", m?.HasSoul("Toothbrush Soul") ?? false),
+            new SoulInfo("Stereoscope", m?.HasSoul("Stereoscope Soul") ?? false), new SoulInfo("Dish Soap Bottle", m?.HasSoul("Dish Soap Bottle Soul") ?? false),
+            new SoulInfo("Spray Bottle", m?.HasSoul("Spray Bottle Soul") ?? false), new SoulInfo("Weed Tool", m?.HasSoul("Weed Tool Soul") ?? false),
+            new SoulInfo("Lily Flower", m?.HasSoul("Lily Flower Soul") ?? false), new SoulInfo("Fusilage", m?.HasSoul("Fusilage Soul") ?? false),
+            new SoulInfo("Coin", m?.HasSoul("Coin Soul") ?? false), new SoulInfo("Chalk", m?.HasSoul("Chalk Soul") ?? false),
+            new SoulInfo("Dustbin Lid", m?.HasSoul("Dustbin Lid Soul") ?? false), new SoulInfo("Shopping Basket", m?.HasSoul("Shopping Basket Soul") ?? false),
+            new SoulInfo("Push Broom", m?.HasSoul("Push Broom Soul") ?? false), new SoulInfo("Broken Broom Head", m?.HasSoul("Broken Broom Head Soul") ?? false),
+            new SoulInfo("Dustbin", m?.HasSoul("Dustbin Soul") ?? false), new SoulInfo("Baby Doll", m?.HasSoul("Baby Doll Soul") ?? false),
+            new SoulInfo("Pricing Gun", m?.HasSoul("Pricing Gun Soul") ?? false), new SoulInfo("Adding Machine", m?.HasSoul("Adding Machine Soul") ?? false)
+        }; }
         
-        private List<SoulInfo> GetBackGardensPropSouls(Plugin plugin)
-        {
-            var propMgr = plugin.PropManager;
-            return new List<SoulInfo>
-            {
-                new SoulInfo("Dummy", propMgr?.HasSoul("Dummy Soul") ?? false),
-                new SoulInfo("Cricket Ball", propMgr?.HasSoul("Cricket Ball Soul") ?? false),
-                new SoulInfo("Bust Pipe", propMgr?.HasSoul("Bust Pipe Soul") ?? false),
-                new SoulInfo("Bust Hat", propMgr?.HasSoul("Bust Hat Soul") ?? false),
-                new SoulInfo("Bust Glasses", propMgr?.HasSoul("Bust Glasses Soul") ?? false),
-                new SoulInfo("Tea Cup", propMgr?.HasSoul("Tea Cup Soul") ?? false),
-                new SoulInfo("Newspaper", propMgr?.HasSoul("Newspaper Soul") ?? false),
-                new SoulInfo("Badminton Racket", propMgr?.HasSoul("Badminton Racket Soul") ?? false),
-                new SoulInfo("Pot Stack", propMgr?.HasSoul("Pot Stack Soul") ?? false),
-                new SoulInfo("Soap", propMgr?.HasSoul("Soap Soul") ?? false),
-                new SoulInfo("Paintbrush", propMgr?.HasSoul("Paintbrush Soul") ?? false),
-                new SoulInfo("Vase", propMgr?.HasSoul("Vase Soul") ?? false),
-                new SoulInfo("Right Strap", propMgr?.HasSoul("Right Strap Soul") ?? false),
-                new SoulInfo("Rose", propMgr?.HasSoul("Rose Soul") ?? false),
-                new SoulInfo("Rose Box", propMgr?.HasSoul("Rose Box Soul") ?? false),
-                new SoulInfo("Cricket Bat", propMgr?.HasSoul("Cricket Bat Soul") ?? false),
-                new SoulInfo("Tea Pot", propMgr?.HasSoul("Tea Pot Soul") ?? false),
-                new SoulInfo("Clippers", propMgr?.HasSoul("Clippers Soul") ?? false),
-                new SoulInfo("Duck Statue", propMgr?.HasSoul("Duck Statue Soul") ?? false),
-                new SoulInfo("Frog Statue", propMgr?.HasSoul("Frog Statue Soul") ?? false),
-                new SoulInfo("Jeremy Fish", propMgr?.HasSoul("Jeremy Fish Soul") ?? false),
-                new SoulInfo("Messy Sign", propMgr?.HasSoul("Messy Sign Soul") ?? false),
-                new SoulInfo("Drawer", propMgr?.HasSoul("Drawer Soul") ?? false),
-                new SoulInfo("Enamel Jug", propMgr?.HasSoul("Enamel Jug Soul") ?? false),
-                new SoulInfo("Clean Sign", propMgr?.HasSoul("Clean Sign Soul") ?? false),
-            };
-        }
+        private List<SoulInfo> GetBackGardensPropSouls(Plugin p) { var m = p.PropManager; return new List<SoulInfo> {
+            new SoulInfo("Dummy", m?.HasSoul("Dummy Soul") ?? false), new SoulInfo("Cricket Ball", m?.HasSoul("Cricket Ball Soul") ?? false),
+            new SoulInfo("Bust Pipe", m?.HasSoul("Bust Pipe Soul") ?? false), new SoulInfo("Bust Hat", m?.HasSoul("Bust Hat Soul") ?? false),
+            new SoulInfo("Bust Glasses", m?.HasSoul("Bust Glasses Soul") ?? false), new SoulInfo("Tea Cup", m?.HasSoul("Tea Cup Soul") ?? false),
+            new SoulInfo("Newspaper", m?.HasSoul("Newspaper Soul") ?? false), new SoulInfo("Badminton Racket", m?.HasSoul("Badminton Racket Soul") ?? false),
+            new SoulInfo("Pot Stack", m?.HasSoul("Pot Stack Soul") ?? false), new SoulInfo("Soap", m?.HasSoul("Soap Soul") ?? false),
+            new SoulInfo("Paintbrush", m?.HasSoul("Paintbrush Soul") ?? false), new SoulInfo("Vase", m?.HasSoul("Vase Soul") ?? false),
+            new SoulInfo("Right Strap", m?.HasSoul("Right Strap Soul") ?? false), new SoulInfo("Rose", m?.HasSoul("Rose Soul") ?? false),
+            new SoulInfo("Rose Box", m?.HasSoul("Rose Box Soul") ?? false), new SoulInfo("Cricket Bat", m?.HasSoul("Cricket Bat Soul") ?? false),
+            new SoulInfo("Tea Pot", m?.HasSoul("Tea Pot Soul") ?? false), new SoulInfo("Clippers", m?.HasSoul("Clippers Soul") ?? false),
+            new SoulInfo("Duck Statue", m?.HasSoul("Duck Statue Soul") ?? false), new SoulInfo("Frog Statue", m?.HasSoul("Frog Statue Soul") ?? false),
+            new SoulInfo("Jeremy Fish", m?.HasSoul("Jeremy Fish Soul") ?? false), new SoulInfo("Messy Sign", m?.HasSoul("Messy Sign Soul") ?? false),
+            new SoulInfo("Drawer", m?.HasSoul("Drawer Soul") ?? false), new SoulInfo("Enamel Jug", m?.HasSoul("Enamel Jug Soul") ?? false),
+            new SoulInfo("Clean Sign", m?.HasSoul("Clean Sign Soul") ?? false)
+        }; }
         
-        private List<SoulInfo> GetPubPropSouls(Plugin plugin)
-        {
-            var propMgr = plugin.PropManager;
-            return new List<SoulInfo>
-            {
-                new SoulInfo("Fishing Bobber", propMgr?.HasSoul("Fishing Bobber Soul") ?? false),
-                new SoulInfo("Exit Letter", propMgr?.HasSoul("Exit Letter Soul") ?? false),
-                new SoulInfo("Pint Glass", propMgr?.HasSoul("Pint Glass Soul") ?? false),
-                new SoulInfo("Toy Boat", propMgr?.HasSoul("Toy Boat Soul") ?? false),
-                new SoulInfo("Wooly Hat", propMgr?.HasSoul("Wooly Hat Soul") ?? false),
-                new SoulInfo("Pepper Grinder", propMgr?.HasSoul("Pepper Grinder Soul") ?? false),
-                new SoulInfo("Pub Cloth", propMgr?.HasSoul("Pub Cloth Soul") ?? false),
-                new SoulInfo("Cork", propMgr?.HasSoul("Cork Soul") ?? false),
-                new SoulInfo("Candlestick", propMgr?.HasSoul("Candlestick Soul") ?? false),
-                new SoulInfo("Flower for Vase", propMgr?.HasSoul("Flower for Vase Soul") ?? false),
-                new SoulInfo("Harmonica", propMgr?.HasSoul("Harmonica Soul") ?? false),
-                new SoulInfo("Tackle Box", propMgr?.HasSoul("Tackle Box Soul") ?? false),
-                new SoulInfo("Traffic Cone", propMgr?.HasSoul("Traffic Cone Soul") ?? false),
-                new SoulInfo("Exit Parcel", propMgr?.HasSoul("Exit Parcel Soul") ?? false),
-                new SoulInfo("Stealth Box", propMgr?.HasSoul("Stealth Box Soul") ?? false),
-                new SoulInfo("No Goose Sign", propMgr?.HasSoul("No Goose Sign Soul") ?? false),
-                new SoulInfo("Portable Stool", propMgr?.HasSoul("Portable Stool Soul") ?? false),
-                new SoulInfo("Dartboard", propMgr?.HasSoul("Dartboard Soul") ?? false),
-                new SoulInfo("Mop Bucket", propMgr?.HasSoul("Mop Bucket Soul") ?? false),
-                new SoulInfo("Mop", propMgr?.HasSoul("Mop Soul") ?? false),
-                new SoulInfo("Delivery Box", propMgr?.HasSoul("Delivery Box Soul") ?? false),
-                new SoulInfo("Burly Mans Bucket", propMgr?.HasSoul("Burly Mans Bucket Soul") ?? false),
-            };
-        }
+        private List<SoulInfo> GetPubPropSouls(Plugin p) { var m = p.PropManager; return new List<SoulInfo> {
+            new SoulInfo("Fishing Bobber", m?.HasSoul("Fishing Bobber Soul") ?? false), new SoulInfo("Exit Letter", m?.HasSoul("Exit Letter Soul") ?? false),
+            new SoulInfo("Pint Glass", m?.HasSoul("Pint Glass Soul") ?? false), new SoulInfo("Toy Boat", m?.HasSoul("Toy Boat Soul") ?? false),
+            new SoulInfo("Wooly Hat", m?.HasSoul("Wooly Hat Soul") ?? false), new SoulInfo("Pepper Grinder", m?.HasSoul("Pepper Grinder Soul") ?? false),
+            new SoulInfo("Pub Cloth", m?.HasSoul("Pub Cloth Soul") ?? false), new SoulInfo("Cork", m?.HasSoul("Cork Soul") ?? false),
+            new SoulInfo("Candlestick", m?.HasSoul("Candlestick Soul") ?? false), new SoulInfo("Flower for Vase", m?.HasSoul("Flower for Vase Soul") ?? false),
+            new SoulInfo("Harmonica", m?.HasSoul("Harmonica Soul") ?? false), new SoulInfo("Tackle Box", m?.HasSoul("Tackle Box Soul") ?? false),
+            new SoulInfo("Traffic Cone", m?.HasSoul("Traffic Cone Soul") ?? false), new SoulInfo("Exit Parcel", m?.HasSoul("Exit Parcel Soul") ?? false),
+            new SoulInfo("Stealth Box", m?.HasSoul("Stealth Box Soul") ?? false), new SoulInfo("No Goose Sign", m?.HasSoul("No Goose Sign Soul") ?? false),
+            new SoulInfo("Portable Stool", m?.HasSoul("Portable Stool Soul") ?? false), new SoulInfo("Dartboard", m?.HasSoul("Dartboard Soul") ?? false),
+            new SoulInfo("Mop Bucket", m?.HasSoul("Mop Bucket Soul") ?? false), new SoulInfo("Mop", m?.HasSoul("Mop Soul") ?? false),
+            new SoulInfo("Delivery Box", m?.HasSoul("Delivery Box Soul") ?? false), new SoulInfo("Burly Mans Bucket", m?.HasSoul("Burly Mans Bucket Soul") ?? false)
+        }; }
         
-        private List<SoulInfo> GetModelVillagePropSouls(Plugin plugin)
-        {
-            var propMgr = plugin.PropManager;
-            return new List<SoulInfo>
-            {
-                new SoulInfo("Mini Mail Pillar", propMgr?.HasSoul("Mini Mail Pillar Soul") ?? false),
-                new SoulInfo("Mini Phone Door", propMgr?.HasSoul("Mini Phone Door Soul") ?? false),
-                new SoulInfo("Mini Shovel", propMgr?.HasSoul("Mini Shovel Soul") ?? false),
-                new SoulInfo("Poppy Flower", propMgr?.HasSoul("Poppy Flower Soul") ?? false),
-                new SoulInfo("Timber Handle", propMgr?.HasSoul("Timber Handle Soul") ?? false),
-                new SoulInfo("Birdbath", propMgr?.HasSoul("Birdbath Soul") ?? false),
-                new SoulInfo("Easel", propMgr?.HasSoul("Easel Soul") ?? false),
-                new SoulInfo("Mini Bench", propMgr?.HasSoul("Mini Bench Soul") ?? false),
-                new SoulInfo("Mini Pump", propMgr?.HasSoul("Mini Pump Soul") ?? false),
-                new SoulInfo("Mini Street Bench", propMgr?.HasSoul("Mini Street Bench Soul") ?? false),
-                new SoulInfo("Sun Lounge", propMgr?.HasSoul("Sun Lounge Soul") ?? false),
-                new SoulInfo("Golden Bell", propMgr?.HasSoul("Golden Bell Soul") ?? false),
-            };
-        }
+        private List<SoulInfo> GetModelVillagePropSouls(Plugin p) { var m = p.PropManager; return new List<SoulInfo> {
+            new SoulInfo("Mini Mail Pillar", m?.HasSoul("Mini Mail Pillar Soul") ?? false), new SoulInfo("Mini Phone Door", m?.HasSoul("Mini Phone Door Soul") ?? false),
+            new SoulInfo("Mini Shovel", m?.HasSoul("Mini Shovel Soul") ?? false), new SoulInfo("Poppy Flower", m?.HasSoul("Poppy Flower Soul") ?? false),
+            new SoulInfo("Timber Handle", m?.HasSoul("Timber Handle Soul") ?? false), new SoulInfo("Birdbath", m?.HasSoul("Birdbath Soul") ?? false),
+            new SoulInfo("Easel", m?.HasSoul("Easel Soul") ?? false), new SoulInfo("Mini Bench", m?.HasSoul("Mini Bench Soul") ?? false),
+            new SoulInfo("Mini Pump", m?.HasSoul("Mini Pump Soul") ?? false), new SoulInfo("Mini Street Bench", m?.HasSoul("Mini Street Bench Soul") ?? false),
+            new SoulInfo("Sun Lounge", m?.HasSoul("Sun Lounge Soul") ?? false), new SoulInfo("Golden Bell", m?.HasSoul("Golden Bell Soul") ?? false)
+        }; }
         
-        private List<SoulInfo> GetSharedPropSouls(Plugin plugin)
-        {
-            var propMgr = plugin.PropManager;
-            return new List<SoulInfo>
-            {
-                new SoulInfo("Carrot", propMgr?.HasSoul("Carrot Soul") ?? false),
-                new SoulInfo("Tomato", propMgr?.HasSoul("Tomato Soul") ?? false),
-                new SoulInfo("Pumpkin", propMgr?.HasSoul("Pumpkin Soul") ?? false),
-                new SoulInfo("Topsoil Bag", propMgr?.HasSoul("Topsoil Bag Soul") ?? false),
-                new SoulInfo("Quoit", propMgr?.HasSoul("Quoit Soul") ?? false),
-                new SoulInfo("Plate", propMgr?.HasSoul("Plate Soul") ?? false),
-                new SoulInfo("Orange", propMgr?.HasSoul("Orange Soul") ?? false),
-                new SoulInfo("Leek", propMgr?.HasSoul("Leek Soul") ?? false),
-                new SoulInfo("Cucumber", propMgr?.HasSoul("Cucumber Soul") ?? false),
-                new SoulInfo("Dart", propMgr?.HasSoul("Dart Soul") ?? false),
-                new SoulInfo("Umbrella", propMgr?.HasSoul("Umbrella Soul") ?? false),
-                new SoulInfo("Spray Can", propMgr?.HasSoul("Spray Can Soul") ?? false),
-                new SoulInfo("Sock", propMgr?.HasSoul("Sock Soul") ?? false),
-                new SoulInfo("Pint Bottle", propMgr?.HasSoul("Pint Bottle Soul") ?? false),
-                new SoulInfo("Knife", propMgr?.HasSoul("Knife Soul") ?? false),
-                new SoulInfo("Gumboot", propMgr?.HasSoul("Gumboot Soul") ?? false),
-                new SoulInfo("Fork", propMgr?.HasSoul("Fork Soul") ?? false),
-                new SoulInfo("Vase Piece", propMgr?.HasSoul("Vase Piece Soul") ?? false),
-                new SoulInfo("Apple Core", propMgr?.HasSoul("Apple Core Soul") ?? false),
-                new SoulInfo("Apple", propMgr?.HasSoul("Apple Soul") ?? false),
-                new SoulInfo("Sandwich", propMgr?.HasSoul("Sandwich Soul") ?? false),
-                new SoulInfo("Slipper", propMgr?.HasSoul("Slipper Soul") ?? false),
-                new SoulInfo("Bow", propMgr?.HasSoul("Bow Soul") ?? false),
-                new SoulInfo("Walkie Talkie", propMgr?.HasSoul("Walkie Talkie Soul") ?? false),
-                new SoulInfo("Boot", propMgr?.HasSoul("Boot Soul") ?? false),
-                new SoulInfo("Mini Person", propMgr?.HasSoul("Mini Person Soul") ?? false),
-            };
-        }
-        
-        private void DrawAccess(float x, float y, string label, bool hasAccess)
-        {
-            if (hasAccess)
-            {
-                GUI.color = new Color(0.3f, 1f, 0.3f);
-                GUI.Label(new Rect(x, y, 230, 18), "✓ " + label);
-            }
-            else
-            {
-                GUI.color = new Color(0.5f, 0.5f, 0.5f);
-                GUI.Label(new Rect(x, y, 230, 18), "✗ " + label);
-            }
-            GUI.color = Color.white;
-        }
+        private List<SoulInfo> GetSharedPropSouls(Plugin p) { var m = p.PropManager; return new List<SoulInfo> {
+            new SoulInfo("Carrot", m?.HasSoul("Carrot Soul") ?? false), new SoulInfo("Tomato", m?.HasSoul("Tomato Soul") ?? false),
+            new SoulInfo("Pumpkin", m?.HasSoul("Pumpkin Soul") ?? false), new SoulInfo("Topsoil Bag", m?.HasSoul("Topsoil Bag Soul") ?? false),
+            new SoulInfo("Quoit", m?.HasSoul("Quoit Soul") ?? false), new SoulInfo("Plate", m?.HasSoul("Plate Soul") ?? false),
+            new SoulInfo("Orange", m?.HasSoul("Orange Soul") ?? false), new SoulInfo("Leek", m?.HasSoul("Leek Soul") ?? false),
+            new SoulInfo("Cucumber", m?.HasSoul("Cucumber Soul") ?? false), new SoulInfo("Dart", m?.HasSoul("Dart Soul") ?? false),
+            new SoulInfo("Umbrella", m?.HasSoul("Umbrella Soul") ?? false), new SoulInfo("Tinned Food", m?.HasSoul("Tinned Food Soul") ?? false),
+            new SoulInfo("Sock", m?.HasSoul("Sock Soul") ?? false), new SoulInfo("Pint Bottle", m?.HasSoul("Pint Bottle Soul") ?? false),
+            new SoulInfo("Knife", m?.HasSoul("Knife Soul") ?? false), new SoulInfo("Gumboot", m?.HasSoul("Gumboot Soul") ?? false),
+            new SoulInfo("Fork", m?.HasSoul("Fork Soul") ?? false), new SoulInfo("Vase Piece", m?.HasSoul("Vase Piece Soul") ?? false),
+            new SoulInfo("Apple Core", m?.HasSoul("Apple Core Soul") ?? false), new SoulInfo("Apple", m?.HasSoul("Apple Soul") ?? false),
+            new SoulInfo("Sandwich", m?.HasSoul("Sandwich Soul") ?? false), new SoulInfo("Slipper", m?.HasSoul("Slipper Soul") ?? false),
+            new SoulInfo("Bow", m?.HasSoul("Bow Soul") ?? false), new SoulInfo("Walkie Talkie", m?.HasSoul("Walkie Talkie Soul") ?? false),
+            new SoulInfo("Boot", m?.HasSoul("Boot Soul") ?? false), new SoulInfo("Mini Person", m?.HasSoul("Mini Person Soul") ?? false)
+        }; }
     }
 }

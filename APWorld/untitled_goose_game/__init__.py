@@ -111,7 +111,7 @@ class GooseGameWorld(World):
             "Cucumber Soul",
             "Dart Soul",
             "Umbrella Soul",
-            "Spray Can Soul",
+            "Tinned Food Soul",
             "Sock Soul",
             "Pint Bottle Soul",
             "Knife Soul",
@@ -174,6 +174,7 @@ class GooseGameWorld(World):
             "Baby Doll Soul",
             "Pricing Gun Soul",
             "Adding Machine Soul",
+            "Boards Soul",
             
             # Back Gardens Prop Souls (25)
             "Dummy Soul",
@@ -251,13 +252,20 @@ class GooseGameWorld(World):
             else:
                 self.multiworld.itempool.append(self.create_item(item_name))
         
-        # Add all NPC souls to pool
-        for soul in npc_souls:
-            self.multiworld.itempool.append(self.create_item(soul))
+        # Track items added for filler calculation
+        items_added = 4  # 4 area items in pool (1 is precollected)
         
-        # Add all Prop souls to pool
-        for soul in prop_souls:
-            self.multiworld.itempool.append(self.create_item(soul))
+        # Add NPC souls to pool if option enabled
+        if self.options.include_npc_souls:
+            for soul in npc_souls:
+                self.multiworld.itempool.append(self.create_item(soul))
+            items_added += len(npc_souls)
+        
+        # Add Prop souls to pool if option enabled
+        if self.options.include_prop_souls:
+            for soul in prop_souls:
+                self.multiworld.itempool.append(self.create_item(soul))
+            items_added += len(prop_souls)
         
         # NOTE: Golden Bell is NOT added to the pool here!
         # It is placed directly at "Pick up Golden Bell" location in pre_fill()
@@ -265,8 +273,6 @@ class GooseGameWorld(World):
         
         # Calculate filler needed
         total_locations = len(self.multiworld.get_unfilled_locations(self.player))
-        # 4 area items in pool + NPC souls + prop souls (Golden Bell is placed separately)
-        items_added = 4 + len(npc_souls) + len(prop_souls)
         filler_needed = total_locations - items_added
         
         # Capped filler items - these have maximum quantities
@@ -332,6 +338,8 @@ class GooseGameWorld(World):
             "include_item_pickups": self.options.include_item_pickups.value,
             "include_drag_items": self.options.include_drag_items.value,
             "include_interactions": self.options.include_interactions.value,
+            "include_npc_souls": self.options.include_npc_souls.value,
+            "include_prop_souls": self.options.include_prop_souls.value,
             "goal": self.options.goal.value,
             "death_link": self.options.death_link.value,
         }

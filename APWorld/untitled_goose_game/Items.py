@@ -49,7 +49,7 @@ item_table: Dict[str, GooseGameItemData] = {
     "Cucumber Soul": GooseGameItemData(BASE_ID + 408, ItemClassification.progression),
     "Dart Soul": GooseGameItemData(BASE_ID + 409, ItemClassification.progression),
     "Umbrella Soul": GooseGameItemData(BASE_ID + 410, ItemClassification.progression),
-    "Spray Can Soul": GooseGameItemData(BASE_ID + 411, ItemClassification.progression),
+    "Tinned Food Soul": GooseGameItemData(BASE_ID + 411, ItemClassification.progression),
     "Sock Soul": GooseGameItemData(BASE_ID + 412, ItemClassification.progression),
     "Pint Bottle Soul": GooseGameItemData(BASE_ID + 413, ItemClassification.progression),
     "Knife Soul": GooseGameItemData(BASE_ID + 414, ItemClassification.progression),
@@ -112,6 +112,7 @@ item_table: Dict[str, GooseGameItemData] = {
     "Baby Doll Soul": GooseGameItemData(BASE_ID + 541, ItemClassification.progression),
     "Pricing Gun Soul": GooseGameItemData(BASE_ID + 542, ItemClassification.progression),
     "Adding Machine Soul": GooseGameItemData(BASE_ID + 543, ItemClassification.progression),
+    "Boards Soul": GooseGameItemData(BASE_ID + 544, ItemClassification.progression),
     
     # === BACK GARDENS ONE-OFF PROP SOULS (IDs 550-579) ===
     "Dummy Soul": GooseGameItemData(BASE_ID + 550, ItemClassification.progression),
@@ -232,7 +233,7 @@ ITEM_GROUPS = {
         "Cucumber Soul",
         "Dart Soul",
         "Umbrella Soul",
-        "Spray Can Soul",
+        "Tinned Food Soul",
         "Sock Soul",
         "Pint Bottle Soul",
         "Knife Soul",
@@ -295,6 +296,7 @@ ITEM_GROUPS = {
         "Baby Doll Soul",
         "Pricing Gun Soul",
         "Adding Machine Soul",
+        "Boards Soul",
     },
     "Back Gardens Prop Souls": {
         "Dummy Soul",
@@ -399,7 +401,7 @@ LOCATION_TO_SOUL: Dict[str, str] = {
     "Red Quoit": "Quoit Soul",
     "Plate": "Plate Soul",
     "Orange": "Orange Soul",
-    "Orange Can": "Spray Can Soul",  # Override - this is a spray can not orange
+    "Orange Can": "Tinned Food Soul",  # Tinned food from shop
     "Leek": "Leek Soul",
     "Cucumber": "Cucumber Soul",
     "Dart": "Dart Soul",
@@ -407,8 +409,8 @@ LOCATION_TO_SOUL: Dict[str, str] = {
     "Black Umbrella": "Umbrella Soul",
     "Rainbow Umbrella": "Umbrella Soul",
     "Red Umbrella": "Umbrella Soul",
-    "Blue Can": "Spray Can Soul",
-    "Yellow Can": "Spray Can Soul",
+    "Blue Can": "Tinned Food Soul",
+    "Yellow Can": "Tinned Food Soul",
     "Sock": "Sock Soul",
     "Pint Bottle": "Pint Bottle Soul",
     "Knife": "Knife Soul",
@@ -475,6 +477,7 @@ LOCATION_TO_SOUL: Dict[str, str] = {
     "Baby Doll": "Baby Doll Soul",
     "Pricing Gun": "Pricing Gun Soul",
     "Adding Machine": "Adding Machine Soul",
+    "Boards": "Boards Soul",
     
     # Back Gardens one-offs
     "Dummy": "Dummy Soul",

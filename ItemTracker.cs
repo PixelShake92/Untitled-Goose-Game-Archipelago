@@ -278,6 +278,16 @@ namespace GooseGameAP
                 
                 Prop effectiveDragProp = isActive ? currentDragProp : null;
                 
+                // Check if this is a soul-blocked prop and force drop if so
+                if (effectiveDragProp != null)
+                {
+                    if (ShouldBlockDrag(effectiveDragProp))
+                    {
+                        ForceDropProp(cachedDragger);
+                        effectiveDragProp = null;
+                    }
+                }
+                
                 // Detect start drag
                 if (effectiveDragProp != null && lastDraggedProp == null)
                 {
@@ -394,6 +404,82 @@ namespace GooseGameAP
                 parent = parent.parent;
             }
             return path;
+        }
+        
+        /// <summary>
+        /// Check if dragging this prop should be blocked due to missing soul
+        /// </summary>
+        private bool ShouldBlockDrag(Prop prop)
+        {
+            if (prop == null) return false;
+            
+            var propManager = plugin.PropManager;
+            if (propManager == null) return false;
+            
+            string propName = prop.name?.ToLower() ?? "";
+            
+            // Check drawer (always-enabled prop that needs soul to drag)
+            if (propName.Contains("drawer"))
+            {
+                bool shouldBlock = propManager.ShouldBlockDrag("Drawer Soul");
+                if (shouldBlock)
+                {
+                    Log.LogInfo($"[Drag] Blocking drag of {prop.name} - need Drawer Soul");
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Force the dragger to drop its current prop
+        /// </summary>
+        private void ForceDropProp(object dragger)
+        {
+            try
+            {
+                // Try to find and call Drop method
+                var dropMethod = dragger.GetType().GetMethod("Drop",
+                    System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.Instance);
+                
+                if (dropMethod != null)
+                {
+                    dropMethod.Invoke(dragger, null);
+                    Log.LogInfo("[Drag] Forced drop via Drop()");
+                    return;
+                }
+                
+                // Alternative: Try Release method
+                var releaseMethod = dragger.GetType().GetMethod("Release",
+                    System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.Instance);
+                
+                if (releaseMethod != null)
+                {
+                    releaseMethod.Invoke(dragger, null);
+                    Log.LogInfo("[Drag] Forced drop via Release()");
+                    return;
+                }
+                
+                // Alternative: Set active to false and holdable to null
+                if (draggerActiveField != null)
+                {
+                    draggerActiveField.SetValue(dragger, false);
+                }
+                if (draggerHoldableField != null)
+                {
+                    draggerHoldableField.SetValue(dragger, null);
+                }
+                Log.LogInfo("[Drag] Forced drop via field reset");
+            }
+            catch (System.Exception ex)
+            {
+                Log.LogError($"[Drag] ForceDropProp error: {ex.Message}");
+            }
         }
     }
 }

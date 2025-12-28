@@ -107,7 +107,6 @@ item_pickup_locations: Dict[str, GooseGameLocationData] = {
     "Pick up Radio": GooseGameLocationData(BASE_ID + 1002, "Garden"),
     "Pick up Trowel": GooseGameLocationData(BASE_ID + 1003, "Garden"),
     "Pick up Keys": GooseGameLocationData(BASE_ID + 1004, "Garden"),
-    "Pick up Carrot": GooseGameLocationData(BASE_ID + 1005, "Garden"),
     "Pick up Tulip": GooseGameLocationData(BASE_ID + 1006, "Garden"),
     "Pick up Apple": GooseGameLocationData(BASE_ID + 1007, "Garden"),
     "Pick up Jam": GooseGameLocationData(BASE_ID + 1008, "Garden"),
@@ -318,7 +317,7 @@ interaction_locations: Dict[str, GooseGameLocationData] = {
     "Open Intro Gate": GooseGameLocationData(BASE_ID + 1306, "Hub"),  # Very first gate at game start
     
     # High Street interactions (1310-1317)
-    "Break Through Boards": GooseGameLocationData(BASE_ID + 1310, "High Street"),
+    "Break Through Boards": GooseGameLocationData(BASE_ID + 1310, "Back Gardens"),
     "Unplug the Radio": GooseGameLocationData(BASE_ID + 1311, "High Street"),
     "Open Black Umbrella": GooseGameLocationData(BASE_ID + 1313, "High Street"),
     "Open Rainbow Umbrella": GooseGameLocationData(BASE_ID + 1314, "High Street"),
@@ -367,9 +366,6 @@ unique_item_locations: Dict[str, GooseGameLocationData] = {
     "Pick up Carrot 8": GooseGameLocationData(BASE_ID + 1408, "Garden"),
     "Pick up Carrot 9": GooseGameLocationData(BASE_ID + 1409, "Garden"),
     "Pick up Carrot 10": GooseGameLocationData(BASE_ID + 1410, "Garden"),
-    "Pick up Carrot 11": GooseGameLocationData(BASE_ID + 1411, "High Street"),  # Shop carrot
-    "Pick up Carrot 12": GooseGameLocationData(BASE_ID + 1412, "High Street"),  # Shop carrot
-    "Pick up Carrot 13": GooseGameLocationData(BASE_ID + 1413, "High Street"),  # Shop carrot
     
     # Pub Tomatoes (IDs 1421-1431)
     "Pick up Pub Tomato 1": GooseGameLocationData(BASE_ID + 1421, "Pub"),

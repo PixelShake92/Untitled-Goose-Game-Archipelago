@@ -83,7 +83,7 @@ namespace GooseGameAP
                 case 408: return "Cucumber Soul";
                 case 409: return "Dart Soul";
                 case 410: return "Umbrella Soul";
-                case 411: return "Spray Can Soul";
+                case 411: return "Tinned Food Soul";
                 case 412: return "Sock Soul";
                 case 413: return "Pint Bottle Soul";
                 case 414: return "Knife Soul";
@@ -146,6 +146,7 @@ namespace GooseGameAP
                 case 541: return "Baby Doll Soul";
                 case 542: return "Pricing Gun Soul";
                 case 543: return "Adding Machine Soul";
+                case 544: return "Boards Soul";
                 
                 // Back Gardens One-Off Prop Souls (550-574)
                 case 550: return "Dummy Soul";
@@ -398,6 +399,7 @@ namespace GooseGameAP
                 case "canyellow": return BASE_ID + 1032;
                 case "canorange": return BASE_ID + 1033;
                 case "weedtool": return BASE_ID + 1034;
+                case "forkgarden": return BASE_ID + 1034;  // In-game name for weed tool
                 case "lilyflower": return BASE_ID + 1035;
                 case "orange": return BASE_ID + 1036;
                 case "tomato (1)": return BASE_ID + 1037;

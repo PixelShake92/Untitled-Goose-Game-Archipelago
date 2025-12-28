@@ -42,12 +42,12 @@ namespace GooseGameAP
             { "cucumber", "Cucumber Soul" },
             { "dart", "Dart Soul" },
             { "umbrella", "Umbrella Soul" },
-            { "bluecan", "Spray Can Soul" },
-            { "orangecan", "Spray Can Soul" },
-            { "yellowcan", "Spray Can Soul" },
-            { "canblue", "Spray Can Soul" },
-            { "canorange", "Spray Can Soul" },
-            { "canyellow", "Spray Can Soul" },
+            { "bluecan", "Tinned Food Soul" },
+            { "orangecan", "Tinned Food Soul" },
+            { "yellowcan", "Tinned Food Soul" },
+            { "canblue", "Tinned Food Soul" },
+            { "canorange", "Tinned Food Soul" },
+            { "canyellow", "Tinned Food Soul" },
             { "sock", "Sock Soul" },
             { "pintbottle", "Pint Bottle Soul" },
             { "knife", "Knife Soul" },
@@ -114,6 +114,7 @@ namespace GooseGameAP
             { "dishwashbottle", "Dish Soap Bottle Soul" },
             { "spraybottle", "Spray Bottle Soul" },
             { "weedtool", "Weed Tool Soul" },
+            { "forkgarden", "Weed Tool Soul" },  // In-game name for weed tool
             { "lilyflower", "Lily Flower Soul" },
             { "fusilage", "Fusilage Soul" },
             { "coin", "Coin Soul" },
@@ -122,6 +123,8 @@ namespace GooseGameAP
             { "shoppingbasket", "Shopping Basket Soul" },
             { "shopbasket", "Shopping Basket Soul" },
             { "basketprop", "Picnic Basket Soul" },
+            { "basket", "Picnic Basket Soul" },  // Short name from hierarchy
+            { "top", "Topsoil Bag Soul" },  // Short name after cleaning top_1, top_2, top_3
             { "pushbroom", "Push Broom Soul" },
             { "brokenbroomhead", "Broken Broom Head Soul" },
             { "broomheadseperate", "Broken Broom Head Soul" },
@@ -151,6 +154,7 @@ namespace GooseGameAP
             { "teapot", "Tea Pot Soul" },
             { "clippers", "Clippers Soul" },
             { "duckstatue", "Duck Statue Soul" },
+            { "duckstatueprop", "Duck Statue Soul" },  // Full prop name
             { "duck", "Duck Statue Soul" },
             { "frogstatue", "Frog Statue Soul" },
             { "frog", "Frog Statue Soul" },
@@ -222,9 +226,14 @@ namespace GooseGameAP
         private bool PropSoulsEnabled => plugin.PropSoulsEnabled;
         
         // Props that should ALWAYS be enabled (needed for basic progression)
+        // Props that must always be visible for game mechanics to work
+        // These props are visible but still require their soul to be interacted with
+        // (drag blocking handled separately in Patches.cs)
         private static readonly HashSet<string> AlwaysEnabledProps = new HashSet<string>
         {
-            "Fence Bolt Soul"  // Needed to open intro gate
+            "Fence Bolt Soul",  // Needed to open intro gate - starting item
+            "Drawer Soul"       // Drawer must exist for desk-breaking mechanic to work
+                                // Player still needs soul to drag it
         };
         
         /// <summary>
@@ -462,12 +471,21 @@ namespace GooseGameAP
         
         private string GetSoulForProp(string cleanName)
         {
+            // Direct match first
             if (PropToSoul.TryGetValue(cleanName, out string soul))
                 return soul;
             
+            // Check if cleanName starts with or contains a key
             foreach (var kvp in PropToSoul)
             {
                 if (cleanName.StartsWith(kvp.Key) || cleanName.Contains(kvp.Key))
+                    return kvp.Value;
+            }
+            
+            // Check if a key starts with or contains cleanName (for short names like "top", "basket")
+            foreach (var kvp in PropToSoul)
+            {
+                if (kvp.Key.StartsWith(cleanName) || kvp.Key.Contains(cleanName))
                     return kvp.Value;
             }
             
@@ -525,9 +543,31 @@ namespace GooseGameAP
                     if (prop != null)
                     {
                         prop.SetActive(true);
+                        
+                        // Special handling for physics-based props that may need Rigidbody reset
+                        ResetPhysicsIfNeeded(prop, soulName);
+                        
                         Log.LogInfo($"[Prop] Enabled: {prop.name}");
                     }
                 }
+            }
+        }
+        
+        /// <summary>
+        /// Reset physics components for props that need it after being enabled
+        /// </summary>
+        private void ResetPhysicsIfNeeded(GameObject prop, string soulName)
+        {
+            // Most props work fine with just SetActive(true)
+            // Add special handling here if specific props need physics reset
+            
+            // Check for Rigidbody and wake it up
+            var rb = prop.GetComponent<Rigidbody>();
+            if (rb == null) rb = prop.GetComponentInChildren<Rigidbody>();
+            
+            if (rb != null)
+            {
+                rb.WakeUp();
             }
         }
         
@@ -545,6 +585,34 @@ namespace GooseGameAP
                 return true;
             
             return receivedSouls.Contains(soulName);
+        }
+        
+        /// <summary>
+        /// Check if dragging a prop should be blocked
+        /// This is for "always enabled" props that are visible but can't be dragged without their soul
+        /// </summary>
+        public bool ShouldBlockDrag(string soulName)
+        {
+            Log.LogInfo($"[Prop] ShouldBlockDrag called for: {soulName}, PropSoulsEnabled={PropSoulsEnabled}");
+            
+            // If souls are disabled, never block
+            if (!PropSoulsEnabled)
+            {
+                Log.LogInfo($"[Prop] ShouldBlockDrag: souls disabled, not blocking");
+                return false;
+            }
+            
+            // If it's an always-enabled prop, block drag if we don't have the soul
+            if (AlwaysEnabledProps.Contains(soulName))
+            {
+                bool hasSoul = receivedSouls.Contains(soulName);
+                Log.LogInfo($"[Prop] ShouldBlockDrag: {soulName} is always-enabled, hasSoul={hasSoul}, blocking={!hasSoul}");
+                return !hasSoul;
+            }
+            
+            // For normal props, they're already disabled so no need to block
+            Log.LogInfo($"[Prop] ShouldBlockDrag: {soulName} not in AlwaysEnabledProps, not blocking");
+            return false;
         }
         
         /// <summary>

@@ -45,6 +45,20 @@ class IncludeInteractions(Toggle):
     default = True
 
 
+class IncludeNPCSouls(Toggle):
+    """When enabled, NPCs won't appear until you receive their soul item.
+    This adds NPC souls to the item pool and gates NPC-related goals behind them."""
+    display_name = "Include NPC Souls"
+    default = True
+
+
+class IncludePropSouls(Toggle):
+    """When enabled, items can't be picked up or dragged until you receive their soul.
+    This adds prop souls to the item pool and gates item interactions behind them."""
+    display_name = "Include Prop Souls"
+    default = True
+
+
 class TrapPercentage(Range):
     """Percentage of filler items that will be traps."""
     display_name = "Trap Percentage"
@@ -76,6 +90,8 @@ class GooseGameOptions(PerGameCommonOptions):
     include_item_pickups: IncludeItemPickups
     include_drag_items: IncludeDragItems
     include_interactions: IncludeInteractions
+    include_npc_souls: IncludeNPCSouls
+    include_prop_souls: IncludePropSouls
     trap_percentage: TrapPercentage
     goal: Goal
     death_link: DeathLink
