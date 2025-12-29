@@ -356,8 +356,8 @@ def get_goal_rules(player, include_npc_souls, include_prop_souls):
                 and has_pub(state, player) 
                 and has_model_village(state, player)
                 # Timber Handle and Golden Bell are ALWAYS required regardless of prop souls option
-                and state.has("Timber Handle Soul", player) 
-                and state.has("Golden Bell Soul", player)
+                and has_soul(state, player, "Timber Handle Soul") 
+                and has_soul(state, player, "Golden Bell Soul")
                 and state.has("Golden Bell", player)
             ),
     }
@@ -787,6 +787,17 @@ def get_speedrun_rules(player, include_npc_souls, include_prop_souls):
             has_soul(state, player, "Horn-Rimmed Glasses") 
             or has_soul(state, player, "Red Glasses") 
             or has_soul(state, player, "Sunglasses")
+        )
+    
+    def can_access_back_gardens_signs(state, player):
+        return (
+            has_back_gardens(state, player) 
+            and has_npc(state, player, "Tidy Neighbour") 
+            and has_npc(state, player, "Messy Neighbour") 
+            and has_soul(state, player, "Tea Cup") 
+            and has_soul(state, player, "Slipper") 
+            and has_soul(state, player, "Rose") 
+            and has_soul(state, player, "Vase")
         )
     
     def can_complete_garden_todos(state, player):
@@ -1690,6 +1701,7 @@ def get_pickup_rules(player, include_npc_souls, include_prop_souls):
         "Pick up Badminton Racket":
             lambda state: (
                 has_back_gardens(state, player) 
+                and can_access_back_gardens_signs(state, player) 
                 and has_soul(state, player, "Badminton Racket")
             ),
         "Pick up Rose":
@@ -1737,6 +1749,7 @@ def get_pickup_rules(player, include_npc_souls, include_prop_souls):
         "Drag Messy Sign":
             lambda state: (
                 has_back_gardens(state, player) 
+                and can_access_back_gardens_signs(state, player) 
                 and has_soul(state, player, "Messy Sign")
             ),
         "Drag Drawer":
@@ -1752,6 +1765,7 @@ def get_pickup_rules(player, include_npc_souls, include_prop_souls):
         "Drag Clean Sign":
             lambda state: (
                 has_back_gardens(state, player) 
+                and can_access_back_gardens_signs(state, player) 
                 and has_soul(state, player, "Clean Sign")
             ),
         
