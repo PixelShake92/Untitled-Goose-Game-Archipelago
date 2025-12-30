@@ -182,10 +182,10 @@ item_table: Dict[str, GooseGameItemData] = {
     "Golden Bell Soul": GooseGameItemData(BASE_ID + 621, ItemClassification.progression),
     
     # === FILLER ITEMS ===
-    "Mega Honk": GooseGameItemData(BASE_ID + 200, ItemClassification.filler),
-    "Speedy Feet": GooseGameItemData(BASE_ID + 201, ItemClassification.filler),
-    "Silent Steps": GooseGameItemData(BASE_ID + 202, ItemClassification.filler),
-    "A Goose Day": GooseGameItemData(BASE_ID + 203, ItemClassification.useful),
+    "Mega Honk": GooseGameItemData(BASE_ID + 200, ItemClassification.useful),
+    "Speedy Feet": GooseGameItemData(BASE_ID + 201, ItemClassification.useful),
+    "Silent Steps": GooseGameItemData(BASE_ID + 202, ItemClassification.useful),
+    "A Goose Day": GooseGameItemData(BASE_ID + 203, ItemClassification.filler),
     
     # === TRAP ITEMS ===
     "Tired Goose": GooseGameItemData(BASE_ID + 300, ItemClassification.trap),
