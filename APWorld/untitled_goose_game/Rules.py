@@ -238,11 +238,12 @@ def get_goal_rules(player, include_npc_souls, include_prop_souls):
             not has_high_street(state, player)
             or not has_npc(state, player, "Boy")
             or not has_npc(state, player, "Market Lady")
+            or not has_npc(state, player, "TV Shop Owner")
         ):
             return False
         
         # Count total available tasks; the final task is available if we can do at least 5
-        task_count = 1 # Trapping the boy in the phone booth is free with the above conditions
+        task_count = 2 # Trapping the boy in the phone booth and getting on TV are free with the above conditions
         
         if has_soul(state, player, "Boy's Glasses") and has_any_wrong_glasses(state, player):
             task_count += 1
@@ -252,8 +253,6 @@ def get_goal_rules(player, include_npc_souls, include_prop_souls):
             and has_npc(state, player, "Groundskeeper") 
             and has_soul(state, player, "Trowel")
         ):
-            task_count += 1
-        if has_npc(state, player, "TV Shop Owner"):
             task_count += 1
         if has_soul(state, player, "Push Broom"):
             task_count += 1
@@ -362,7 +361,8 @@ def get_goal_rules(player, include_npc_souls, include_prop_souls):
         "Trap the boy in the phone booth":
             lambda state: (
                 has_high_street(state, player) 
-                and has_npc(state, player, "Boy")
+                and has_npc(state, player, "Boy") 
+                and has_npc(state, player, "TV Shop Owner") 
             ),
         "Make the boy wear the wrong glasses":
             lambda state: (
@@ -408,6 +408,7 @@ def get_goal_rules(player, include_npc_souls, include_prop_souls):
             lambda state: (
                 has_back_gardens(state, player) 
                 and has_npc(state, player, "Tidy Neighbour") 
+                and has_npc(state, player, "Messy Neighbour") 
                 and has_soul(state, player, "Tea Cup")
             ),
         "Make the man go barefoot":
@@ -606,11 +607,12 @@ def get_extra_goal_rules(player, include_npc_souls, include_prop_souls):
             not has_high_street(state, player)
             or not has_npc(state, player, "Boy")
             or not has_npc(state, player, "Market Lady")
+            or not has_npc(state, player, "TV Shop Owner")
         ):
             return False
         
         # Count total available tasks; the final task is available if we can do at least 5
-        task_count = 1 # Trapping the boy in the phone booth is free with the above conditions
+        task_count = 2 # Trapping the boy in the phone booth and getting on TV are free with the above conditions
         
         if has_soul(state, player, "Boy's Glasses") and has_any_wrong_glasses(state, player):
             task_count += 1
@@ -620,8 +622,6 @@ def get_extra_goal_rules(player, include_npc_souls, include_prop_souls):
             and has_npc(state, player, "Groundskeeper") 
             and has_soul(state, player, "Trowel")
         ):
-            task_count += 1
-        if has_npc(state, player, "TV Shop Owner"):
             task_count += 1
         if has_soul(state, player, "Push Broom"):
             task_count += 1
@@ -892,10 +892,72 @@ def get_extra_goal_rules(player, include_npc_souls, include_prop_souls):
                 has_back_gardens(state, player) 
                 and has_npc(state, player, "Tidy Neighbour")
                 and (
+                    # Back Garden items
                     has_soul(state, player, "Bow")
-                    or has_soul(state, player, "Cricket Ball")
                     or has_soul(state, player, "Soap")
-                    or has_soul(state, player, "Tea Cup")
+                    or has_soul(state, player, "Pot Stack")
+                    or has_soul(state, player, "Paintbrush")
+                    or has_soul(state, player, "Vase")
+                    or has_soul(state, player, "Right Strap")
+                    or has_soul(state, player, "Sock")
+                    # Hub items
+                    or has_soul(state, player, "Dummy")
+                    or has_soul(state, player, "Coin")
+                    or has_soul(state, player, "Fishing Bobber")
+                    or has_soul(state, player, "Drink Can")
+                    or has_soul(state, player, "Tennis Ball")
+                    # Garden items
+                    or has_garden(state, player) 
+                    and (
+                        has_soul(state, player, "Radio")
+                        or has_soul(state, player, "Trowel")
+                        or has_soul(state, player, "Tulip")
+                        or has_soul(state, player, "Jam")
+                        or has_soul(state, player, "Carrot")
+                        or has_soul(state, player, "Apple")
+                        or has_soul(state, player, "Sandwich")
+                    )
+                    # High Street items
+                    or has_high_street(state, player) 
+                    and (
+                        has_soul(state, player, "Horn-Rimmed Glasses")
+                        or has_soul(state, player, "Red Glasses")
+                        or has_soul(state, player, "Sunglasses")
+                        or has_soul(state, player, "Loo Paper")
+                        or has_soul(state, player, "Toy Car")
+                        or has_soul(state, player, "Hairbrush")
+                        or has_soul(state, player, "Toothbrush")
+                        or has_soul(state, player, "Stereoscope")
+                        or has_soul(state, player, "Dish Soap Bottle")
+                        or has_soul(state, player, "Spray Bottle")
+                        or has_soul(state, player, "Weed Tool")
+                        or has_soul(state, player, "Lily Flower")
+                        or has_soul(state, player, "Fusilage")
+                        or has_soul(state, player, "Baby Doll")
+                        or has_soul(state, player, "Carrot")
+                        or has_soul(state, player, "Tomato")
+                        or has_soul(state, player, "Leek")
+                        or has_soul(state, player, "Cucumber")
+                        or has_soul(state, player, "Tinned Food")
+                        or has_soul(state, player, "Apple Core")
+                        or has_soul(state, player, "Walkie Talkie")
+                        or has_soul(state, player, "Orange")
+                    )
+                    # Pub items
+                    or has_pub(state, player) 
+                    and (
+                        has_soul(state, player, "Exit Letter")
+                        or has_soul(state, player, "Toy Boat")
+                        or has_soul(state, player, "Pepper Grinder")
+                        or has_soul(state, player, "Cork")
+                        or has_soul(state, player, "Candlestick")
+                        or has_soul(state, player, "Harmonica")
+                        or has_soul(state, player, "Tomato")
+                        or has_soul(state, player, "Quoit")
+                        or has_soul(state, player, "Plate")
+                        or has_soul(state, player, "Knife")
+                        or has_soul(state, player, "Fork")
+                    )
                 )
             ),
         "Steal the old man's woolen hat":
@@ -1342,11 +1404,12 @@ def get_pickup_rules(player, include_npc_souls, include_prop_souls):
             not has_high_street(state, player)
             or not has_npc(state, player, "Boy")
             or not has_npc(state, player, "Market Lady")
+            or not has_npc(state, player, "TV Shop Owner")
         ):
             return False
         
         # Count total available tasks; the final task is available if we can do at least 5
-        task_count = 1 # Trapping the boy in the phone booth is free with the above conditions
+        task_count = 2 # Trapping the boy in the phone booth and getting on TV are free with the above conditions
         
         if has_soul(state, player, "Boy's Glasses") and has_any_wrong_glasses(state, player):
             task_count += 1
@@ -1356,8 +1419,6 @@ def get_pickup_rules(player, include_npc_souls, include_prop_souls):
             and has_npc(state, player, "Groundskeeper") 
             and has_soul(state, player, "Trowel")
         ):
-            task_count += 1
-        if has_npc(state, player, "TV Shop Owner"):
             task_count += 1
         if has_soul(state, player, "Push Broom"):
             task_count += 1
