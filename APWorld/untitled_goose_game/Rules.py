@@ -2413,6 +2413,7 @@ def get_pickup_rules(player, include_npc_souls, include_prop_souls):
         "Drag Delivery Box":
             lambda state: (
                 has_pub(state, player) 
+                and has_npc(state, player, "Cook") 
                 and has_soul(state, player, "Delivery Box")
             ),
         "Drag Burly Mans Bucket":
