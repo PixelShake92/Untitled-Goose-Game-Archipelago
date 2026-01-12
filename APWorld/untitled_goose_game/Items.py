@@ -107,7 +107,8 @@ item_table: Dict[str, GooseGameItemData] = {
     "Weed Tool Soul": GooseGameItemData(BASE_ID + 531, ItemClassification.progression),
     "Lily Flower Soul": GooseGameItemData(BASE_ID + 532, ItemClassification.progression),
     "Fusilage Soul": GooseGameItemData(BASE_ID + 533, ItemClassification.progression),
-    "Coin Soul": GooseGameItemData(BASE_ID + 534, ItemClassification.progression),
+    # REMOVED: Coin Soul - Changing it to filler instead
+    # "Coin Soul": GooseGameItemData(BASE_ID + 534, ItemClassification.progression),
     "Chalk Soul": GooseGameItemData(BASE_ID + 535, ItemClassification.progression),
     "Dustbin Lid Soul": GooseGameItemData(BASE_ID + 536, ItemClassification.progression),
     "Shopping Basket Soul": GooseGameItemData(BASE_ID + 537, ItemClassification.progression),
@@ -193,6 +194,7 @@ item_table: Dict[str, GooseGameItemData] = {
     "Speedy Feet": GooseGameItemData(BASE_ID + 201, ItemClassification.useful),
     "Silent Steps": GooseGameItemData(BASE_ID + 202, ItemClassification.useful),
     "A Goose Day": GooseGameItemData(BASE_ID + 203, ItemClassification.filler),
+    "Coin": GooseGameItemData(BASE_ID + 204, ItemClassification.filler),
     
     # === TRAP ITEMS ===
     "Tired Goose": GooseGameItemData(BASE_ID + 300, ItemClassification.trap),
@@ -297,7 +299,7 @@ ITEM_GROUPS = {
         "Weed Tool Soul",
         "Lily Flower Soul",
         "Fusilage Soul",
-        "Coin Soul",
+        # "Coin Soul",
         "Chalk Soul",
         "Dustbin Lid Soul",
         "Shopping Basket Soul",
@@ -484,7 +486,7 @@ LOCATION_TO_SOUL: Dict[str, str] = {
     "Weed Tool": "Weed Tool Soul",
     "Lily Flower": "Lily Flower Soul",
     "Fusilage": "Fusilage Soul",
-    "Coin": "Coin Soul",
+    # "Coin": "Coin Soul",
     "Chalk": "Chalk Soul",
     "Dustbin Lid": "Dustbin Lid Soul",
     "Dustbin": "Dustbin Soul",

@@ -64,6 +64,7 @@ namespace GooseGameAP
                 case 201: return "Speedy Feet";
                 case 202: return "Silent Steps";
                 case 203: return "A Goose Day";
+                case 204: return "Coin";
                 
                 // Traps
                 case 300: return "Tired Goose";
@@ -136,7 +137,7 @@ namespace GooseGameAP
                 case 531: return "Weed Tool Soul";
                 case 532: return "Lily Flower Soul";
                 case 533: return "Fusilage Soul";
-                case 534: return "Coin Soul";
+                // case 534: return "Coin Soul";
                 case 535: return "Chalk Soul";
                 case 536: return "Dustbin Lid Soul";
                 case 537: return "Shopping Basket Soul";
@@ -415,7 +416,7 @@ namespace GooseGameAP
                 case "applecore (1)": return BASE_ID + 1058;
                 case "dustbinlid": return BASE_ID + 1047;
                 case "pintbottle (1)": return BASE_ID + 1048;
-                case "coin": return BASE_ID + 1049;
+                // case "coin": return BASE_ID + 1049;
                 case "chalk": return BASE_ID + 1050;
                 case "tomato (2)": return BASE_ID + 1051;
                 case "orange (1)": return BASE_ID + 1052;

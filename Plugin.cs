@@ -753,6 +753,11 @@ namespace GooseGameAP
                     PropManager?.SaveSouls();
                     UI?.ShowNotification($"{soulName} received!");
                     break;
+                
+                case 204: // Coin filler item
+                    PropManager?.ReceiveCoin();
+                    UI?.ShowNotification($"Coin received.");
+                    break;
                     
                 case 200:
                     if (TrapManager.MegaHonkCount < 3)

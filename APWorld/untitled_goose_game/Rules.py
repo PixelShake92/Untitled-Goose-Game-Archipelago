@@ -729,8 +729,8 @@ def get_extra_goal_rules(player, include_npc_souls, include_prop_souls):
             item_count += 1
         if has_soul(state, player, "Dustbin Lid"):
             item_count += 1
-        if has_soul(state, player, "Coin"):
-            item_count += 1
+        # if has_soul(state, player, "Coin"):
+        #     item_count += 1
         if has_soul(state, player, "Walkie Talkie"):
             item_count += 2  # Two walkie talkies
         
@@ -902,7 +902,7 @@ def get_extra_goal_rules(player, include_npc_souls, include_prop_souls):
                     or has_soul(state, player, "Sock")
                     # Hub items
                     or has_soul(state, player, "Dummy")
-                    or has_soul(state, player, "Coin")
+                    # or has_soul(state, player, "Coin")
                     or has_soul(state, player, "Fishing Bobber")
                     or has_soul(state, player, "Drink Can")
                     or has_soul(state, player, "Tennis Ball")
@@ -1909,11 +1909,11 @@ def get_pickup_rules(player, include_npc_souls, include_prop_souls):
                 has_high_street(state, player) 
                 and has_soul(state, player, "Dustbin Lid")
             ),
-        "Pick up Coin":
-            lambda state: (
-                has_high_street(state, player) 
-                and has_soul(state, player, "Coin")
-            ),
+        # "Pick up Coin":
+        #     lambda state: (
+        #         has_high_street(state, player) 
+        #         and has_soul(state, player, "Coin")
+        #     ),
         "Pick up Chalk":
             lambda state: (
                 can_access_final_high_street_task(state, player) 

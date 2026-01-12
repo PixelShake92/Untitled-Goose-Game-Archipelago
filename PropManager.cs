@@ -83,9 +83,9 @@ namespace GooseGameAP
             { "tennisball", "Tennis Ball Soul" },
             // REMOVED: Gardener Hat spawns with Groundskeeper
             // { "gardenerhat", "Gardener Hat Soul" },
-            { "gardenershat", "Gardener Hat Soul" },
-            { "hatgardener", "Gardener Hat Soul" },
-            { "gardenerssunhat", "Gardener Hat Soul" },
+            // { "gardenershat", "Gardener Hat Soul" },
+            // { "hatgardener", "Gardener Hat Soul" },
+            // { "gardenerssunhat", "Gardener Hat Soul" },
             { "rake", "Rake Soul" },
             { "picnicbasket", "Picnic Basket Soul" },
             { "picnicbaskethandle", "Picnic Basket Soul" },
@@ -102,11 +102,11 @@ namespace GooseGameAP
             { "gardenersign", "Gardener Sign Soul" },
             
             // High Street one-offs
-            { "boysglasses", "Boy's Glasses Soul" },
             // REMOVED: Boy's Glasses spawn with Boy
+            // { "boysglasses", "Boy's Glasses Soul" },
             // { "boyglasses", "Boy's Glasses Soul" },
-            { "glassesboy", "Boy's Glasses Soul" },
-            { "wimpglasses", "Boy's Glasses Soul" },
+            // { "glassesboy", "Boy's Glasses Soul" },
+            // { "wimpglasses", "Boy's Glasses Soul" },
             { "hornrimmedglasses", "Horn-Rimmed Glasses Soul" },
             { "redglasses", "Red Glasses Soul" },
             { "sunglasses", "Sunglasses Soul" },
@@ -122,7 +122,7 @@ namespace GooseGameAP
             { "forkgarden", "Weed Tool Soul" },  // In-game name for weed tool
             { "lilyflower", "Lily Flower Soul" },
             { "fusilage", "Fusilage Soul" },
-            { "coin", "Coin Soul" },
+            { "coin", "Coin" },
             { "chalk", "Chalk Soul" },
             { "dustbinlid", "Dustbin Lid Soul" },
             { "shoppingbasket", "Shopping Basket Soul" },
@@ -131,8 +131,9 @@ namespace GooseGameAP
             { "basket", "Picnic Basket Soul" },  // Short name from hierarchy
             { "top", "Topsoil Bag Soul" },  // Short name after cleaning top_1, top_2, top_3
             { "pushbroom", "Push Broom Soul" },
-            { "brokenbroomhead", "Broken Broom Head Soul" },
-            { "broomheadseperate", "Broken Broom Head Soul" },
+            // REMOVED: Broom head pieces spawn when broom is broken
+            // { "brokenbroomhead", "Broken Broom Head Soul" },
+            // { "broomheadseperate", "Broken Broom Head Soul" },
             { "dustbin", "Dustbin Soul" },
             { "babydoll", "Baby Doll Soul" },
             { "pricinggun", "Pricing Gun Soul" },
@@ -177,7 +178,7 @@ namespace GooseGameAP
             { "toyboat", "Toy Boat Soul" },
             // REMOVED: Wooly Hat spawns with Old Man
             // { "woolyhat", "Wooly Hat Soul" },
-            { "woollyhat", "Wooly Hat Soul" },
+            // { "woollyhat", "Wooly Hat Soul" },
             { "peppergrinder", "Pepper Grinder Soul" },
             // REMOVED: Pub Cloth spawns with Pub Lady
             // { "pubcloth", "Pub Cloth Soul" },
@@ -333,6 +334,7 @@ namespace GooseGameAP
             {
                 var allProps = UnityEngine.Object.FindObjectsOfType<Prop>();
                 Log.LogInfo($"[Prop] Found {allProps.Length} props total");
+                List<Prop> cloneCleanedPropsList = new List<Prop>();
                 
                 int logCount = 0;
                 foreach (var prop in allProps)
@@ -343,6 +345,18 @@ namespace GooseGameAP
                         string cleanName = CleanPropName(prop.name);
                         Log.LogInfo($"[Prop DEBUG] Raw: '{prop.name}' -> Clean: '{cleanName}'");
                         logCount++;
+                    }
+
+                    // Cleaning duplicate Coins on reload
+                    if (prop.name.Contains("(Clone)"))
+                    {
+                        Log.LogInfo($"[Prop DEBUG] Attempting to destroy: '{prop.name}'");
+                        UnityEngine.Object.Destroy(prop);
+                        continue;
+                    }
+                    else
+                    {
+                        cloneCleanedPropsList.Add(prop);
                     }
                     
                     // Debug logging for problematic props
@@ -358,7 +372,7 @@ namespace GooseGameAP
                 int matched = 0;
                 int unmatched = 0;
                 
-                foreach (var prop in allProps)
+                foreach (var prop in cloneCleanedPropsList)
                 {
                     if (prop == null) continue;
                     
@@ -520,7 +534,9 @@ namespace GooseGameAP
                 foreach (var prop in kvp.Value)
                 {
                     if (prop != null)
+                    {
                         prop.SetActive(shouldEnable);
+                    }
                 }
             }
             
@@ -536,8 +552,8 @@ namespace GooseGameAP
                 return;
             
             Log.LogInfo($"[Prop] Received soul: {soulName}");
-            receivedSouls.Add(soulName);
-            
+            receivedSouls.Add(soulName); 
+
             // Only enable specific props if souls are enabled
             // If souls disabled, props are already enabled
             if (!PropSoulsEnabled)
@@ -550,11 +566,58 @@ namespace GooseGameAP
                     if (prop != null)
                     {
                         prop.SetActive(true);
-                        
+                    
                         // Special handling for physics-based props that may need Rigidbody reset
                         ResetPhysicsIfNeeded(prop, soulName);
                         
                         Log.LogInfo($"[Prop] Enabled: {prop.name}");
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Called when a Coin is received
+        /// </summary>
+        public void ReceiveCoin()
+        {
+            // Coins are a special case; as a filler item, we will spawn one every time it's received but only add it to the list once
+            bool originalCoin = true;
+            if (receivedSouls.Contains("Coin"))
+            {
+                originalCoin = false;
+            }
+            else
+            {
+                receivedSouls.Add("Coin"); 
+            }
+            
+            Log.LogInfo($"[Prop] Received Coin. original: {originalCoin}");
+
+            // If souls disabled, props are already enabled, and thus the original coin is already spawned
+            if (!PropSoulsEnabled)
+                originalCoin = false;
+            
+            bool firstCoinFound = false;
+            if (propCache.TryGetValue("Coin", out var props))
+            {
+                foreach (var prop in props)
+                {
+                    if (prop != null)
+                    {
+                        if (!firstCoinFound)
+                        {
+                            if (originalCoin)
+                            {
+                                prop.SetActive(true);
+                                Log.LogInfo($"[Prop] Enabled: {prop.name}");
+                            }
+                            else
+                            {
+                                prop.Spawn();
+                                Log.LogInfo($"[Prop] Spawned: {prop.name}");
+                            }
+                        }
                     }
                 }
             }

@@ -157,7 +157,7 @@ class GooseGameWorld(World):
             "Horn-Rimmed Glasses Soul",
             "Red Glasses Soul",
             "Sunglasses Soul",
-            "Toilet Paper Soul",
+            "Loo Paper Soul",
             "Toy Car Soul",
             "Hairbrush Soul",
             "Toothbrush Soul",
@@ -167,7 +167,6 @@ class GooseGameWorld(World):
             "Weed Tool Soul",
             "Lily Flower Soul",
             "Fusilage Soul",
-            "Coin Soul",
             "Chalk Soul",
             "Dustbin Lid Soul",
             "Shopping Basket Soul",
@@ -278,64 +277,73 @@ class GooseGameWorld(World):
         # Calculate filler needed
         total_locations = len(self.multiworld.get_unfilled_locations(self.player))
         filler_needed = total_locations - items_added
+
+        # Add Silent Steps first since there can only be one
+        if self.options.filler_active_silent_steps:
+            self.multiworld.itempool.append(self.create_item("Silent Steps"))
+            filler_needed -= 1
+
+        # Add other capped fillers next
+        for i in range (self.options.filler_amount_mega_honk.value): # Max 3
+            self.multiworld.itempool.append(self.create_item("Mega Honk"))
+            filler_needed -= 1
+        for i in range (self.options.filler_amount_speedy_feet.value): # Max 10
+            self.multiworld.itempool.append(self.create_item("Speedy Feet"))
+            filler_needed -= 1
+        for i in range (self.options.filler_amount_goose_day.value): # Max 3
+            self.multiworld.itempool.append(self.create_item("A Goose Day"))
+            filler_needed -= 1
         
-        # Build weighted filler pool from options
-        # Format: (item_name, weight, max_count or None for unlimited)
-        weighted_items = []
-        
-        # Filler items (capped)
-        if self.options.filler_weight_mega_honk.value > 0:
-            weighted_items.append(("Mega Honk", self.options.filler_weight_mega_honk.value, 3))
-        if self.options.filler_weight_speedy_feet.value > 0:
-            weighted_items.append(("Speedy Feet", self.options.filler_weight_speedy_feet.value, 10))
-        if self.options.filler_weight_silent_steps.value > 0:
-            weighted_items.append(("Silent Steps", self.options.filler_weight_silent_steps.value, 1))
-        if self.options.filler_weight_goose_day.value > 0:
-            weighted_items.append(("A Goose Day", self.options.filler_weight_goose_day.value, 3))
-        
-        # Trap items (unlimited)
-        if self.options.trap_weight_tired_goose.value > 0:
-            weighted_items.append(("Tired Goose", self.options.trap_weight_tired_goose.value, None))
-        if self.options.trap_weight_confused_feet.value > 0:
-            weighted_items.append(("Confused Feet", self.options.trap_weight_confused_feet.value, None))
-        if self.options.trap_weight_butterbeak.value > 0:
-            weighted_items.append(("Butterbeak", self.options.trap_weight_butterbeak.value, None))
-        if self.options.trap_weight_suspicious_goose.value > 0:
-            weighted_items.append(("Suspicious Goose", self.options.trap_weight_suspicious_goose.value, None))
-        
-        # Track counts for capped items
-        item_counts = {}
-        
-        for _ in range(filler_needed):
-            # Build available items list (excluding maxed out capped items)
-            available = []
-            total_weight = 0
+        # Remaining filler items based on weights
+        if filler_needed > 0:
+            # Build weighted filler pool from options
+            # Format: (item_name, weight)
+            weighted_items = []
+            coins_weight = self.options.filler_weight_coins.value
+            tired_goose_weight = self.options.trap_weight_tired_goose.value
+            confused_feet_weight = self.options.trap_weight_confused_feet.value
+            butterbeak_weight = self.options.trap_weight_butterbeak.value
+            suspicious_goose_weight = self.options.trap_weight_suspicious_goose.value
             
-            for item_name, weight, max_count in weighted_items:
-                current_count = item_counts.get(item_name, 0)
-                if max_count is None or current_count < max_count:
-                    available.append((item_name, weight, max_count))
-                    total_weight += weight
+            # Filler items
+            if coins_weight > 0:
+                weighted_items.append(("Coin", coins_weight))
             
-            if not available or total_weight == 0:
-                # No items available (all capped items maxed and no traps enabled)
-                # Fall back to A Goose Day as default filler (even if maxed)
-                item_name = "A Goose Day"
-            else:
-                # Weighted random selection
-                roll = self.random.randint(1, total_weight)
-                cumulative = 0
-                item_name = available[0][0]  # Default fallback
+            # Trap items
+            if tired_goose_weight > 0:
+                weighted_items.append(("Tired Goose", tired_goose_weight))
+            if confused_feet_weight > 0:
+                weighted_items.append(("Confused Feet", confused_feet_weight))
+            if butterbeak_weight > 0:
+                weighted_items.append(("Butterbeak", butterbeak_weight))
+            if suspicious_goose_weight > 0:
+                weighted_items.append(("Suspicious Goose", suspicious_goose_weight))
                 
-                for name, weight, _ in available:
-                    cumulative += weight
-                    if roll <= cumulative:
-                        item_name = name
-                        break
+            total_weight = 0
+            for item_name, weight in weighted_items:
+                total_weight += weight
             
-            # Track count for capped items
-            item_counts[item_name] = item_counts.get(item_name, 0) + 1
-            self.multiworld.itempool.append(self.create_item(item_name))
+            for _ in range(filler_needed):
+                if total_weight == 0:
+                    # All weighted filler has been turned off, so Coins are forced
+                    item_name = "Coin"
+                else:
+                    # Weighted random selection
+                    roll = self.random.randint(1, total_weight)
+                    if roll <= coins_weight:
+                        item_name = "Coin"
+                    elif roll <= coins_weight + tired_goose_weight:
+                        item_name = "Tired Goose"
+                    elif roll <= coins_weight + tired_goose_weight + confused_feet_weight:
+                        item_name = "Confused Feet"
+                    elif roll <= coins_weight + tired_goose_weight + confused_feet_weight + butterbeak_weight:
+                        item_name = "Butterbeak"
+                    elif roll <= coins_weight + tired_goose_weight + confused_feet_weight + butterbeak_weight + suspicious_goose_weight:
+                        item_name = "Suspicious Goose"
+                    else:
+                        item_name = "Coin" # We shouldn't reach this, but if something goes wrong, we fall back on Coins
+                
+                self.multiworld.itempool.append(self.create_item(item_name))
     
     def pre_fill(self) -> None:
         """Place victory-related items at their fixed locations.

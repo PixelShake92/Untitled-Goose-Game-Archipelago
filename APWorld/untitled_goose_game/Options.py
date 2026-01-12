@@ -59,40 +59,50 @@ class IncludePropSouls(Toggle):
     default = True
 
 
-class FillerWeightMegaHonk(Range):
-    """Weight for Mega Honk in filler pool. Set to 0 to disable."""
-    display_name = "Filler Weight: Mega Honk"
+class FillerAmountMegaHonk(Range):
+    """Amount of Mega Honk in the filler pool.
+    Mega Honk effects - upgraded honking abilities
+    Level 1: All NPCs react to honk (draws attention) - default behavior enhanced
+    Level 2: Increased honk detection distance - always heard regardless of distance
+    Level 3: Scary honk - NPCs drop held items"""
+    display_name = "Filler Amount: Mega Honk"
     range_start = 0
-    range_end = 100
+    range_end = 3
+    default = 3
+
+
+class FillerAmountSpeedyFeet(Range):
+    """Amount of Speedy Feet in filler pool. Speedy Feet increases your run speed."""
+    display_name = "Filler Amount: Speedy Feet"
+    range_start = 0
+    range_end = 10
     default = 10
 
 
-class FillerWeightSpeedyFeet(Range):
-    """Weight for Speedy Feet in filler pool. Set to 0 to disable."""
-    display_name = "Filler Weight: Speedy Feet"
+class FillerActiveSilentSteps(Toggle):
+    """Whether or not Silent Steps is in the filler pool. Silent Steps prevents NPCs from hearing your footsteps."""
+    display_name = "Filler Active: Silent Steps"
+    default = True
+
+
+class FillerAmountGooseDay(Range):
+    """Amount of A Goose Day in filler pool. A Goose Day causes NPCs to ignore you for 15 seconds."""
+    display_name = "Filler Amount: A Goose Day"
+    range_start = 0
+    range_end = 3
+    default = 3
+
+class FillerWeightCoins(Range):
+    """Weight for Coins in the filler pool. Set to 0 to disable this filler.
+    Please note that if you turn off all traps below, this filler item will be chosen to fill all remaining spots regardless of chosen weight."""
+    display_name = "Filler Weight: Coins"
     range_start = 0
     range_end = 100
-    default = 10
-
-
-class FillerWeightSilentSteps(Range):
-    """Weight for Silent Steps in filler pool. Set to 0 to disable."""
-    display_name = "Filler Weight: Silent Steps"
-    range_start = 0
-    range_end = 100
-    default = 5
-
-
-class FillerWeightGooseDay(Range):
-    """Weight for A Goose Day (stored buff) in filler pool. Set to 0 to disable."""
-    display_name = "Filler Weight: A Goose Day"
-    range_start = 0
-    range_end = 100
-    default = 10
+    default = 80
 
 
 class TrapWeightTiredGoose(Range):
-    """Weight for Tired Goose trap. Set to 0 to disable this trap."""
+    """Weight for Tired Goose trap in the filler pool. Set to 0 to disable this trap."""
     display_name = "Trap Weight: Tired Goose"
     range_start = 0
     range_end = 100
@@ -100,7 +110,7 @@ class TrapWeightTiredGoose(Range):
 
 
 class TrapWeightConfusedFeet(Range):
-    """Weight for Confused Feet trap. Set to 0 to disable this trap."""
+    """Weight for Confused Feet trap in the filler pool. Set to 0 to disable this trap."""
     display_name = "Trap Weight: Confused Feet"
     range_start = 0
     range_end = 100
@@ -108,7 +118,7 @@ class TrapWeightConfusedFeet(Range):
 
 
 class TrapWeightButterbeak(Range):
-    """Weight for Butterbeak trap. Set to 0 to disable this trap."""
+    """Weight for Butterbeak trap in the filler pool. Set to 0 to disable this trap."""
     display_name = "Trap Weight: Butterbeak"
     range_start = 0
     range_end = 100
@@ -116,7 +126,7 @@ class TrapWeightButterbeak(Range):
 
 
 class TrapWeightSuspiciousGoose(Range):
-    """Weight for Suspicious Goose trap. Set to 0 to disable this trap."""
+    """Weight for Suspicious Goose trap in the filler pool. Set to 0 to disable this trap."""
     display_name = "Trap Weight: Suspicious Goose"
     range_start = 0
     range_end = 100
@@ -148,10 +158,11 @@ class GooseGameOptions(PerGameCommonOptions):
     include_interactions: IncludeInteractions
     include_npc_souls: IncludeNPCSouls
     include_prop_souls: IncludePropSouls
-    filler_weight_mega_honk: FillerWeightMegaHonk
-    filler_weight_speedy_feet: FillerWeightSpeedyFeet
-    filler_weight_silent_steps: FillerWeightSilentSteps
-    filler_weight_goose_day: FillerWeightGooseDay
+    filler_amount_mega_honk: FillerAmountMegaHonk
+    filler_amount_speedy_feet: FillerAmountSpeedyFeet
+    filler_active_silent_steps: FillerActiveSilentSteps
+    filler_amount_goose_day: FillerAmountGooseDay
+    filler_weight_coins: FillerWeightCoins
     trap_weight_tired_goose: TrapWeightTiredGoose
     trap_weight_confused_feet: TrapWeightConfusedFeet
     trap_weight_butterbeak: TrapWeightButterbeak
