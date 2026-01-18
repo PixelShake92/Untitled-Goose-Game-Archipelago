@@ -347,7 +347,7 @@ interaction_locations: Dict[str, GooseGameLocationData] = {
     
     # Hub interactions (1306, 1500)
     "Open Intro Gate": GooseGameLocationData(BASE_ID + 1306, "Hub"),  # Very first gate at game start
-    "Drop Something in the Well": GooseGameLocationData(BASE_ID + 1500, "Hub"),  # Drop any item into the well
+    # "Drop Something in the Well": GooseGameLocationData(BASE_ID + 1500, "Hub"),  # Drop any item into the well
     
     # High Street interactions (1310-1317)
     "Break Through Boards": GooseGameLocationData(BASE_ID + 1310, "Back Gardens"),

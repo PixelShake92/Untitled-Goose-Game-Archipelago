@@ -257,7 +257,7 @@ class UntitledGooseRules:
                 "Turn on Garden Tap": self.interact_garden_water,
                 "Turn on Sprinkler": self.interact_garden_water,
                 "Open Intro Gate": self.interact_intro_gate,
-                "Drop Something in the Well": self.interact_well,
+                # "Drop Something in the Well": self.interact_well,
                 "Break Through Boards": self.interact_boards,
                 "Unplug the Radio": self.interact_radio,
                 "Open Black Umbrella": self.interact_umbrellas,
