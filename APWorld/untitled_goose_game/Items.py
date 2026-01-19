@@ -141,7 +141,7 @@ item_table: Dict[str, GooseGameItemData] = {
     "Cork Soul": GooseGameItemData(BASE_ID + 587, ItemClassification.progression_deprioritized),
     "Candlestick Soul": GooseGameItemData(BASE_ID + 588, ItemClassification.progression),
     "Flower for Vase Soul": GooseGameItemData(BASE_ID + 589, ItemClassification.progression),
-    "Harmonica Soul": GooseGameItemData(BASE_ID + 590, ItemClassification.progression_deprioritized),
+    "Harmonica Soul": GooseGameItemData(BASE_ID + 590, ItemClassification.progression),
     "Tackle Box Soul": GooseGameItemData(BASE_ID + 591, ItemClassification.progression_deprioritized),
     "Traffic Cone Soul": GooseGameItemData(BASE_ID + 592, ItemClassification.progression),
     "Exit Parcel Soul": GooseGameItemData(BASE_ID + 593, ItemClassification.progression_deprioritized),

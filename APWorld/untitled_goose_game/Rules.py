@@ -706,6 +706,7 @@ class UntitledGooseRules:
                 or self.has_pub(state) and (
                     self.has_prop(state, "Knife")
                     or self.has_prop(state, "Fork")
+                    or self.has_prop(state, "Harmonica")
                     or self.has_npc(state, "Fancy Ladies") and self.has_prop(state, "Flower for Vase")
                 )
                 or self.has_model_village(state) and self.has_prop(state, "Poppy Flower")
@@ -1083,6 +1084,7 @@ class UntitledGooseRules:
                 or self.has_pub(state) and (
                     self.has_prop(state, "Knife")
                     or self.has_prop(state, "Fork")
+                    or self.has_prop(state, "Harmonica")
                     or self.has_npc(state, "Fancy Ladies") and self.has_prop(state, "Flower for Vase")
                 )
                 or self.has_model_village(state) and self.has_prop(state, "Poppy Flower")
