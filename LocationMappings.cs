@@ -77,12 +77,12 @@ namespace GooseGameAP
                 case 401: return "Tomatoes";
                 case 402: return "Pumpkins";
                 case 403: return "Topsoil Bags";
-                case 404: return "Quoits";
+                case 404: return "Quoits (Green)";
                 case 405: return "Plates";
                 case 406: return "Oranges";
                 case 407: return "Leeks";
                 case 408: return "Cucumbers";
-                // case 409: return "Red Quoits";
+                case 409: return "Quoits (Red)";
                 case 410: return "Umbrellas";
                 case 411: return "Tinned Food";
                 case 412: return "Socks";

@@ -134,6 +134,7 @@ class GooseGameWorld(World):
             itemNames.PROP_APPLE_CORES,
             itemNames.PROP_APPLES,
             itemNames.PROP_SANDWICH,
+            itemNames.PROP_RED_QUOITS,
             itemNames.PROP_RIBBONS,
             itemNames.PROP_WALKIE_TALKIES,
             itemNames.PROP_BOOTS,

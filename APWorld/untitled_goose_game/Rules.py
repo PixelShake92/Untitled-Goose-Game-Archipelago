@@ -130,12 +130,12 @@ class UntitledGooseRules:
                 locationNames.PICKUP_PLATE_1: self.pickup_plates,
                 locationNames.PICKUP_PLATE_2: self.pickup_plates,
                 locationNames.PICKUP_PLATE_3: self.pickup_plates,
-                locationNames.PICKUP_GREEN_QUOIT_1: self.pickup_quoits,
-                locationNames.PICKUP_GREEN_QUOIT_2: self.pickup_quoits,
-                locationNames.PICKUP_GREEN_QUOIT_3: self.pickup_quoits,
-                locationNames.PICKUP_RED_QUOIT_1: self.pickup_quoits,
-                locationNames.PICKUP_RED_QUOIT_2: self.pickup_quoits,
-                locationNames.PICKUP_RED_QUOIT_3: self.pickup_quoits,
+                locationNames.PICKUP_GREEN_QUOIT_1: self.pickup_green_quoits,
+                locationNames.PICKUP_GREEN_QUOIT_2: self.pickup_green_quoits,
+                locationNames.PICKUP_GREEN_QUOIT_3: self.pickup_green_quoits,
+                locationNames.PICKUP_RED_QUOIT_1: self.pickup_red_quoits,
+                locationNames.PICKUP_RED_QUOIT_2: self.pickup_red_quoits,
+                locationNames.PICKUP_RED_QUOIT_3: self.pickup_red_quoits,
                 locationNames.PICKUP_FORK_1: self.pickup_forks,
                 locationNames.PICKUP_FORK_2: self.pickup_forks,
                 locationNames.PICKUP_KNIFE_1: self.pickup_knives,
@@ -867,9 +867,13 @@ class UntitledGooseRules:
             return True
         if self.has_pub(state) and self.has_prop(state, itemNames.PROP_GREEN_QUOITS):
             return True
+        if self.has_pub(state) and self.has_prop(state, itemNames.PROP_RED_QUOITS):
+            return True
         if self.has_pub(state) and self.has_prop(state, itemNames.PROP_PLATES):
             return True
         if self.has_pub(state) and self.has_prop(state, itemNames.PROP_DARTBOARD):
+            return True
+        if self.has_pub(state) and self.has_model_village(state) and self.has_prop(state, itemNames.PROP_MINI_PEOPLE):
             return True
         if self.has_prop(state, itemNames.PROP_PINT_BOTTLES):
             return True # Two in High Street, one in the hub near the dummy
@@ -1000,6 +1004,20 @@ class UntitledGooseRules:
                 item_count += 2
             if self.has_prop(state, itemNames.PROP_FORKS):
                 item_count += 2
+                
+            if self.has_model_village(state):
+                if self.has_prop(state, itemNames.PROP_MINI_GOOSE):
+                    item_count += 1
+                if self.has_prop(state, itemNames.PROP_MINI_MAIL_PILLAR):
+                    item_count += 1
+                if self.has_prop(state, itemNames.PROP_MINI_PHONE_DOOR):
+                    item_count += 1
+                if self.has_prop(state, itemNames.PROP_MINI_SHOVEL):
+                    item_count += 1
+                if self.has_prop(state, itemNames.PROP_POPPY_FLOWER):
+                    item_count += 1
+                if self.has_prop(state, itemNames.PROP_TIMBER_HANDLE):
+                    item_count += 1
         
         return item_count >= 3
     
@@ -1682,10 +1700,16 @@ class UntitledGooseRules:
             and self.has_prop(state, itemNames.PROP_PLATES)
         )
     
-    def pickup_quoits(self, state: CollectionState) -> bool:
+    def pickup_green_quoits(self, state: CollectionState) -> bool:
         return (
             self.has_pub(state)
             and self.has_prop(state, itemNames.PROP_GREEN_QUOITS)
+        )
+    
+    def pickup_red_quoits(self, state: CollectionState) -> bool:
+        return (
+            self.has_pub(state)
+            and self.has_prop(state, itemNames.PROP_RED_QUOITS)
         )
     
     def pickup_forks(self, state: CollectionState) -> bool:

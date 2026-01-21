@@ -52,7 +52,8 @@ namespace GooseGameAP
             { "fertiliser", "Topsoil Bags" },
             { "fertliser", "Topsoil Bags" },  // Typo variant
             { "fertilizer", "Topsoil Bags" },
-            { "quoit", "Quoits" },
+            { "quoitgreen", "Quoits (Green)" },
+            { "quoitred", "Quoits (Red)" },
             { "plate", "Plates" },
             { "orange", "Oranges" },
             { "leek", "Leeks" },
