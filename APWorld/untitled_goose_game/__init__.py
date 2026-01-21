@@ -233,6 +233,7 @@ class GooseGameWorld(World):
             itemNames.PROP_BUCKET,
             
             # Model Village One-Off Props (9)
+            itemNames.PROP_MINI_GOOSE,
             itemNames.PROP_MINI_MAIL_PILLAR,
             itemNames.PROP_MINI_PHONE_DOOR,
             itemNames.PROP_MINI_SHOVEL,

@@ -37,6 +37,7 @@ namespace GooseGameAP
         private static readonly List<string> PerfectMatchOnlyProps = new List<string>
         {
             "minishovelprop",
+            "minipersonvariant-goose",
         };
         
         // Map item name patterns to soul names
@@ -199,6 +200,7 @@ namespace GooseGameAP
             { "streetbench", "Miniature Benches" },
             { "benchstreet", "Miniature Benches" },
             { "sunlounge", "Miniature Sun Lounge" },
+            { "minipersonvariant-goose", "Miniature Goose" },
             
             // Victory item
             { "goldenbell", "Golden Bell" },
@@ -337,11 +339,11 @@ namespace GooseGameAP
                 GameObject picnicBasket2 = null;
 
                 var checkAllGameObjects = UnityEngine.Object.FindObjectsOfType<GameObject>();
-                //Log.LogInfo($"[Prop] Found {checkAllGameObjects.Length} GameObjects");
+                Log.LogInfo($"[Prop] Found {checkAllGameObjects.Length} GameObjects");
                 foreach (var gameObj in checkAllGameObjects)
                 {
                     if (gameObj == null) continue;
-                    Log.LogInfo($"[Prop DEBUG] Noting existence of game object with name: '{gameObj.name}'");
+                    //Log.LogInfo($"[Prop DEBUG] Noting existence of game object with name: '{gameObj.name}'");
                     if (gameObj.name == "braSkinned")
                     {
                         bra = gameObj;
@@ -610,7 +612,7 @@ namespace GooseGameAP
             {
                 if (!PerfectMatchOnlyProps.Contains(kvp.Key) && (cleanName.StartsWith(kvp.Key) || cleanName.Contains(kvp.Key)))
                 {
-                    //Log.LogInfo($"[Prop DEBUG] cleanname '{cleanName}' .StartsWith or .Contains soul: '{kvp.Key}'");
+                    Log.LogInfo($"[Prop DEBUG] cleanname '{cleanName}' .StartsWith or .Contains soul: '{kvp.Key}'");
                     return kvp.Value;
                 }
             }
@@ -620,7 +622,7 @@ namespace GooseGameAP
             {
                 if (!PerfectMatchOnlyProps.Contains(kvp.Key) && (kvp.Key.StartsWith(cleanName) || kvp.Key.Contains(cleanName)))
                 {
-                    //Log.LogInfo($"[Prop DEBUG] soul '{kvp.Key}' .StartsWith or .Contains cleanname: '{cleanName}'");
+                    Log.LogInfo($"[Prop DEBUG] soul '{kvp.Key}' .StartsWith or .Contains cleanname: '{cleanName}'");
                     return kvp.Value;
                 }
             }

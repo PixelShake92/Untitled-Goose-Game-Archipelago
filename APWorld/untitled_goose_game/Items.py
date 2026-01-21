@@ -163,6 +163,7 @@ item_table: Dict[str, GooseGameItemData] = {
     itemNames.PROP_MINI_BIRDBATH: GooseGameItemData(BASE_ID + 615, ItemClassification.progression_deprioritized),
     itemNames.PROP_MINI_EASEL: GooseGameItemData(BASE_ID + 616, ItemClassification.progression_deprioritized),
     itemNames.PROP_MINI_PUMP: GooseGameItemData(BASE_ID + 618, ItemClassification.progression_deprioritized),
+    itemNames.PROP_MINI_GOOSE: GooseGameItemData(BASE_ID + 619, ItemClassification.progression_deprioritized),
     itemNames.PROP_MINI_SUN_LOUNGE: GooseGameItemData(BASE_ID + 620, ItemClassification.progression_deprioritized),
     
     # Victory item soul
@@ -441,6 +442,7 @@ ITEM_GROUPS = {
         itemNames.PROP_FORKS,
     },
     "Model Village One-Off Props": {
+        itemNames.PROP_MINI_GOOSE,
         itemNames.PROP_MINI_MAIL_PILLAR,
         itemNames.PROP_MINI_PHONE_DOOR,
         itemNames.PROP_MINI_SHOVEL,
@@ -452,6 +454,7 @@ ITEM_GROUPS = {
         itemNames.PROP_MINI_SUN_LOUNGE,
     },
     "Model Village Props": {
+        itemNames.PROP_MINI_GOOSE,
         itemNames.PROP_MINI_MAIL_PILLAR,
         itemNames.PROP_MINI_PHONE_DOOR,
         itemNames.PROP_MINI_SHOVEL,

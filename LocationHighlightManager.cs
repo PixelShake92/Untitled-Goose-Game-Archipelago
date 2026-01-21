@@ -326,10 +326,10 @@ namespace GooseGameAP
                 {
                     HighlightSpecificGameObject(gameObj, "rightstrap");
                 }
-                else if (gameObj.name == "fertilizer")
+                /*else if (gameObj.name == "fertiliser" || gameObj.name == "fertliser" || gameObj.name == "fertilizer" || gameObj.name == "topsoilbag" || gameObj.name == "topsoil")
                 {
                     HighlightSpecificGameObject(gameObj, "top");
-                }
+                }*/
             }
         }
 

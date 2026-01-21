@@ -159,7 +159,7 @@ class UntitledGooseRules:
                 locationNames.PICKUP_MINI_PERSON_POSTIE: self.pickup_people_miniatures,
                 locationNames.PICKUP_MINI_PERSON_VEST_MAN: self.pickup_people_miniatures,
                 locationNames.PICKUP_MINI_PERSON: self.pickup_people_miniatures,
-                locationNames.PICKUP_MINI_GOOSE: self.pickup_people_miniatures,
+                locationNames.PICKUP_MINI_GOOSE: self.pickup_mini_goose,
                 locationNames.PICKUP_MINI_SHOVEL: self.pickup_mini_shovel,
                 locationNames.PICKUP_POPPY_FLOWER: self.pickup_poppy,
                 locationNames.PICKUP_MINI_PHONE_DOOR: self.pickup_mini_phone_booth,
@@ -1806,6 +1806,12 @@ class UntitledGooseRules:
         return (
             self.has_model_village(state)
             and self.has_prop(state, itemNames.PROP_MINI_SHOVEL)
+        )
+    
+    def pickup_mini_goose(self, state: CollectionState) -> bool:
+        return (
+            self.has_model_village(state)
+            and self.has_prop(state, itemNames.PROP_MINI_GOOSE)
         )
     
     def pickup_poppy(self, state: CollectionState) -> bool:

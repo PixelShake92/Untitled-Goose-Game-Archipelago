@@ -209,6 +209,7 @@ namespace GooseGameAP
                 case 616: return "Miniature Easel";
                 case 617: return "Miniature Benches";
                 case 618: return "Miniature Pump";
+                case 619: return "Miniature Goose";
                 case 620: return "Miniature Sun Lounge";
                 case 621: return "Golden Bell";
                 
