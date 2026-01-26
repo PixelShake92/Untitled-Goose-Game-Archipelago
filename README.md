@@ -15,6 +15,9 @@ This mod turns Untitled Goose Game into an Archipelago multiworld game where:
 ### Prerequisites
 1. **Untitled Goose Game** (Steam)
 2. **BepInEx 5.4.9.0 x64** - Unity mod loader
+3. **.NET 6.0 Runtime** (for the proxy server)
+4, Archipelago client files (from releases)
+- Archipelago server 0.6.4 or higher
 
 ### Installing BepInEx
 1. Download https://github.com/BepInEx/BepInEx/releases/tag/v5.4.9 x64
@@ -34,11 +37,11 @@ This mod turns Untitled Goose Game into an Archipelago multiworld game where:
 ## Usage
 
 ### Connecting to Archipelago
-1. Start the game
+1. Launch Untitled Goose Game
 2. Press `F1` to open the AP connection menu
 3. Enter:
    - **Server**: Your AP server address (e.g., `archipelago.gg:12345`)
-   - **Slot Name**: Your player name
+   - **Slot Name**: Your player name (must match your YAML)
    - **Password**: (if required)
 4. Click Connect
 
@@ -84,6 +87,27 @@ Every task on your to-do list is a location check:
 - Suspicious Goose (Honk randomly for 10s)
 - Confused feet (Random Stick directions for 15s)
 - Butterbeak (drop items and be unable to grab anything for 10s)
+
+#### Extra Controls
+
+`| Key    | Action                                                |`
+`|--------|-------------------------------------------------------|`
+`| F1     | Toggle AP UI visibility                               |`
+`| F2     | Toggle Soul UI Visibility                             |`
+`| F3     | Toggle Server UI Visibility                           |`
+`| F4     | Toggle Extra Tasks UI Visibility                      |`
+`| G      | Use a stored Goose Day                                |`
+`| C      | Cycle goose colour                                    |`
+`| Ctrl+C | Reset goose colour                                    |`
+`| F9     | Resync gates (use if gates get stuck after reconnect) |`
+`| 0      | Warp to starting area (if not holding anything)       |`
+`| 1      | Warp to garden (if not holding anything)              |`
+`| 2      | Warp to high street (if not holding anything)         |`
+`| 3      | Warp to back gardens (if not holding anything)        |`
+`| 4      | Warp to pub (if not holding anything)                 |`
+`| 5      | Warp to mode village (if not holding anything)        |`
+`| H      | Warp to the well in the hub (if not holding anything) |`
+`|--------|-------------------------------------------------------|`
 
 ## YAML
 - Copy the YAML below into a text document like Notepad - or - after installing the AP world, run the Archipelago Launcher and then press Generate Template Options
@@ -318,6 +342,35 @@ Untitled Goose Game:
     'true': 0
 ```
 
+## Troubleshooting
+
+**Game won't start / crashes on launch**
+- Make sure you're using BepInEx 5.x, not 6.x
+- Check that all files are in the correct folders
+
+**Can't connect to server**
+- Check that APProxy.exe started (should appear automatically)
+- Verify the address and port are correct
+- Check your slot name matches exactly (case-sensitive)
+- Make sure the server is running and you have network access
+
+**Proxy won't start**
+- Install .NET 6.0 Runtime if you haven't already
+- Make sure all three proxy files are in the game folder (same folder as Untitled Goose Game.exe)
+
+**Gates not opening after receiving items**
+- Press F9 to force a gate resync
+- If that fails, try reconnecting
+
+**Stuck in an area**
+- Check the UI to see which access items you have
+- You may need to wait for another player to send you the required item
+
+**A specific prop got bugged (eg. drawer won't come out, or can't pull the rose box)**
+- Use the in-game reset
+- If that fails, disconnect and reconnect while on the title screen
+- If all else fails, close Untitled Goose Game and reopen
+- If the prop just isn't there, you have it somewhere in the pool and it wasn't sent to you yet
 
 ## Credits
 - House House - Untitled Goose Game
