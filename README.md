@@ -191,7 +191,7 @@ Untitled Goose Game:
     # Some of these happen naturally throughout gameplay, and some are more involved.
     # You can view these tasks at any time in-game by pressing F4. New tasks include:
     # - Break the intro gate
-    # - Drop something in the well
+    # - Drop some mail in the well
     # - Short out the garden radio
     # - Lock the groundskeeper IN the garden
     # - Trap the TV shop owner in the garage
