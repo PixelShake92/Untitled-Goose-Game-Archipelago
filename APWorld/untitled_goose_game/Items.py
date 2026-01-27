@@ -481,7 +481,7 @@ ITEM_GROUPS = {
         itemNames.TRAP_BUTTERBEAK,
         itemNames.TRAP_SUSPICIOUS_GOOSE,
     },
-    "Main Task Progression Items": {
+    "Main Task Progression Props": {
         itemNames.PROP_RADIO,
         itemNames.PROP_TULIP,
         itemNames.PROP_JAM,
