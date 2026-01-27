@@ -362,7 +362,7 @@ namespace GooseGameAP
             }
         }
         
-        private void ForceDropItems()
+        public static void ForceDropItems()
         {
             if (GameManager.instance == null || GameManager.instance.allGeese == null) return;
             

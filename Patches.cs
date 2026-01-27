@@ -74,7 +74,27 @@ namespace GooseGameAP
             try
             {
                 Plugin.Log.LogInfo("Goose shooed");
-                Plugin.Instance?.OnGooseShooed();
+                string name = "someone";
+                if (shooer != null)
+                {
+                    name = shooer.name;
+                }
+                Plugin.Instance?.OnGooseShooed(name);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogError("Shoo patch error: " + ex.Message);
+            }
+        }
+        
+        [HarmonyPatch(typeof(Goose), "Shoo", typeof(Vector3))]
+        [HarmonyPostfix]
+        static void OnGooseShooed2(Goose __instance)
+        {
+            try
+            {
+                Plugin.Log.LogInfo("Goose shooed");
+                Plugin.Instance?.OnGooseShooed("someone");
             }
             catch (Exception ex)
             {

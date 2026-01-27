@@ -69,7 +69,7 @@ namespace GooseGameAP
         public int MegaHonkCount => TrapManager?.MegaHonkCount ?? 0;
         
         // DeathLink
-        public bool DeathLinkEnabled { get; set; } = false;
+        public bool DeathLinkEnabled => Client?.NewTasksEnabled ?? false;
         private bool deathLinkPending = false;
         
         // Location tracking
@@ -154,9 +154,13 @@ namespace GooseGameAP
             // Handle DeathLink
             if (deathLinkPending)
             {
-                deathLinkPending = false;
-                GateManager?.TeleportGooseToWell();
-                UI?.ShowNotification("DeathLink! Another player died!");
+                if (GameManager.instance != null && GameManager.instance.allGeese != null && GameManager.instance.allGeese.Count > 0)
+                {
+                    deathLinkPending = false;
+                    TrapManager.ForceDropItems();
+                    GateManager?.TeleportGooseToWell();
+                    UI?.ShowNotification("DeathLink! Another player died!");
+                }
             }
             
             // Update traps
@@ -1083,8 +1087,12 @@ namespace GooseGameAP
             UI?.ShowNotification("You need " + areaName + " Access to enter!");
         }
         
-        public void OnGooseShooed()
+        public void OnGooseShooed(string nameOfShooer)
         {
+            if (DeathLinkEnabled) // TO DO: add option for deathlink every n shoos rather than every shoo
+            {
+                Client?.SendDeathLink(nameOfShooer);
+            }
         }
         
         public void OnLaunch(Prop prop, PropLaunchEffect launcher)

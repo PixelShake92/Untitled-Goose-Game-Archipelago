@@ -206,7 +206,7 @@ class TrapWeightSuspiciousGoose(Range):
 
 
 class DeathLink(Toggle):
-    """When you get caught/shooed, everyone dies. When someone else dies, you get teleported to the hub."""
+    """When you get caught/shooed, everyone dies. When someone else dies, you drop whatever you're holding and get teleported to the hub."""
     display_name = "Death Link"
     default = False
 
