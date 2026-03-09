@@ -1173,47 +1173,47 @@ class UntitledGooseRules:
     
     def speedrun_garden(self, state: CollectionState) -> bool:
         return (
-            self.get_into_garden
-            and self.get_groundskeeper_wet
-            and self.steal_groundskeepers_keys
-            and self.make_groundskeeper_wear_sun_hat
-            and self.rake_in_lake
-            and self.picnic
-            and self.make_groundskeeper_hammer_thumb
+            self.get_into_garden(state)
+            and self.get_groundskeeper_wet(state)
+            and self.steal_groundskeepers_keys(state)
+            and self.make_groundskeeper_wear_sun_hat(state)
+            and self.rake_in_lake(state)
+            and self.picnic(state)
+            and self.make_groundskeeper_hammer_thumb(state)
         )
     
     def speedrun_high_street(self, state: CollectionState) -> bool:
         return (
-            self.break_broom
-            and self.trap_boy_in_phone_booth
-            and self.make_boy_wear_wrong_glasses
-            and self.make_someone_buyback
-            and self.get_on_tv
-            and self.go_shopping
-            and self.trap_shopkeep_in_garage
+            self.break_broom(state)
+            and self.trap_boy_in_phone_booth(state)
+            and self.make_boy_wear_wrong_glasses(state)
+            and self.make_someone_buyback(state)
+            and self.get_on_tv(state)
+            and self.go_shopping(state)
+            and self.trap_shopkeep_in_garage(state)
         )
     
     def speedrun_back_gardens(self, state: CollectionState) -> bool:
         return (
-            self.make_someone_break_vase
-            and self.dress_up_bust
-            and self.make_man_spit_out_tea
-            and self.get_dressed_up
-            and self.make_man_barefoot
-            and self.do_washing
-            and self.make_someone_prune_rose
+            self.make_someone_break_vase(state)
+            and self.dress_up_bust(state)
+            and self.make_man_spit_out_tea(state)
+            and self.get_dressed_up(state)
+            and self.make_man_barefoot(state)
+            and self.do_washing(state)
+            and self.make_someone_prune_rose(state)
         )
     
     def speedrun_pub(self, state: CollectionState) -> bool:
         return (
-            self.get_into_pub
-            and self.break_dartboard
-            and self.get_toy_boat
-            and self.make_old_man_fall_on_bum
-            and self.be_awarded_flower
-            and self.drop_pint_glass_in_canal
-            and self.set_table
-            and self.drop_bucket_on_burly_man
+            self.get_into_pub(state)
+            and self.break_dartboard(state)
+            and self.get_toy_boat(state)
+            and self.make_old_man_fall_on_bum(state)
+            and self.be_awarded_flower(state)
+            and self.drop_pint_glass_in_canal(state)
+            and self.set_table(state)
+            and self.drop_bucket_on_burly_man(state)
         )
     
     
@@ -2275,7 +2275,86 @@ class UntitledGooseRules:
         return True
     
     def interact_well(self, state: CollectionState) -> bool:
-        return True
+        return (
+            self.pickup_radio(state)
+            or self.pickup_trowel(state)
+            or self.pickup_keys(state)
+            or self.pickup_tulip(state)
+            or self.pickup_apples(state)
+            or self.pickup_jam(state)
+            or self.pickup_picnic_mug(state)
+            or self.pickup_thermos(state)
+            or self.pickup_sandwich(state)
+            or self.pickup_straw_hat(state)
+            or self.pickup_drink_can(state)
+            or self.pickup_tennis_ball(state)
+            or self.pickup_grounsdkeepers_hat(state)
+            or self.pickup_boys_glasses(state)
+            or self.pickup_horn_rimmed_glasses(state)
+            or self.pickup_red_glasses(state)
+            or self.pickup_sunglasses(state)
+            or self.pickup_loo_paper(state)
+            or self.pickup_toy_car(state)
+            or self.pickup_hairbrush(state)
+            or self.pickup_toothbrush(state)
+            or self.pickup_stereoscope(state)
+            or self.pickup_dish_soap_bottle(state)
+            or self.pickup_food_cans(state)
+            or self.pickup_weed_tools(state)
+            or self.pickup_lily_flower(state)
+            or self.pickup_oranges(state)
+            or self.pickup_tomatoes_high_street(state)
+            or self.pickup_carrots_high_street(state)
+            or self.pickup_cucumbers(state)
+            or self.pickup_leeks(state)
+            or self.pickup_fusilage(state)
+            or self.pickup_pint_bottle_hub(state)
+            or self.pickup_spray_bottle(state)
+            or self.pickup_walkie_talkies(state)
+            or self.pickup_apple_cores(state)
+            or self.pickup_dustbin_lid(state)
+            or self.pickup_blue_bow(state)
+            or self.pickup_dummy(state)
+            or self.pickup_cricket_ball(state)
+            or self.pickup_bust_pipe(state)
+            or self.pickup_bust_hat(state)
+            or self.pickup_bust_glasses(state)
+            or self.pickup_slippers(state)
+            or self.pickup_tea_cup(state)
+            or self.pickup_newspaper(state)
+            or self.pickup_socks(state)
+            or self.pickup_vase(state)
+            or self.pickup_pot_stack(state)
+            or self.pickup_soap(state)
+            or self.pickup_paintbrush(state)
+            or self.pickup_bra(state)
+            or self.pickup_fishing_bobber(state)
+            or self.pickup_exit_letter(state)
+            or self.pickup_plates(state)
+            or self.pickup_green_quoits(state)
+            or self.pickup_red_quoits(state)
+            or self.pickup_forks(state)
+            or self.pickup_knives(state)
+            or self.pickup_cork(state)
+            or self.pickup_candlestick(state)
+            or self.pickup_vase_flower(state)
+            or self.pickup_darts(state)
+            or self.pickup_harmonica(state)
+            or self.pickup_pint_glass(state)
+            or self.pickup_toy_boat(state)
+            or self.pickup_woolen_hat(state)
+            or self.pickup_pepper_grinder(state)
+            or self.pickup_pub_woman_cloth(state)
+            or self.pickup_people_miniatures(state)
+            or self.pickup_mini_goose(state)
+            or self.pickup_mini_shovel(state)
+            or self.pickup_poppy(state)
+            or self.pickup_mini_phone_booth(state)
+            or self.pickup_mini_mail_pillar(state)
+            or self.pickup_timber_handle(state)
+            or self.pickup_garden_carrots(state)
+            or self.pickup_boots(state)
+        )
     
     def drop_mail_in_well(self, state: CollectionState) -> bool:
         return (

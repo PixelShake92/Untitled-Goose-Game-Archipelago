@@ -1099,6 +1099,7 @@ namespace GooseGameAP
             new SoulInfo("Miniature Benches", m?.HasReceivedSoul("Miniature Benches") ?? false),
             new SoulInfo("Miniature Birdbath", m?.HasReceivedSoul("Miniature Birdbath") ?? false),
             new SoulInfo("Miniature Easel", m?.HasReceivedSoul("Miniature Easel") ?? false),
+            new SoulInfo("Miniature Goose", m?.HasReceivedSoul("Miniature Goose") ?? false),
             new SoulInfo("Miniature Mail Pillar", m?.HasReceivedSoul("Miniature Mail Pillar") ?? false),
             new SoulInfo("Miniature People", m?.HasReceivedSoul("Miniature People") ?? false),
             new SoulInfo("Miniature Phone Door", m?.HasReceivedSoul("Miniature Phone Door") ?? false),
