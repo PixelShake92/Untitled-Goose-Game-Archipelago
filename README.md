@@ -19,11 +19,19 @@ This mod turns Untitled Goose Game into an Archipelago multiworld game where:
 4, Archipelago client files (from releases)
 - Archipelago server 0.6.4 or higher
 
-### Installing BepInEx
+### Installing BepInEx (non-Linux)
 1. Download https://github.com/BepInEx/BepInEx/releases/tag/v5.4.9 x64
 2. Extract the contents to your game folder (`Untitled Goose Game/`)
 3. Run the game once to generate necesarry files and folder for Bepin
 4. Close the game
+
+### Installing BepInEx (Linux)
+1. Download https://github.com/BepInEx/BepInEx/releases/tag/v5.4.9 x64
+2. Extract the contents to your game folder (`Untitled Goose Game/`)
+3. Follow the instructions from https://docs.bepinex.dev/articles/advanced/proton_wine.html to setup a winecfg for Untitled Goose Game
+4. Download the ".NET Desktop Runtime" exe from https://dotnet.microsoft.com/en-us/download/dotnet/6.0
+5. Open the exe from step 3 with `protontricks`, and select Untitled Goose Game
+Big thanks to Whizzlefern for providing these instructions!
 
 ### Installing the AP Mod and World
 1. Download the latest release files from the Releases page
@@ -32,7 +40,6 @@ This mod turns Untitled Goose Game into an Archipelago multiworld game where:
 4. Copy `APProxy.runtimeconfig.json` to `BepInEx/plugins/` 
 5. Copy `APProxy.dll` to `BepInEx/plugins/`
 6. Double-click the APWorld file or drag it into custom worlds folder to install. 
-
 
 ## Usage
 
