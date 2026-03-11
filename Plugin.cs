@@ -605,13 +605,11 @@ namespace GooseGameAP
             
             if (slotMatches)
             {
-                Log.LogInfo($"[AP] Reconnecting to same slot ({UI.SlotName}@{UI.ServerAddress}). Loading saved state.");
+                Log.LogInfo($"[AP] Reconnecting to same slot ({UI.SlotName}@{UI.ServerAddress}). Clearing flags and loading saved state.");
+                ResetAllFlags();
                 LoadAccessFlags();
                 Client?.LoadSavedSoulSettings();
                 PropManager?.LoadSouls();
-                GateManager?.SyncGatesFromAccessFlags();
-                NPCManager?.RefreshNPCStates();
-                PropManager?.RefreshPropStates();
             }
             else
             {
@@ -619,10 +617,10 @@ namespace GooseGameAP
                 ResetAllAccess();
                 PropManager?.ClearAllSouls();
                 PropManager?.ClearSavedSouls();
-                GateManager?.SyncGatesFromAccessFlags();
-                NPCManager?.RefreshNPCStates();
-                PropManager?.RefreshPropStates();
             }
+            GateManager?.SyncGatesFromAccessFlags();
+            NPCManager?.RefreshNPCStates();
+            PropManager?.RefreshPropStates();
             
             PlayerPrefs.SetString("AP_SlotName", UI.SlotName);
             PlayerPrefs.SetString("AP_ServerAddress", UI.ServerAddress);

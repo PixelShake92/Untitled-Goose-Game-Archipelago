@@ -80,6 +80,11 @@ namespace GooseGameAP
         private GUIStyle customHorizontalSlider;
         private GUIStyle customHorizontalSliderThumb;
         private bool scrollbarStylesInitialized = false;
+
+        // Connection Info Display
+        private bool ConnectionInfoHidden = false;
+        private int MoveOffScreenIfNeeded = 0;
+
         
         public UIManager()
         {
@@ -290,26 +295,38 @@ namespace GooseGameAP
             fieldStyle.fontSize = fieldTextSize;
             
             // Connection fields
+            if (ConnectionInfoHidden)
+            {
+                MoveOffScreenIfNeeded = 999999;
+            } 
+            else
+            {
+                MoveOffScreenIfNeeded = 0;
+            }
             GUI.color = new Color(0.2f, 0.2f, 0.25f);
             GUI.Label(new Rect(x, y + 3 * s, 55 * s, inputH), $"<size={textSize}>Server:</size>");
             GUI.color = Color.white;
-            ServerAddress = GUI.TextField(new Rect(x + 55 * s, y, w - 120 * s, inputH), ServerAddress, fieldStyle);
+            ServerAddress = GUI.TextField(new Rect(x + 55 * s + MoveOffScreenIfNeeded, y - MoveOffScreenIfNeeded, w - 120 * s, inputH), ServerAddress, fieldStyle);
             GUI.color = new Color(0.2f, 0.2f, 0.25f);
-            GUI.Label(new Rect(x + w - 60 * s, y + 3 * s, 15 * s, inputH), $"<size={textSize}>:</size>");
+            GUI.Label(new Rect(x + w - 60 * s + MoveOffScreenIfNeeded, y + 3 * s - MoveOffScreenIfNeeded, 15 * s, inputH), $"<size={textSize}>:</size>");
             GUI.color = Color.white;
-            ServerPort = GUI.TextField(new Rect(x + w - 45 * s, y, 45 * s, inputH), ServerPort, fieldStyle);
+            ServerPort = GUI.TextField(new Rect(x + w - 45 * s + MoveOffScreenIfNeeded, y - MoveOffScreenIfNeeded, 45 * s, inputH), ServerPort, fieldStyle);
             y += inputH + 6 * s;
             
             GUI.color = new Color(0.2f, 0.2f, 0.25f);
             GUI.Label(new Rect(x, y + 3 * s, 55 * s, inputH), $"<size={textSize}>Slot:</size>");
             GUI.color = Color.white;
-            SlotName = GUI.TextField(new Rect(x + 55 * s, y, w - 55 * s, inputH), SlotName, fieldStyle);
+            SlotName = GUI.TextField(new Rect(x + 55 * s + MoveOffScreenIfNeeded, y - MoveOffScreenIfNeeded, w - 120 * s, inputH), SlotName, fieldStyle);
+            if (GUI.Button(new Rect(x + w - 45 * s, y, 45 * s, inputH), ConnectionInfoHidden ? "Unhide" : "Hide"))
+                ConnectionInfoHidden = !ConnectionInfoHidden;
+            GUI.color = new Color(0.2f, 0.2f, 0.25f);
+            if (ConnectionInfoHidden)
+                GUI.Label(new Rect(x + 110 * s, y + 4 * s, 55 * s, inputH - 2 * s), $"<size={textSize}>Hidden</size>");
             y += inputH + 6 * s;
             
-            GUI.color = new Color(0.2f, 0.2f, 0.25f);
             GUI.Label(new Rect(x, y + 3 * s, 68 * s, inputH), $"<size={textSize}>Password:</size>");
             GUI.color = Color.white;
-            Password = GUI.PasswordField(new Rect(x + 70 * s, y, w - 70 * s, inputH), Password, '*', fieldStyle);
+            Password = GUI.PasswordField(new Rect(x + 70 * s + MoveOffScreenIfNeeded, y - MoveOffScreenIfNeeded, w - 70 * s, inputH), Password, '*', fieldStyle);
             y += inputH + 12 * s;
             
             // Buttons
@@ -1082,6 +1099,7 @@ namespace GooseGameAP
             new SoulInfo("Miniature Benches", m?.HasReceivedSoul("Miniature Benches") ?? false),
             new SoulInfo("Miniature Birdbath", m?.HasReceivedSoul("Miniature Birdbath") ?? false),
             new SoulInfo("Miniature Easel", m?.HasReceivedSoul("Miniature Easel") ?? false),
+            new SoulInfo("Miniature Goose", m?.HasReceivedSoul("Miniature Goose") ?? false),
             new SoulInfo("Miniature Mail Pillar", m?.HasReceivedSoul("Miniature Mail Pillar") ?? false),
             new SoulInfo("Miniature People", m?.HasReceivedSoul("Miniature People") ?? false),
             new SoulInfo("Miniature Phone Door", m?.HasReceivedSoul("Miniature Phone Door") ?? false),
