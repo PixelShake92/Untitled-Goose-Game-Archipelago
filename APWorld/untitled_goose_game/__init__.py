@@ -67,9 +67,11 @@ class GooseGameWorld(World):
         create_regions(self)
     
     def get_starting_area_name(self) -> str:
-        """Determine which area the player starts with access to."""
-        starting_option = self.options.starting_area.value
-        
+        """Determine which area the player starts with access to.
+
+        Archipelago resolves the auto-injected "random" option to a concrete
+        value (0-3) before this runs, so starting_area.value is always a real index.
+        """
         # Only 4 valid starting areas (Model Village excluded - it's the finale!)
         area_names = [
             itemNames.GARDEN_ACCESS,
@@ -77,11 +79,8 @@ class GooseGameWorld(World):
             itemNames.BACK_GARDENS_ACCESS,
             itemNames.PUB_ACCESS,
         ]
-        
-        if starting_option == 4:  # Random
-            return self.random.choice(area_names)
-        else:
-            return area_names[starting_option]
+
+        return area_names[self.options.starting_area.value]
     
     def create_items(self) -> None:
         # Determine starting area

@@ -11,8 +11,7 @@ class StartingArea(Choice):
     option_high_street = 1
     option_back_gardens = 2
     option_pub = 3
-    option_random = 4
-    default = 4  # Random by default
+    default = "random"  # This is already done by AP so we just leave it that way. 
 
 
 class Goal(Choice):

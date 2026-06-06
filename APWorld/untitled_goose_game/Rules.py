@@ -668,7 +668,7 @@ class UntitledGooseRules:
         return (
             self.has_back_gardens(state)
             and self.has_npc(state, itemNames.NPC_TIDY_NEIGHBOUR)
-            and self.has_prop(state, itemNames.NPC_MESSY_NEIGHBOUR)
+            and self.has_npc(state, itemNames.NPC_MESSY_NEIGHBOUR)
             and self.has_prop(state, itemNames.PROP_TEA_CUP)
         )
     
