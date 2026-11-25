@@ -213,8 +213,8 @@ namespace GooseGameAP
             if (needsRefresh)
             {
                 
-                // Method 1: Try GetComponent<Dragger>()
-                var draggerComp = goose.GetComponent<Dragger>();
+                // Method 1: Goose.dragger
+                var draggerComp = goose.dragger;
                 if (draggerComp != null)
                 {
                     cachedDragger = draggerComp;
@@ -427,7 +427,7 @@ namespace GooseGameAP
             // Check drawer (always-enabled prop that needs soul to drag)
             if (propName.Contains("drawer"))
             {
-                bool shouldBlock = propManager.ShouldBlockDrag("Drawer Soul");
+                bool shouldBlock = propManager.ShouldBlockDrag("Drawer");
                 if (shouldBlock)
                 {
                     Log.LogInfo($"[Drag] Blocking drag of {prop.name} - need Drawer Soul");

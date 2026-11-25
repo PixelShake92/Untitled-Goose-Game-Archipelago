@@ -454,7 +454,39 @@ class UntitledGooseRules:
             locationNames.TASK_MODEL_VILLAGE_ENTRY: self.get_into_model_village,
             locationNames.TASK_MODEL_VILLAGE_BELL: self.steal_bell,
             locationNames.TASK_MODEL_VILLAGE_VICTORY: self.steal_bell,
+            locationNames.PICKUP_GOLDEN_BELL: self.steal_bell,
         }
+    
+    
+    # NPC Sanities
+    
+    def make_npc_rule(self, area_rule, soul):
+        return lambda state: area_rule(state) and self.has_npc(state, soul)
+    
+    def build_npc_sanity_rules(self) -> dict:
+        npcs = [
+            (locationNames.HONK_GROUNDSKEEPER, locationNames.STARTLE_GROUNDSKEEPER, locationNames.SHOOED_BY_GROUNDSKEEPER, self.has_garden, itemNames.NPC_GROUNDSKEEPER),
+            (locationNames.HONK_BOY, locationNames.STARTLE_BOY, None, self.has_high_street, itemNames.NPC_BOY),
+            (locationNames.HONK_TV_SHOP_OWNER, locationNames.STARTLE_TV_SHOP_OWNER, locationNames.SHOOED_BY_TV_SHOP_OWNER, self.has_high_street, itemNames.NPC_TV_SHOP_OWNER),
+            (locationNames.HONK_MARKET_LADY, locationNames.STARTLE_MARKET_LADY, locationNames.SHOOED_BY_MARKET_LADY, self.has_high_street, itemNames.NPC_MARKET_LADY),
+            (locationNames.HONK_TIDY_NEIGHBOUR, locationNames.STARTLE_TIDY_NEIGHBOUR, locationNames.SHOOED_BY_TIDY_NEIGHBOUR, self.has_back_gardens, itemNames.NPC_TIDY_NEIGHBOUR),
+            (locationNames.HONK_MESSY_NEIGHBOUR, locationNames.STARTLE_MESSY_NEIGHBOUR, locationNames.SHOOED_BY_MESSY_NEIGHBOUR, self.has_back_gardens, itemNames.NPC_MESSY_NEIGHBOUR),
+            (locationNames.HONK_BURLY_MAN, locationNames.STARTLE_BURLY_MAN, locationNames.SHOOED_BY_BURLY_MAN, self.has_pub, itemNames.NPC_BURLY_MAN),
+            (locationNames.HONK_OLD_MAN, locationNames.STARTLE_OLD_MAN, None, self.has_pub, itemNames.NPC_OLD_MAN),
+            (locationNames.HONK_PUB_LADY, locationNames.STARTLE_PUB_LADY, locationNames.SHOOED_BY_PUB_LADY, self.has_pub, itemNames.NPC_PUB_LADY),
+            (locationNames.HONK_FANCY_LADY_YELLOW, locationNames.STARTLE_FANCY_LADY_YELLOW, None, self.has_pub, itemNames.NPC_FANCY_LADIES),
+            (locationNames.HONK_FANCY_LADY_BLUE, locationNames.STARTLE_FANCY_LADY_BLUE, None, self.has_pub, itemNames.NPC_FANCY_LADIES),
+            (locationNames.HONK_COOK, locationNames.STARTLE_COOK, None, self.has_pub, itemNames.NPC_COOK),
+        ]
+        rules = {}
+        for honk, startle, shoo, area_rule, soul in npcs:
+            if self.world.options.include_honksanity.value:
+                rules[honk] = self.make_npc_rule(area_rule, soul)
+            if self.world.options.include_startlesanity.value:
+                rules[startle] = self.make_npc_rule(area_rule, soul)
+            if shoo is not None and self.world.options.include_shoosanity.value:
+                rules[shoo] = self.make_npc_rule(area_rule, soul)
+        return rules
     
     
     # ----- Region Defs -----
@@ -703,10 +735,10 @@ class UntitledGooseRules:
             and self.has_prop(state, itemNames.PROP_DRAWER)
             and (
                 self.has_prop(state, itemNames.PROP_BUST_HAT)
-                or self.has_garden(state) and self.has_npc(state, itemNames.NPC_GROUNDSKEEPER)
+                or self.pickup_grounsdkeepers_hat(state)
                 or self.has_pub(state) and (
                     self.has_prop(state, itemNames.PROP_TRAFFIC_CONE)
-                    or self.has_npc(state, itemNames.NPC_OLD_MAN)
+                    or self.pickup_woolen_hat(state)
                 )
             )
             and (
@@ -1110,10 +1142,10 @@ class UntitledGooseRules:
             and self.has_npc(state, itemNames.NPC_MESSY_NEIGHBOUR)
             and self.has_prop(state, itemNames.PROP_DRAWER)
             and (
-                self.has_garden(state) and self.has_npc(state, itemNames.NPC_GROUNDSKEEPER)
+                self.pickup_grounsdkeepers_hat(state)
                 or self.has_pub(state) and (
                     self.has_prop(state, itemNames.PROP_TRAFFIC_CONE)
-                    or self.has_npc(state, itemNames.NPC_OLD_MAN)
+                    or self.pickup_woolen_hat(state)
                 )
             )
             and self.has_high_street(state) and (
@@ -2499,6 +2531,11 @@ class UntitledGooseRules:
             for location, rules in self.new_tasks_rules.items():
                 new_rule = self.world.multiworld.get_location(location, self.player)
                 set_rule(new_rule, rules)
+
+        # NPC Sanity Rules
+        for location, rules in self.build_npc_sanity_rules().items():
+            new_rule = self.world.multiworld.get_location(location, self.player)
+            set_rule(new_rule, rules)
 
         # Model Church Pecking Rules
         if self.world.options.include_model_church_pecks.value == 1:

@@ -490,6 +490,50 @@ new_tasks_locations: Dict[str, GooseGameLocationData] = {
     locationNames.PERFORM_WITH_HARMONICA: GooseGameLocationData(BASE_ID + 1512, regionNames.PUB),
 }
 
+# NPC SANITY LOCATIONS (IDs 1600-1659)
+# Honksanity (1600-1611)
+honksanity_locations: Dict[str, GooseGameLocationData] = {
+    locationNames.HONK_GROUNDSKEEPER: GooseGameLocationData(BASE_ID + 1600, regionNames.GARDEN),
+    locationNames.HONK_BOY: GooseGameLocationData(BASE_ID + 1601, regionNames.HIGH_STREET),
+    locationNames.HONK_TV_SHOP_OWNER: GooseGameLocationData(BASE_ID + 1602, regionNames.HIGH_STREET),
+    locationNames.HONK_MARKET_LADY: GooseGameLocationData(BASE_ID + 1603, regionNames.HIGH_STREET),
+    locationNames.HONK_TIDY_NEIGHBOUR: GooseGameLocationData(BASE_ID + 1604, regionNames.BACK_GARDENS),
+    locationNames.HONK_MESSY_NEIGHBOUR: GooseGameLocationData(BASE_ID + 1605, regionNames.BACK_GARDENS),
+    locationNames.HONK_BURLY_MAN: GooseGameLocationData(BASE_ID + 1606, regionNames.PUB),
+    locationNames.HONK_OLD_MAN: GooseGameLocationData(BASE_ID + 1607, regionNames.PUB),
+    locationNames.HONK_PUB_LADY: GooseGameLocationData(BASE_ID + 1608, regionNames.PUB),
+    locationNames.HONK_FANCY_LADY_YELLOW: GooseGameLocationData(BASE_ID + 1609, regionNames.PUB),
+    locationNames.HONK_FANCY_LADY_BLUE: GooseGameLocationData(BASE_ID + 1610, regionNames.PUB),
+    locationNames.HONK_COOK: GooseGameLocationData(BASE_ID + 1611, regionNames.PUB),
+}
+
+# Startlesanity (1620-1631)
+startlesanity_locations: Dict[str, GooseGameLocationData] = {
+    locationNames.STARTLE_GROUNDSKEEPER: GooseGameLocationData(BASE_ID + 1620, regionNames.GARDEN),
+    locationNames.STARTLE_BOY: GooseGameLocationData(BASE_ID + 1621, regionNames.HIGH_STREET),
+    locationNames.STARTLE_TV_SHOP_OWNER: GooseGameLocationData(BASE_ID + 1622, regionNames.HIGH_STREET),
+    locationNames.STARTLE_MARKET_LADY: GooseGameLocationData(BASE_ID + 1623, regionNames.HIGH_STREET),
+    locationNames.STARTLE_TIDY_NEIGHBOUR: GooseGameLocationData(BASE_ID + 1624, regionNames.BACK_GARDENS),
+    locationNames.STARTLE_MESSY_NEIGHBOUR: GooseGameLocationData(BASE_ID + 1625, regionNames.BACK_GARDENS),
+    locationNames.STARTLE_BURLY_MAN: GooseGameLocationData(BASE_ID + 1626, regionNames.PUB),
+    locationNames.STARTLE_OLD_MAN: GooseGameLocationData(BASE_ID + 1627, regionNames.PUB),
+    locationNames.STARTLE_PUB_LADY: GooseGameLocationData(BASE_ID + 1628, regionNames.PUB),
+    locationNames.STARTLE_FANCY_LADY_YELLOW: GooseGameLocationData(BASE_ID + 1629, regionNames.PUB),
+    locationNames.STARTLE_FANCY_LADY_BLUE: GooseGameLocationData(BASE_ID + 1630, regionNames.PUB),
+    locationNames.STARTLE_COOK: GooseGameLocationData(BASE_ID + 1631, regionNames.PUB),
+}
+
+# Shoosanity (1640-1651), only NPCs that shoo
+shoosanity_locations: Dict[str, GooseGameLocationData] = {
+    locationNames.SHOOED_BY_GROUNDSKEEPER: GooseGameLocationData(BASE_ID + 1640, regionNames.GARDEN),
+    locationNames.SHOOED_BY_TV_SHOP_OWNER: GooseGameLocationData(BASE_ID + 1642, regionNames.HIGH_STREET),
+    locationNames.SHOOED_BY_MARKET_LADY: GooseGameLocationData(BASE_ID + 1643, regionNames.HIGH_STREET),
+    locationNames.SHOOED_BY_TIDY_NEIGHBOUR: GooseGameLocationData(BASE_ID + 1644, regionNames.BACK_GARDENS),
+    locationNames.SHOOED_BY_MESSY_NEIGHBOUR: GooseGameLocationData(BASE_ID + 1645, regionNames.BACK_GARDENS),
+    locationNames.SHOOED_BY_BURLY_MAN: GooseGameLocationData(BASE_ID + 1646, regionNames.PUB),
+    locationNames.SHOOED_BY_PUB_LADY: GooseGameLocationData(BASE_ID + 1648, regionNames.PUB),
+}
+
 
 def get_all_locations(include_extra: bool = False, include_speedrun: bool = False, 
                       include_items: bool = True, include_drags: bool = True,
@@ -546,4 +590,7 @@ def get_all_location_ids() -> Dict[str, int]:
     all_locs.update({name: data.id for name, data in sandcastle_peck_locations.items()})
     all_locs.update({name: data.id for name, data in sandcastle_first_peck_locations.items()})
     all_locs.update({name: data.id for name, data in new_tasks_locations.items()})
+    all_locs.update({name: data.id for name, data in honksanity_locations.items()})
+    all_locs.update({name: data.id for name, data in startlesanity_locations.items()})
+    all_locs.update({name: data.id for name, data in shoosanity_locations.items()})
     return all_locs

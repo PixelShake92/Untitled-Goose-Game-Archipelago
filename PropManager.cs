@@ -225,7 +225,7 @@ namespace GooseGameAP
         // (drag blocking handled separately in Patches.cs)
         private static readonly HashSet<string> AlwaysEnabledProps = new HashSet<string>
         {
-            // "Drawer Soul"       // Drawer must exist for desk-breaking mechanic to work
+            "Drawer"            // Drawer must exist for desk-breaking mechanic to work
                                 // Player still needs soul to drag it
         };
         
@@ -296,7 +296,7 @@ namespace GooseGameAP
             {
                 bool shouldEnable = true;
                 string soul = kvp.Key;
-                if (soul == "goldenbell")
+                if (soul == "Golden Bell")
                 {
                     if (!receivedSouls.Contains(soul))
                     {
@@ -583,10 +583,16 @@ namespace GooseGameAP
                 {
                     propCache["Garage Rope"] = new List<GameObject>();
                 }
-                Log.LogInfo($"[Prop DEBUG] Forcing soul match for: '{garageRope.name}'. Attached to: 'Garage Rope'.");
-                propCache["Garage Rope"].Add(garageRope);
-                Log.LogInfo($"[Prop DEBUG] Forcing soul match for: '{garageRope2.name}'. Attached to: 'Garage Rope'.");
-                propCache["Garage Rope"].Add(garageRope2);
+                if (garageRope != null)
+                {
+                    Log.LogInfo($"[Prop DEBUG] Forcing soul match for: '{garageRope.name}'. Attached to: 'Garage Rope'.");
+                    propCache["Garage Rope"].Add(garageRope);
+                }
+                if (garageRope2 != null)
+                {
+                    Log.LogInfo($"[Prop DEBUG] Forcing soul match for: '{garageRope2.name}'. Attached to: 'Garage Rope'.");
+                    propCache["Garage Rope"].Add(garageRope2);
+                }
                 
                 // Log.LogInfo($"[Prop DEBUG] Cleaned list made");
                 int matched = 0;
@@ -934,7 +940,8 @@ namespace GooseGameAP
 
             // Only enable specific props if souls are enabled
             // If souls disabled, props are already enabled
-            if (!PropSoulsEnabled)
+            // Always-enabled props are never toggled
+            if (!PropSoulsEnabled || AlwaysEnabledProps.Contains(soulName))
                 return;
             
             if (propCache.TryGetValue(soulName, out var props))
@@ -1006,6 +1013,7 @@ namespace GooseGameAP
                                 prop.Spawn();
                                 Log.LogInfo($"[Prop] Spawned: {prop.name}");
                             }
+                            firstCoinFound = true;
                         }
                     }
                 }

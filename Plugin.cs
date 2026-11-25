@@ -70,7 +70,9 @@ namespace GooseGameAP
         
         // DeathLink
         public bool DeathLinkEnabled => Client?.DeathLinkEnabled ?? false;
+        public bool ShoosanityEnabled => Client?.ShoosanityEnabled ?? false;
         private bool deathLinkPending = false;
+        private int shoosSinceDeathLink = 0;
         
         // Location tracking
         private HashSet<long> checkedLocations = new HashSet<long>();
@@ -224,6 +226,8 @@ namespace GooseGameAP
                 }
                 UI?.ShowNotification($"Highlight color: {LocationHighlight?.CurrentColorName}");
             }
+            
+            if (GUIUtility.keyboardControl != 0) return;
 
 
             // G key: Use a stored Goose Day
@@ -406,7 +410,7 @@ namespace GooseGameAP
             // Check if dragging something
             bool isDragging = false;
             
-            var dragger = goose.GetComponent<Dragger>();
+            var dragger = goose.dragger;
             if (dragger != null)
             {
                 var activeField = dragger.GetType().GetField("active",
@@ -481,8 +485,7 @@ namespace GooseGameAP
                     var holder = goose.GetComponent<Holder>();
                     if (holder == null || holder.holding == null) continue;
                     
-                    string heldName = holder.holding.name.ToLower();
-                    if (!heldName.Contains("goldenbell") && !heldName.Contains("golden") && !heldName.Contains("bell")) continue;
+                    if (PropManager.CleanPropName(holder.holding.name) != "goldenbell") continue;
                     
                     // Goose is holding the bell - check position
                     // Pub area is roughly around x: -20 to -40, z: 0 to 20
@@ -540,6 +543,7 @@ namespace GooseGameAP
         private void HandleGateSyncTiming()
         {
             if (Client == null) return;
+            if (GateManager != null && GateManager.FinaleActive) return;
             
             if (Client.PendingGateSync && GameManager.instance != null && 
                 GameManager.instance.allGeese != null && GameManager.instance.allGeese.Count > 0)
@@ -585,7 +589,11 @@ namespace GooseGameAP
             // Draw extra task list overlay (always if visible, even when main UI is hidden)
             UI?.DrawNewTasksTracker(this);
             
-            if (!showUI) return;
+            if (!showUI)
+            {
+                if (GUIUtility.keyboardControl != 0) GUIUtility.keyboardControl = 0;
+                return;
+            }
             UI?.DrawUI(this);
         }
         
@@ -610,6 +618,7 @@ namespace GooseGameAP
                 LoadAccessFlags();
                 Client?.LoadSavedSoulSettings();
                 PropManager?.LoadSouls();
+                TrapManager?.LoadProgressiveItems();
             }
             else
             {
@@ -617,6 +626,8 @@ namespace GooseGameAP
                 ResetAllAccess();
                 PropManager?.ClearAllSouls();
                 PropManager?.ClearSavedSouls();
+                PlayerPrefs.DeleteKey("AP_GooseDays");
+                TrapManager?.LoadProgressiveItems();
             }
             GateManager?.SyncGatesFromAccessFlags();
             NPCManager?.RefreshNPCStates();
@@ -645,6 +656,31 @@ namespace GooseGameAP
         public void Disconnect()
         {
             Client?.Disconnect();
+        }
+        
+        public void OnSeedReceived(string seedName)
+        {
+            if (string.IsNullOrEmpty(seedName)) return;
+            string savedSeed = PlayerPrefs.GetString("AP_SeedName", "");
+            if (!string.IsNullOrEmpty(savedSeed) && savedSeed != seedName)
+            {
+                Log.LogInfo($"[AP] Seed changed ({savedSeed} -> {seedName}). Clearing ALL saved state.");
+                ResetAllAccess();
+                PlayerPrefs.DeleteKey("AP_GooseDays");
+                TrapManager?.LoadProgressiveItems();
+                PlayerPrefs.SetString("AP_SlotName", UI.SlotName);
+                PlayerPrefs.SetString("AP_ServerAddress", UI.ServerAddress);
+                GateManager?.SyncGatesFromAccessFlags();
+                UI?.ShowNotification("New seed detected, progress reset");
+            }
+            PlayerPrefs.SetString("AP_SeedName", seedName);
+            PlayerPrefs.Save();
+        }
+        
+        public void ResendCheckedLocations()
+        {
+            if (checkedLocations.Count == 0) return;
+            Client?.SendPacket("[{\"cmd\":\"LocationChecks\",\"locations\":[" + string.Join(",", checkedLocations) + "]}]");
         }
         
         public void SendLocationCheck(long locationId)
@@ -998,14 +1034,6 @@ namespace GooseGameAP
                     PropManager?.ReceiveSoul("Tomatoes");
                     PropManager?.SaveSouls();
                     UI?.ShowNotification($"Tomatoes received!");
-                    
-                    var checkAllSwitchSystems = FindObjectsOfType<SwitchSystem>();
-                    foreach (var switchSys in checkAllSwitchSystems)
-                    {
-                        string switchSysParentName = switchSys?.transform?.parent?.gameObject?.name ?? "no parent";
-                        Log.LogInfo($"[INTERACT DEBUG] Noting existence of SwitchSystem '{switchSys.name}' with parent '{switchSysParentName}'");
-                    }
-
                     break;
                 
                 case 204: // Coin filler item
@@ -1085,12 +1113,19 @@ namespace GooseGameAP
             UI?.ShowNotification("You need " + areaName + " Access to enter!");
         }
         
-        public void OnGooseShooed(string nameOfShooer)
+        public void OnGooseShooed(string nameOfShooer, bool awardedShoosanityCheck = false)
         {
-            if (DeathLinkEnabled) // TO DO: add option for deathlink every n shoos rather than every shoo
+            if (!DeathLinkEnabled || awardedShoosanityCheck) return;
+            
+            int amnesty = Client?.DeathLinkAmnesty ?? 0;
+            shoosSinceDeathLink++;
+            if (shoosSinceDeathLink <= amnesty)
             {
-                Client?.SendDeathLink(nameOfShooer);
+                UI?.ShowNotification($"Shooed! Amnesty {shoosSinceDeathLink}/{amnesty}");
+                return;
             }
+            shoosSinceDeathLink = 0;
+            Client?.SendDeathLink(nameOfShooer);
         }
         
         public void OnLaunch(Prop prop, PropLaunchEffect launcher)
@@ -1328,6 +1363,7 @@ namespace GooseGameAP
         
         private void ClearHubBlockers()
         {
+            if (GateManager != null && GateManager.FinaleActive) return;
             GateManager?.ClearHubBlockers();
             
             var allObjects = FindObjectsOfType<GameObject>();

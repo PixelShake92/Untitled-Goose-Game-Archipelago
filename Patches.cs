@@ -73,28 +73,13 @@ namespace GooseGameAP
         {
             try
             {
-                Plugin.Log.LogInfo("Goose shooed");
-                string name = "someone";
-                if (shooer != null)
-                {
-                    name = shooer.name;
-                }
-                Plugin.Instance?.OnGooseShooed(name);
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.LogError("Shoo patch error: " + ex.Message);
-            }
-        }
-        
-        [HarmonyPatch(typeof(Goose), "Shoo", typeof(Vector3))]
-        [HarmonyPostfix]
-        static void OnGooseShooed2(Goose __instance)
-        {
-            try
-            {
-                Plugin.Log.LogInfo("Goose shooed");
-                Plugin.Instance?.OnGooseShooed("someone");
+                if (shooer == null) return;
+                Brain brain = shooer.GetComponent<Brain>();
+                if (brain == null) return;
+                
+                Plugin.Log.LogInfo("Goose shooed by " + shooer.name);
+                bool awarded = NpcSanityPatches.OnShooedBy(brain);
+                Plugin.Instance?.OnGooseShooed(shooer.name, awarded);
             }
             catch (Exception ex)
             {
@@ -152,9 +137,6 @@ namespace GooseGameAP
                     Plugin.Instance.PositionTracker?.ScanAndCacheItems();
                 }
                 
-                // Check for interaction events
-                CheckInteractionEvents(id);
-                
                 switch (id)
                 {
                     case "enterAreaGarden":
@@ -207,57 +189,6 @@ namespace GooseGameAP
                 return true;
             }
         }
-        
-        /// <summary>
-        /// Check for interaction-related events
-        /// </summary>
-        private static void CheckInteractionEvents(string id)
-        {
-            try
-            {
-                string lower = id.ToLower();
-                
-                // Bike bell detection
-                if (lower.Contains("bell") && (lower.Contains("bike") || lower.Contains("bicycle") || lower.Contains("ring")))
-                {
-                    Plugin.Instance?.InteractionTracker?.OnBikeBellRung();
-                }
-                
-                // Windmill detection
-                if (lower.Contains("windmill") || lower.Contains("pinwheel"))
-                {
-                    Plugin.Instance?.InteractionTracker?.OnWindmillSpun();
-                }
-                
-                // Wind chimes detection
-                if (lower.Contains("chime") || lower.Contains("windchime"))
-                {
-                    Plugin.Instance?.InteractionTracker?.OnWindChimesPlayed();
-                }
-                
-                // Radio unplug detection
-                if (lower.Contains("radio") && (lower.Contains("unplug") || lower.Contains("off") || lower.Contains("stop")))
-                {
-                    Plugin.Instance?.InteractionTracker?.OnRadioUnplugged();
-                }
-                
-                // Board break detection (entrance to back gardens)
-                if (lower.Contains("board") && (lower.Contains("break") || lower.Contains("smash") || lower.Contains("destroy")))
-                {
-                    Plugin.Instance?.InteractionTracker?.OnBoardsBroken();
-                }
-                
-                // Also check for generic fence/gate events that might be the boards
-                if (lower.Contains("fence") && lower.Contains("break"))
-                {
-                    Plugin.Instance?.InteractionTracker?.OnBoardsBroken();
-                }
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log?.LogError($"[INTERACT] Event check error: {ex.Message}");
-            }
-        }
     }
 
     // NOTE: Interaction patches for SwitchSystem work but may have signature issues.
@@ -285,36 +216,19 @@ namespace GooseGameAP
         }
         
         /// <summary>
-        /// Log when SwitchSystem.Peck is called (toggle-style switches)
-        /// </summary>
-        [HarmonyPatch(typeof(SwitchSystem), "Peck")]
-        [HarmonyPostfix]
-        static void OnPeck(SwitchSystem __instance)
-        {
-            try
-            {
-                string objName = __instance?.gameObject?.name ?? "unknown";
-                string parentName = __instance?.transform?.parent?.gameObject?.name ?? "no parent";
-                
-                CheckInteraction(__instance, objName, parentName);
-                CheckLacesInteraction(__instance, objName, parentName);
-            }
-            catch { }
-        }
-        
-        /// <summary>
         /// Log when SwitchSystem.SetState is called
         /// </summary>
         [HarmonyPatch(typeof(SwitchSystem), "SetState")]
         [HarmonyPostfix]
-        static void OnSetState(SwitchSystem __instance)
+        static void OnSetState(SwitchSystem __instance, int stateNumber, SwitchUser switchUser)
         {
             try
             {
                 string objName = __instance?.gameObject?.name ?? "unknown";
                 string parentName = __instance?.transform?.parent?.gameObject?.name ?? "no parent";
+                bool byGoose = switchUser == null || switchUser.agentType == AgentType.Goose;
                 
-                CheckInteraction(__instance, objName, parentName);
+                CheckInteraction(__instance, objName, parentName, byGoose);
                 CheckLacesInteraction(__instance, objName, parentName);
                 CheckSandcastlePeck(__instance);
                 CheckFinaleStart(__instance, objName);
@@ -414,7 +328,7 @@ namespace GooseGameAP
         /// <summary>
         /// Check if a switch interaction matches our tracked interactions
         /// </summary>
-        private static void CheckInteraction(SwitchSystem instance, string objName, string parentName)
+        private static void CheckInteraction(SwitchSystem instance, string objName, string parentName, bool byGoose)
         {
             string objLower = objName.ToLower();
             string parentLower = parentName.ToLower();
@@ -475,22 +389,22 @@ namespace GooseGameAP
                 }
             }
             
-            // === GARDEN ===
+            // GARDEN 
             
             // Bike bell - bikeBellSwitchSystem with parent "bike"
-            if (objLower.Contains("bikebell") && parentLower == "bike")
+            if (byGoose && objLower.Contains("bikebell") && parentLower == "bike")
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("BikeBell");
             }
             
             // Garden tap/valve
-            if (objLower == "valve" && parentLower == "gardendynamic")
+            if (byGoose && objLower == "valve" && parentLower == "gardendynamic")
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("GardenTap");
             }
             
             // Sprinkler
-            if (objLower.Contains("sprinkler") && parentLower == "sprinkler")
+            if (byGoose && objLower.Contains("sprinkler") && parentLower == "sprinkler")
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("Sprinkler");
             }
@@ -507,7 +421,7 @@ namespace GooseGameAP
                 Plugin.Instance?.InteractionTracker?.OnInteraction("LockedIn");
             }
             
-            // === HUB ===
+            // HUB 
             
             // Intro gate (first gate at game start)
             if (objLower == "shoosystem" && parentLower == "introgate")
@@ -515,7 +429,7 @@ namespace GooseGameAP
                 Plugin.Instance?.InteractionTracker?.OnInteraction("IntroGate");
             }
             
-            // === HIGH STREET ===
+            // HIGH STREET
             
             // Boop the football
             if (objLower == "goosepecktorollswitch" && parentLower == "football")
@@ -536,7 +450,7 @@ namespace GooseGameAP
             }
             
             // Umbrellas on stands - parent starts with "umbrella" (handles umbrella_1, umbrella_2, umbrella_3)
-            if (parentLower.StartsWith("umbrella"))
+            if (byGoose && parentLower.StartsWith("umbrella"))
             {
                 if (objLower == "umbrellaonstand1")
                 {
@@ -576,10 +490,10 @@ namespace GooseGameAP
                 }
             }
             
-            // === BACK GARDENS ===
+            // BACK GARDENS
             
             // Topiary - pecking
-            if (parentLower == "topiary" && (objLower == "peckeffects" || objLower == "peckyswitch"))
+            if (byGoose && parentLower == "topiary" && (objLower == "peckeffects" || objLower == "peckyswitch"))
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("Topiary");
             }
@@ -596,13 +510,13 @@ namespace GooseGameAP
             }
             
             // Big Garden Bell - StrikerSwitchSystem/BellSwitchSystem with parent "bell"
-            if (parentLower == "bell" && (objLower.Contains("striker") || objLower.Contains("bellswitch")))
+            if (byGoose && parentLower == "bell" && (objLower.Contains("striker") || objLower.Contains("bellswitch")))
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("GardenBell");
             }
             
             // Wind chimes - parent is "chimeSwitches", distinguished by grandparent (chime-a through chime-g)
-            if (parentLower.Contains("chime"))
+            if (byGoose && parentLower.Contains("chime"))
             {
                 // Get grandparent to distinguish between chimes
                 string grandparent = instance.transform.parent?.parent?.name?.ToLower() ?? "";
@@ -623,18 +537,16 @@ namespace GooseGameAP
                     Plugin.Instance?.InteractionTracker?.OnInteraction("WindChimeF");
                 else if (grandparent == "chime-g")
                     Plugin.Instance?.InteractionTracker?.OnInteraction("WindChimeG");
-                else
-                    Plugin.Instance?.InteractionTracker?.OnInteraction("WindChimes"); // Fallback
             }
             
             // Windmill - switchsystem with parent "Plane"
-            if (parentLower == "plane" && objLower.Contains("switchsystem"))
+            if (byGoose && parentLower == "plane" && objLower.Contains("switchsystem"))
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("Windmill");
             }
             
             // Spinny Flowers - switch with parent "Circle", distinguished by grandparent
-            if (parentLower == "circle" && objLower == "switch")
+            if (byGoose && parentLower == "circle" && objLower == "switch")
             {
                 // Get grandparent to distinguish between flowers
                 string grandparentName = "";
@@ -684,20 +596,20 @@ namespace GooseGameAP
                 Plugin.Instance?.InteractionTracker?.OnInteraction("InteriorRedecorating");
             }
             
-            // === PUB ===
+            // PUB
             
             // Van doors
-            if (objLower == "switchsystem" && parentLower == "doorleft")
+            if (byGoose && objLower == "switchsystem" && parentLower == "doorleft")
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("VanDoorLeft");
             }
-            if (objLower == "switchsystem" && parentLower == "doorright")
+            if (byGoose && objLower == "switchsystem" && parentLower == "doorright")
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("VanDoorRight");
             }
             
             // Pub sink tap
-            if (objLower == "goosesswitch" && parentLower == "taphandlepositioner")
+            if (byGoose && objLower == "goosesswitch" && parentLower == "taphandlepositioner")
             {
                 Plugin.Instance?.InteractionTracker?.OnInteraction("PubTap");
             }
@@ -732,10 +644,7 @@ namespace GooseGameAP
             }
         }
         
-        /// <summary>
-        /// Check laces interactions - need grandparent to differentiate wimp vs burly man
-        /// Called separately because we need the full instance for hierarchy traversal
-        /// </summary>
+        // Check laces interactions - need grandparent to differentiate wimp vs burly man
         private static void CheckLacesInteraction(SwitchSystem instance, string objName, string parentName)
         {
             string objLower = objName.ToLower();
@@ -746,8 +655,6 @@ namespace GooseGameAP
             if (!parentLower.Contains("foot")) return;
             
             // Traverse up the hierarchy to find NPC name
-            // Structure: LacesSwitchLeft -> footLComponents -> foot_L -> ... -> hips -> Bone -> skellington -> NPC
-            // NPC name is at level 8-9 in the hierarchy
             try
             {
                 var current = instance?.transform;
@@ -893,21 +800,13 @@ namespace GooseGameAP
         public static void ResetLog() { lastLogTime = 0f; }
     }
     
-    /// <summary>
-    /// Note: Confused Feet uses velocity inversion in MoverPatches.
-    /// stickAim inversion was tried but didn't affect movement direction.
-    /// Velocity inversion works but causes sliding (no walk animation).
-    /// </summary>
+    // Note: Confused Feet uses velocity inversion in MoverPatches.
     
-    /// <summary>
-    /// Goose Day effect - blocks NPC perception of the goose
-    /// </summary>
+    // Goose Day effect - blocks NPC perception of the goose
     [HarmonyPatch]
     public static class GooseDayPatches
     {
-        /// <summary>
-        /// Block visual detection of goose during Goose Day
-        /// </summary>
+        // Block visual detection of goose during Goose Day
         [HarmonyPatch(typeof(Senses), nameof(Senses.CanSeeGoose))]
         [HarmonyPrefix]
         static bool BlockCanSeeGoose(ref bool __result)
@@ -924,9 +823,7 @@ namespace GooseGameAP
             return true; // Run original method
         }
         
-        /// <summary>
-        /// Block hearing honks during Goose Day
-        /// </summary>
+        // Block hearing honks during Goose Day
         [HarmonyPatch(typeof(KnowsGoose), nameof(KnowsGoose.HearHonk))]
         [HarmonyPrefix]
         static bool BlockHearHonk()
@@ -942,9 +839,7 @@ namespace GooseGameAP
             return true;
         }
         
-        /// <summary>
-        /// Block hearing footsteps during Goose Day
-        /// </summary>
+        // Block hearing footsteps during Goose Day
         [HarmonyPatch(typeof(KnowsGoose), nameof(KnowsGoose.HearFeet))]
         [HarmonyPrefix]
         static bool BlockHearFeet()
@@ -962,10 +857,8 @@ namespace GooseGameAP
             return true;
         }
         
-        /// <summary>
-        /// Block NPCs from knowing goose has their items during Goose Day
-        /// This prevents them from chasing after items the goose is holding
-        /// </summary>
+        // Block NPCs from knowing goose has their items during Goose Day
+        // This prevents them from chasing after items the goose is holding
         [HarmonyPatch(typeof(Goose), nameof(Goose.GooseHasItem))]
         [HarmonyPrefix]
         static bool BlockGooseHasItem(ref bool __result)
@@ -983,18 +876,14 @@ namespace GooseGameAP
         }
     }
     
-    /// <summary>
-    /// Mega Honk effects - upgraded honking abilities
-    /// Level 1: All NPCs react to honk (draws attention) - default behavior enhanced
-    /// Level 2: Increased honk detection distance - always heard regardless of distance
-    /// Level 3: Scary honk - NPCs drop held items
-    /// </summary>
+    // Mega Honk effects - upgraded honking abilities
+    // Level 1: All NPCs react to honk (draws attention) - default behavior enhanced
+    // Level 2: Increased honk detection distance - always heard regardless of distance
+    // Level 3: Scary honk - NPCs drop held items
     [HarmonyPatch]
     public static class MegaHonkPatches
     {
-        /// <summary>
-        /// For Level 2+: Force NPCs to react to honk by setting justHonked flag
-        /// </summary>
+        // For Level 2+: Force NPCs to react to honk by setting justHonked flag
         [HarmonyPatch(typeof(KnowsGoose), nameof(KnowsGoose.HearHonk))]
         [HarmonyPrefix]
         static void ForceHearHonk(KnowsGoose __instance)
@@ -1014,10 +903,8 @@ namespace GooseGameAP
             catch { }
         }
         
-        /// <summary>
-        /// Enhance honk effects based on Mega Honk level
-        /// Called after HearHonk to add extra effects
-        /// </summary>
+        // Enhance honk effects based on Mega Honk level
+        // Called after HearHonk to add extra effects
         [HarmonyPatch(typeof(KnowsGoose), nameof(KnowsGoose.HearHonk))]
         [HarmonyPostfix]
         static void EnhanceHonkEffect(KnowsGoose __instance)
@@ -1031,7 +918,6 @@ namespace GooseGameAP
                 if (level < 3) return; // Level 3 required for scare effect
                 
                 // Level 3: Make NPC drop held item
-                // Need to get brain via reflection since it might not be directly accessible
                 var flags = System.Reflection.BindingFlags.Public | 
                             System.Reflection.BindingFlags.NonPublic | 
                             System.Reflection.BindingFlags.Instance;
@@ -1056,9 +942,7 @@ namespace GooseGameAP
         private static ParticleSystem.MinMaxGradient? originalStartColor = null;
         private static ParticleSystem cachedParticleSystem = null;
         
-        /// <summary>
-        /// Set particle color BEFORE honk plays (Prefix)
-        /// </summary>
+        // Set particle color BEFORE honk plays (Prefix)
         [HarmonyPatch(typeof(GooseHonker), "PlayHonkSound")]
         [HarmonyPrefix]
         static void SetHonkColorBefore(GooseHonker __instance)
@@ -1116,9 +1000,7 @@ namespace GooseGameAP
             }
         }
         
-        /// <summary>
-        /// Modify particle colors AFTER emission and emit extra (Postfix)
-        /// </summary>
+        // Modify particle colors AFTER emission and emit extra (Postfix)
         [HarmonyPatch(typeof(GooseHonker), "PlayHonkSound")]
         [HarmonyPostfix]
         static void EnhanceHonkVisuals(GooseHonker __instance)
@@ -1182,12 +1064,7 @@ namespace GooseGameAP
         }
     }
     
-    // NOTE: Butterbeak effect - beak pickups already blocked elsewhere
-    // This patch blocks dragging items during Butterbeak
-    
-    /// <summary>
-    /// Block starting to drag items during Butterbeak
-    /// </summary>
+    // NOTE: Butterbeak effect - drop all picked up objects when active
     [HarmonyPatch(typeof(Dragger), "PickUp")]
     public static class DraggerButterbeakPatch
     {
@@ -1203,6 +1080,143 @@ namespace GooseGameAP
             }
             catch { }
             return true;
+        }
+    }
+
+    [HarmonyPatch]
+    public static class NpcSanityPatches
+    {
+        public const int HONK_BASE = 1600;
+        public const int STARTLE_BASE = 1620;
+        public const int SHOO_BASE = 1640;
+        
+        private static System.Reflection.FieldInfo knowsGooseBrainField = null;
+        
+        // Index order from the apworld NPC list
+        public static int GetNpcIndex(Brain brain)
+        {
+            if (brain == null) return -1;
+            switch (brain.folk)
+            {
+                case Folk.gardener: return 0;
+                case Folk.wimp: return 1;
+                case Folk.tvShop: return 2;
+                case Folk.shopkeeper: return 3;
+                case Folk.neighborClean: return 4;
+                case Folk.neighborMessy: return 5;
+                case Folk.pubMan: return 6;
+                case Folk.oldMan: return 7;
+                case Folk.pubWoman: return 8;
+                case Folk.gossipYellow: return 9;
+                case Folk.gossipBlue: return 10;
+                case Folk.cook: return 11;
+                default: return -1;
+            }
+        }
+        
+        // NPCs that shoo the goose
+        private static bool IsShooIndex(int index)
+        {
+            return index == 0 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 8;
+        }
+        
+        private static void SendOnce(long locationId)
+        {
+            var plugin = Plugin.Instance;
+            if (plugin == null || plugin.IsLocationChecked(locationId)) return;
+            plugin.SendLocationCheck(locationId);
+        }
+        
+        [HarmonyPatch(typeof(KnowsGoose), nameof(KnowsGoose.HearHonk))]
+        [HarmonyPostfix]
+        static void OnHearHonk(KnowsGoose __instance)
+        {
+            try
+            {
+                if (__instance == null) return;
+                if (Plugin.Instance?.TrapManager?.HasGooseDay == true) return;
+                
+                if (knowsGooseBrainField == null)
+                    knowsGooseBrainField = AccessTools.Field(typeof(KnowsGoose), "brain");
+                Brain brain = knowsGooseBrainField?.GetValue(__instance) as Brain;
+                if (brain == null || !brain.gameObject.activeInHierarchy) return;
+                
+                int index = GetNpcIndex(brain);
+                if (index >= 0) SendOnce(Plugin.BASE_ID + HONK_BASE + index);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogError("Honksanity patch error: " + ex.Message);
+            }
+        }
+        
+        [HarmonyPatch(typeof(ReactionState), nameof(ReactionState.Enter))]
+        [HarmonyPostfix]
+        static void OnReactionEnter(ReactionState __instance)
+        {
+            try
+            {
+                if (__instance == null || __instance.reactionName != ReactionName.ReactionStartled) return;
+                Brain brain = __instance.brain;
+                if (brain == null || !brain.gameObject.activeInHierarchy) return;
+                
+                int index = GetNpcIndex(brain);
+                if (index >= 0) SendOnce(Plugin.BASE_ID + STARTLE_BASE + index);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogError("Startlesanity patch error: " + ex.Message);
+            }
+        }
+        [HarmonyPatch(typeof(HerdState), "HerdHasPath")]
+        [HarmonyPrefix]
+        static void BeforeHerdStep(KnowsGoose knowsGoose, out float __state)
+        {
+            __state = -1f;
+            try
+            {
+                if (knowsGoose != null && knowsGoose.goose != null && knowsGoose.goose.gooseBeak != null)
+                    __state = knowsGoose.goose.gooseBeak.timeOfLastShoo;
+            }
+            catch { }
+        }
+        
+        [HarmonyPatch(typeof(HerdState), "HerdHasPath")]
+        [HarmonyPostfix]
+        static void AfterHerdStep(HerdState __instance, KnowsGoose knowsGoose, float __state)
+        {
+            try
+            {
+                if (__instance == null || __instance.brain == null) return;
+                if (knowsGoose == null || knowsGoose.goose == null || knowsGoose.goose.gooseBeak == null) return;
+                if (knowsGoose.goose.gooseBeak.timeOfLastShoo == __state) return;
+                OnShooedBy(__instance.brain);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogError("Herd shoo patch error: " + ex.Message);
+            }
+        }
+        
+        // True if this shoo newly awarded a Shoosanity check
+        public static bool OnShooedBy(Brain brain)
+        {
+            try
+            {
+                var plugin = Plugin.Instance;
+                int index = GetNpcIndex(brain);
+                if (plugin == null || index < 0 || !IsShooIndex(index)) return false;
+                
+                long locationId = Plugin.BASE_ID + SHOO_BASE + index;
+                bool awarded = plugin.ShoosanityEnabled && !plugin.IsLocationChecked(locationId);
+                SendOnce(locationId);
+                return awarded;
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogError("Shoosanity error: " + ex.Message);
+                return false;
+            }
         }
     }
 }

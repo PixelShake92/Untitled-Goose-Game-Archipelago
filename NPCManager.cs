@@ -145,38 +145,41 @@ namespace GooseGameAP
             
             Log.LogInfo("[NPC] Applying NPC states from flags");
             
-            if (plugin.HasGroundskeeperSoul) SetNPCActive("Groundskeeper", true);
-            if (plugin.HasBoySoul) SetNPCActive("Boy", true);
-            if (plugin.HasTVShopOwnerSoul) SetNPCActive("TVShopOwner", true);
-            if (plugin.HasMarketLadySoul) SetNPCActive("MarketLady", true);
-            if (plugin.HasTidyNeighbourSoul) SetNPCActive("TidyNeighbour", true);
-            if (plugin.HasMessyNeighbourSoul) SetNPCActive("MessyNeighbour", true);
-            if (plugin.HasBurlyManSoul) SetNPCActive("BurlyMan", true);
-            if (plugin.HasOldManSoul) SetNPCActive("OldMan", true);
-            if (plugin.HasPubLadySoul) SetNPCActive("PubLady", true);
-            if (plugin.HasFancyLadiesSoul)
-            {
-                SetNPCActive("FancyLadies1", true);
-                SetNPCActive("FancyLadies2", true);
-            }
-            if (plugin.HasCookSoul) SetNPCActive("Cook", true);
+            SetNPCActive("Groundskeeper", plugin.HasGroundskeeperSoul);
+            SetNPCActive("Boy", plugin.HasBoySoul);
+            SetNPCActive("TVShopOwner", plugin.HasTVShopOwnerSoul);
+            SetNPCActive("MarketLady", plugin.HasMarketLadySoul);
+            SetNPCActive("TidyNeighbour", plugin.HasTidyNeighbourSoul);
+            SetNPCActive("MessyNeighbour", plugin.HasMessyNeighbourSoul);
+            SetNPCActive("BurlyMan", plugin.HasBurlyManSoul);
+            SetNPCActive("OldMan", plugin.HasOldManSoul);
+            SetNPCActive("PubLady", plugin.HasPubLadySoul);
+            SetNPCActive("FancyLadies1", plugin.HasFancyLadiesSoul);
+            SetNPCActive("FancyLadies2", plugin.HasFancyLadiesSoul);
+            SetNPCActive("Cook", plugin.HasCookSoul);
         }
         
-        /// <summary>
-        /// Set a single NPC's active state
-        /// </summary>
+        // Set a single NPC's active state
         private void SetNPCActive(string npcType, bool active)
         {
             if (npcCache.TryGetValue(npcType, out GameObject npc) && npc != null)
             {
+                bool wasActive = npc.activeSelf;
                 npc.SetActive(active);
+                if (active && !wasActive) WakeNPC(npc);
                 Log.LogInfo($"[NPC] {npcType} set to {(active ? "ACTIVE" : "INACTIVE")}");
             }
         }
         
-        /// <summary>
-        /// Enable an NPC when their soul is received
-        /// </summary>
+        // Culling leaves a re-enabled NPC asleep until it is woken
+        private void WakeNPC(GameObject npc)
+        {
+            var brain = npc.GetComponentInChildren<Brain>(true);
+            if (brain != null && CullingManager.Instance != null)
+                CullingManager.Instance.WakeSpecificPerson(brain);
+        }
+        
+        // Enable an NPC when their soul is received
         public void EnableNPC(string npcType)
         {
             // If souls are disabled, NPCs are already enabled
@@ -199,7 +202,9 @@ namespace GooseGameAP
         {
             if (npcCache.TryGetValue(npcType, out GameObject npc) && npc != null)
             {
+                bool wasActive = npc.activeSelf;
                 npc.SetActive(true);
+                if (!wasActive) WakeNPC(npc);
                 Log.LogInfo($"[NPC] {npcType} is now ACTIVE");
             }
             else
@@ -212,15 +217,14 @@ namespace GooseGameAP
                     {
                         npcCache[npcType] = foundNpc;
                         foundNpc.SetActive(true);
+                        WakeNPC(foundNpc);
                         Log.LogInfo($"[NPC] Found and enabled {npcType}");
                     }
                 }
             }
         }
         
-        /// <summary>
-        /// Re-apply all NPC states (called when reconnecting or settings change)
-        /// </summary>
+        // Re-apply all NPC states (called when reconnecting or settings change)
         public void RefreshNPCStates()
         {
             if (!hasScannedNPCs) return;
@@ -229,7 +233,6 @@ namespace GooseGameAP
             
             if (NPCSoulsEnabled)
             {
-                DisableAllNPCs();
                 ApplyNPCStatesFromFlags();
             }
             else

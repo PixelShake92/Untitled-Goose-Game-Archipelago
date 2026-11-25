@@ -68,10 +68,8 @@ namespace GooseGameAP
             LoadProgressiveItems();
         }
         
-        /// <summary>
-        /// Load progressive item counts from PlayerPrefs
-        /// </summary>
-        private void LoadProgressiveItems()
+        // Load progressive item counts from PlayerPrefs
+        public void LoadProgressiveItems()
         {
             SpeedyFeetCount = Math.Min(PlayerPrefs.GetInt("AP_SpeedyFeet", 0), 10);  // Max 10
             MegaHonkCount = Math.Min(PlayerPrefs.GetInt("AP_MegaHonk", 0), 3);       // Max 3
@@ -79,9 +77,7 @@ namespace GooseGameAP
             IsSilent = PlayerPrefs.GetInt("AP_SilentSteps", 0) == 1;
         }
         
-        /// <summary>
-        /// Save progressive item counts to PlayerPrefs
-        /// </summary>
+        // Save progressive item counts to PlayerPrefs
         public void SaveProgressiveItems()
         {
             // Clamp values before saving
@@ -388,7 +384,7 @@ namespace GooseGameAP
                     }
                     
                     // Drop dragged items
-                    var dragger = goose.GetComponent<Dragger>();
+                    var dragger = goose.dragger;
                     if (dragger != null)
                     {
                         try
@@ -610,13 +606,6 @@ namespace GooseGameAP
                         {
                             TryResetKnowsGoose(fieldValue);
                         }
-                        // Reset primitive types
-                        else if (field.FieldType == typeof(float))
-                            field.SetValue(knows, 0f);
-                        else if (field.FieldType == typeof(int))
-                            field.SetValue(knows, 0);
-                        else if (field.FieldType == typeof(bool))
-                            field.SetValue(knows, false);
                     }
                     catch { }
                 }
@@ -672,10 +661,10 @@ namespace GooseGameAP
                         var state = stateField.GetValue(states);
                         if (state != null)
                         {
-                            var isDesiredField = state.GetType().GetField("isDesired", flags);
+                            var isDesiredField = state.GetType().GetProperty("isDesired", flags);
                             if (isDesiredField != null)
                             {
-                                isDesiredField.SetValue(state, false);
+                                isDesiredField.SetValue(state, false, null);
                             }
                         }
                     }
@@ -688,10 +677,10 @@ namespace GooseGameAP
                     var idleState = idleStateField.GetValue(states);
                     if (idleState != null)
                     {
-                        var isDesiredField = idleState.GetType().GetField("isDesired", flags);
+                        var isDesiredField = idleState.GetType().GetProperty("isDesired", flags);
                         if (isDesiredField != null)
                         {
-                            isDesiredField.SetValue(idleState, true);
+                            isDesiredField.SetValue(idleState, true, null);
                         }
                     }
                 }

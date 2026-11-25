@@ -5,6 +5,7 @@ from .Locations import (
     milestone_locations, item_pickup_locations, drag_item_locations, interaction_locations,
     unique_item_pickup_locations, unique_item_drag_locations, sandcastle_peck_locations,
     sandcastle_first_peck_locations, milestone_locations_main_tasks, new_tasks_locations,
+    honksanity_locations, startlesanity_locations, shoosanity_locations,
     GooseGameLocation
 )
 from .Rules import UntitledGooseRules
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 
 
 def create_regions(world: "GooseGameWorld") -> None:
-    """Create all regions and their locations
+    r"""Create all regions and their locations
     
     Region Structure (Hub-based):
     
@@ -107,6 +108,19 @@ def create_regions(world: "GooseGameWorld") -> None:
     # Add new tasks locations if enabled
     if world.options.include_new_tasks:
         for loc_name, loc_data in new_tasks_locations.items():
+            add_location(loc_name, loc_data.id, loc_data.region)
+    
+    # Add NPC sanity locations if enabled
+    if world.options.include_honksanity:
+        for loc_name, loc_data in honksanity_locations.items():
+            add_location(loc_name, loc_data.id, loc_data.region)
+    
+    if world.options.include_startlesanity:
+        for loc_name, loc_data in startlesanity_locations.items():
+            add_location(loc_name, loc_data.id, loc_data.region)
+    
+    if world.options.include_shoosanity:
+        for loc_name, loc_data in shoosanity_locations.items():
             add_location(loc_name, loc_data.id, loc_data.region)
     
     # Add sandcastle peck locations if enabled

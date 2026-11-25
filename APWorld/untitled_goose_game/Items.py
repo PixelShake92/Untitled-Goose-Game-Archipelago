@@ -25,7 +25,7 @@ item_table: Dict[str, GooseGameItemData] = {
     # Progressive Area (alternative)
     itemNames.PROGRESSIVE_AREA_ACCESS: GooseGameItemData(BASE_ID + 110, ItemClassification.progression),
     
-    # === NPC Souls (Progression) - NPCs won't appear until you have their soul ===
+    # NPC Souls (Progression) - NPCs won't appear until you have their soul
     itemNames.NPC_GROUNDSKEEPER: GooseGameItemData(BASE_ID + 120, ItemClassification.progression),
     itemNames.NPC_BOY: GooseGameItemData(BASE_ID + 121, ItemClassification.progression),
     itemNames.NPC_TV_SHOP_OWNER: GooseGameItemData(BASE_ID + 122, ItemClassification.progression),
@@ -38,7 +38,7 @@ item_table: Dict[str, GooseGameItemData] = {
     itemNames.NPC_FANCY_LADIES: GooseGameItemData(BASE_ID + 129, ItemClassification.progression),
     itemNames.NPC_COOK: GooseGameItemData(BASE_ID + 130, ItemClassification.progression),
     
-    # === GROUPED PROP SOULS (IDs 400-499) - Multiple instances share one soul ===
+    # GROUPED PROP SOULS (IDs 400-499) - Multiple instances share one soul
     itemNames.PROP_CARROTS: GooseGameItemData(BASE_ID + 400, ItemClassification.progression),
     itemNames.PROP_TOMATOES: GooseGameItemData(BASE_ID + 401, ItemClassification.progression),
     itemNames.PROP_PUMPKINS: GooseGameItemData(BASE_ID + 402, ItemClassification.progression),
@@ -66,7 +66,7 @@ item_table: Dict[str, GooseGameItemData] = {
     itemNames.PROP_MINI_BENCHES: GooseGameItemData(BASE_ID + 617, ItemClassification.progression),
     itemNames.PROP_WEED_TOOLS: GooseGameItemData(BASE_ID + 531, ItemClassification.progression),
     
-    # === GARDEN ONE-OFF PROP SOULS (IDs 500-519) ===
+    # GARDEN ONE-OFF PROP SOULS (IDs 500-519)
     itemNames.PROP_RADIO: GooseGameItemData(BASE_ID + 500, ItemClassification.progression),
     itemNames.PROP_CABBAGES: GooseGameItemData(BASE_ID + 502, ItemClassification.progression_deprioritized),
     itemNames.PROP_TROWEL: GooseGameItemData(BASE_ID + 501, ItemClassification.progression),
@@ -85,7 +85,7 @@ item_table: Dict[str, GooseGameItemData] = {
     itemNames.PROP_MALLET: GooseGameItemData(BASE_ID + 517, ItemClassification.progression),
     itemNames.PROP_WOODEN_CRATE: GooseGameItemData(BASE_ID + 518, ItemClassification.progression_deprioritized),
     
-    # === HIGH STREET ONE-OFF PROP SOULS (IDs 520-549) ===
+    # HIGH STREET ONE-OFF PROP SOULS (IDs 520-549)
     itemNames.PROP_HORN_RIMMED_GLASSES: GooseGameItemData(BASE_ID + 521, ItemClassification.progression),
     itemNames.PROP_RED_GLASSES: GooseGameItemData(BASE_ID + 522, ItemClassification.progression),
     itemNames.PROP_SUNGLASSES: GooseGameItemData(BASE_ID + 523, ItemClassification.progression),
@@ -109,7 +109,7 @@ item_table: Dict[str, GooseGameItemData] = {
     itemNames.PROP_PRICING_GUN: GooseGameItemData(BASE_ID + 542, ItemClassification.progression_deprioritized),
     itemNames.PROP_ADDING_MACHINE: GooseGameItemData(BASE_ID + 543, ItemClassification.progression_deprioritized),
     
-    # === BACK GARDENS ONE-OFF PROP SOULS (IDs 550-579) ===
+    # BACK GARDENS ONE-OFF PROP SOULS (IDs 550-579)
     itemNames.PROP_DUMMY: GooseGameItemData(BASE_ID + 550, ItemClassification.progression_deprioritized),
     itemNames.PROP_CRICKET_BALL: GooseGameItemData(BASE_ID + 551, ItemClassification.progression_deprioritized),
     itemNames.PROP_BUST_PIPE: GooseGameItemData(BASE_ID + 552, ItemClassification.progression),
@@ -136,7 +136,7 @@ item_table: Dict[str, GooseGameItemData] = {
     itemNames.PROP_ENAMEL_JUG: GooseGameItemData(BASE_ID + 573, ItemClassification.progression_deprioritized),
     itemNames.PROP_NO_GOOSE_SIGN_CLEAN: GooseGameItemData(BASE_ID + 574, ItemClassification.progression),
     
-    # === PUB ONE-OFF PROP SOULS (IDs 580-609) ===
+    # PUB ONE-OFF PROP SOULS (IDs 580-609)
     itemNames.PROP_FISHING_BOBBER: GooseGameItemData(BASE_ID + 580, ItemClassification.progression_deprioritized),
     itemNames.PROP_LETTER: GooseGameItemData(BASE_ID + 581, ItemClassification.progression_deprioritized),
     itemNames.PROP_PINT_GLASSES: GooseGameItemData(BASE_ID + 582, ItemClassification.progression),
@@ -157,7 +157,7 @@ item_table: Dict[str, GooseGameItemData] = {
     itemNames.PROP_MOP: GooseGameItemData(BASE_ID + 599, ItemClassification.progression_deprioritized),
     itemNames.PROP_BUCKET: GooseGameItemData(BASE_ID + 601, ItemClassification.progression),
     
-    # === MODEL VILLAGE ONE-OFF PROP SOULS (IDs 610-629) ===
+    # MODEL VILLAGE ONE-OFF PROP SOULS (IDs 610-629)
     itemNames.PROP_MINI_MAIL_PILLAR: GooseGameItemData(BASE_ID + 610, ItemClassification.progression_deprioritized),
     itemNames.PROP_MINI_PHONE_DOOR: GooseGameItemData(BASE_ID + 611, ItemClassification.progression_deprioritized),
     itemNames.PROP_MINI_SHOVEL: GooseGameItemData(BASE_ID + 612, ItemClassification.progression_deprioritized),
@@ -172,14 +172,14 @@ item_table: Dict[str, GooseGameItemData] = {
     # Victory item soul
     itemNames.PROP_GOLDEN_BELL: GooseGameItemData(BASE_ID + 621, ItemClassification.progression),
     
-    # === FILLER ITEMS ===
+    # FILLER ITEMS
     itemNames.FILLER_MEGA_HONK: GooseGameItemData(BASE_ID + 200, ItemClassification.useful),
     itemNames.FILLER_SPEEDY_FEET: GooseGameItemData(BASE_ID + 201, ItemClassification.useful),
     itemNames.FILLER_SILENT_STEPS: GooseGameItemData(BASE_ID + 202, ItemClassification.useful),
     itemNames.FILLER_A_GOOSE_DAY: GooseGameItemData(BASE_ID + 203, ItemClassification.filler),
     itemNames.FILLER_COIN: GooseGameItemData(BASE_ID + 204, ItemClassification.filler),
     
-    # === TRAP ITEMS ===
+    # TRAP ITEMS
     itemNames.TRAP_TIRED_GOOSE: GooseGameItemData(BASE_ID + 300, ItemClassification.trap),
     itemNames.TRAP_CONFUSED_FEET: GooseGameItemData(BASE_ID + 301, ItemClassification.trap),
     itemNames.TRAP_BUTTERBEAK: GooseGameItemData(BASE_ID + 302, ItemClassification.trap),
@@ -266,6 +266,7 @@ ITEM_GROUPS = {
         itemNames.PROP_WATERING_CAN,
         itemNames.PROP_MALLET,
         itemNames.PROP_WOODEN_CRATE,
+        itemNames.PROP_CABBAGES,
     },
     "Garden Props": {
         itemNames.PROP_RADIO,
@@ -282,6 +283,7 @@ ITEM_GROUPS = {
         itemNames.PROP_WATERING_CAN,
         itemNames.PROP_MALLET,
         itemNames.PROP_WOODEN_CRATE,
+        itemNames.PROP_CABBAGES,
         itemNames.PROP_CARROTS,
         itemNames.PROP_PUMPKINS,
         itemNames.PROP_TOPSOIL_BAGS,
@@ -310,6 +312,8 @@ ITEM_GROUPS = {
         itemNames.PROP_BABY_DOLL,
         itemNames.PROP_PRICING_GUN,
         itemNames.PROP_ADDING_MACHINE,
+        itemNames.PROP_FOOTBALL,
+        itemNames.PROP_GARAGE_ROPE,
     },
     "High Street Props": {
         itemNames.PROP_HORN_RIMMED_GLASSES,
@@ -332,6 +336,8 @@ ITEM_GROUPS = {
         itemNames.PROP_BABY_DOLL,
         itemNames.PROP_PRICING_GUN,
         itemNames.PROP_ADDING_MACHINE,
+        itemNames.PROP_FOOTBALL,
+        itemNames.PROP_GARAGE_ROPE,
         itemNames.PROP_CARROTS,
         itemNames.PROP_TOMATOES,
         itemNames.PROP_ORANGES,
@@ -505,6 +511,7 @@ ITEM_GROUPS = {
         itemNames.PROP_CHALK,
         itemNames.PROP_SHOPPING_BASKET,
         itemNames.PROP_PUSH_BROOM,
+        itemNames.PROP_GARAGE_ROPE,
         itemNames.PROP_TOMATOES,
         itemNames.PROP_ORANGES,
         itemNames.PROP_LEEKS,

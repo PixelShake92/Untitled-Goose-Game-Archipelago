@@ -130,6 +130,28 @@ class IncludeNewTasks(Toggle):
     default = False
 
 
+class IncludeHonksanity(Toggle):
+    """Include a location for honking at each NPC (12 locations).
+    Requires the NPC's area and, if NPC souls are included, that NPC's soul."""
+    display_name = "Include Honksanity"
+    default = False
+
+
+class IncludeStartlesanity(Toggle):
+    """Include a location for sneaking up and startling each NPC (12 locations).
+    Requires the NPC's area and, if NPC souls are included, that NPC's soul."""
+    display_name = "Include Startlesanity"
+    default = False
+
+
+class IncludeShoosanity(Toggle):
+    """Include a location for getting shooed by each NPC that shoos (7 locations):
+    Groundskeeper, TV Shop Owner, Market Lady, Tidy Neighbour, Messy Neighbour, Burly Man, Pub Lady.
+    Requires the NPC's area and, if NPC souls are included, that NPC's soul."""
+    display_name = "Include Shoosanity"
+    default = False
+
+
 class FillerAmountMegaHonk(Range):
     """Amount of Mega Honk in the filler pool.
     Mega Honk effects - upgraded honking abilities
@@ -210,6 +232,16 @@ class DeathLink(Toggle):
     default = False
 
 
+class DeathLinkAmnesty(Range):
+    """Number of shoos forgiven before a DeathLink is sent. Only used with Death Link.
+    0: every shoo sends a DeathLink. 3: every 4th shoo sends one.
+    A shoo that completes a Shoosanity location never sends a DeathLink."""
+    display_name = "Death Link Amnesty"
+    range_start = 0
+    range_end = 20
+    default = 0
+
+
 @dataclass
 class GooseGameOptions(PerGameCommonOptions):
     starting_area: StartingArea
@@ -225,6 +257,9 @@ class GooseGameOptions(PerGameCommonOptions):
     include_model_church_pecks: IncludeModelChurchPecks
     include_milestone_locations: IncludeMilestoneLocations
     include_new_tasks: IncludeNewTasks
+    include_honksanity: IncludeHonksanity
+    include_startlesanity: IncludeStartlesanity
+    include_shoosanity: IncludeShoosanity
     filler_amount_mega_honk: FillerAmountMegaHonk
     filler_amount_speedy_feet: FillerAmountSpeedyFeet
     filler_active_silent_steps: FillerActiveSilentSteps
@@ -235,3 +270,4 @@ class GooseGameOptions(PerGameCommonOptions):
     trap_weight_butterbeak: TrapWeightButterbeak
     trap_weight_suspicious_goose: TrapWeightSuspiciousGoose
     death_link: DeathLink
+    death_link_amnesty: DeathLinkAmnesty

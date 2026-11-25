@@ -52,6 +52,10 @@ namespace GooseGameAP
         public bool PropSoulsEnabled { get; private set; } = true;
         public bool NewTasksEnabled { get; private set; } = true;
         public bool DeathLinkEnabled { get; private set; } = false;
+        public int DeathLinkAmnesty { get; private set; } = 0;
+        public bool ShoosanityEnabled { get; private set; } = false;
+        private string seedName = "";
+        private bool goalPending = false;
         
         // Gate sync timing
         public bool PendingGateSync { get; set; } = false;
@@ -72,9 +76,9 @@ namespace GooseGameAP
         {
             try
             {
+                Disconnect();
                 plugin.UI.Status = "Starting proxy...";
                 slotName = slot;
-                StopProxy();
                 
                 string gameDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 string proxyPath = FindProxyPath(gameDir);
@@ -206,7 +210,12 @@ namespace GooseGameAP
         
         public void SendGoalComplete()
         {
-            if (!IsConnected) return;
+            if (!IsConnected)
+            {
+                goalPending = true;
+                return;
+            }
+            goalPending = false;
             string json = "[{\"cmd\":\"StatusUpdate\",\"status\":30}]";
             SendPacket(json);
             AddServerLog("[GOAL] Victory! Goal complete sent!", ServerLogType.Goal);
@@ -218,9 +227,14 @@ namespace GooseGameAP
             if (!IsConnected) return;
             DateTime currentTime = DateTime.UtcNow;
             long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
-            string json = "[{\"cmd\":\"Bounce\",\"tags\":[\"DeathLink\"],\"data\":{\"time\":" + unixTime + ",\"source\":\"" + slotName + "\",\"cause\":\"Shooed by " + nameOfShooer + "!\"}}]";
+            string json = "[{\"cmd\":\"Bounce\",\"tags\":[\"DeathLink\"],\"data\":{\"time\":" + unixTime + ",\"source\":\"" + Esc(slotName) + "\",\"cause\":\"Shooed by " + Esc(nameOfShooer) + "!\"}}]";
             SendPacket(json);
             Log.LogInfo("[APCLIENT] Sent DeathLink");
+        }
+        
+        private static string Esc(string s)
+        {
+            return (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
         
         public void ProcessQueuedMessages()
@@ -255,10 +269,18 @@ namespace GooseGameAP
                 if (roomInfo == null) return;
                 
                 Log.LogInfo("[AP] Got RoomInfo");
+                seedName = "";
+                int seedIdx = roomInfo.IndexOf("\"seed_name\":\"");
+                if (seedIdx >= 0)
+                {
+                    int seedStart = seedIdx + 13;
+                    int seedEnd = roomInfo.IndexOf('"', seedStart);
+                    if (seedEnd > seedStart) seedName = roomInfo.Substring(seedStart, seedEnd - seedStart);
+                }
                 
                 string tags = deathLinkEnabled ? "[\"DeathLink\"]" : "[]";
-                string passStr = string.IsNullOrEmpty(password) ? "null" : "\"" + password + "\"";
-                string connectPacket = "[{\"cmd\":\"Connect\",\"game\":\"Untitled Goose Game\",\"name\":\"" + slot + 
+                string passStr = string.IsNullOrEmpty(password) ? "null" : "\"" + Esc(password) + "\"";
+                string connectPacket = "[{\"cmd\":\"Connect\",\"game\":\"Untitled Goose Game\",\"name\":\"" + Esc(slot) + 
                     "\",\"uuid\":\"\",\"version\":{\"major\":0,\"minor\":5,\"build\":0,\"class\":\"Version\"},\"tags\":" + 
                     tags + ",\"password\":" + passStr + ",\"items_handling\":7}]";
                 
@@ -343,9 +365,13 @@ namespace GooseGameAP
                     }
                 }
                 
+                plugin.OnSeedReceived(seedName);
                 ParsePlayerNames(data);
                 ParseSlotData(data);
+                SendPacket("[{\"cmd\":\"ConnectUpdate\",\"tags\":" + (DeathLinkEnabled ? "[\"DeathLink\"]" : "[]") + "}]");
                 ParseCheckedLocations(data);  // Load already-checked locations from server
+                plugin.ResendCheckedLocations();
+                if (goalPending) SendGoalComplete();
                 
                 lastProcessedIndex = PlayerPrefs.GetInt("AP_LastItemIndex", -1);
                 Log.LogInfo($"[AP] Connected - lastProcessedIndex = {lastProcessedIndex}");
@@ -376,7 +402,7 @@ namespace GooseGameAP
             {
                 if (plugin.DeathLinkEnabled)
                 {
-                    if (!data.Contains("\"source\":" + slotName))
+                    if (!data.Contains("\"source\":\"" + Esc(slotName) + "\""))
                     {
                         AddServerLog("[DEATHLINK] Another player died!", ServerLogType.DeathLink);
                         plugin.TriggerDeathLink();
@@ -392,9 +418,12 @@ namespace GooseGameAP
         
         private void RequestDataPackage()
         {
-            string packet = "[{\"cmd\":\"GetDataPackage\"}]";
+            var games = new HashSet<string>(playerGames.Values);
+            games.Add("Archipelago");
+            games.Add("Untitled Goose Game");
+            string packet = "[{\"cmd\":\"GetDataPackage\",\"games\":[\"" + string.Join("\",\"", games) + "\"]}]";
             SendPacket(packet);
-            Log.LogInfo("[AP] Requested DataPackage (v4)");
+            Log.LogInfo($"[AP] Requested DataPackage for {games.Count} games");
         }
         
         private bool IsCompleteJson(string json)
@@ -498,7 +527,7 @@ namespace GooseGameAP
                 
                 hasDatapackage = true;
                 Log.LogInfo($"[AP] DataPackage complete: {gamesFound} games, {totalItems} items, {totalLocations} locations");
-                AddServerLog($"[INFO] Loaded {totalItems} items, {totalLocations} locations from {gamesFound} games", ServerLogType.System);
+                AddServerLog($"[INFO] Loaded names for {gamesFound} games", ServerLogType.System);
             }
             catch (Exception ex)
             {
@@ -799,6 +828,8 @@ namespace GooseGameAP
                 if (items.TryGetValue(itemId, out string name))
                     return name;
             }
+            if (!string.IsNullOrEmpty(game) && game != "Untitled Goose Game")
+                return $"Item {itemId}";
             return GetItemName(itemId);
         }
         
@@ -810,6 +841,8 @@ namespace GooseGameAP
                 if (locs.TryGetValue(locationId, out string name))
                     return name;
             }
+            if (!string.IsNullOrEmpty(game) && game != "Untitled Goose Game")
+                return $"Location {locationId}";
             return GetLocationName(locationId);
         }
         
@@ -847,6 +880,8 @@ namespace GooseGameAP
         {
             NPCSoulsEnabled = true;
             PropSoulsEnabled = true;
+            DeathLinkAmnesty = 0;
+            ShoosanityEnabled = false;
             
             int slotDataIdx = data.IndexOf("\"slot_data\":");
             if (slotDataIdx < 0)
@@ -891,6 +926,26 @@ namespace GooseGameAP
                 Log.LogInfo($"[AP] Parsed death_link: {DeathLinkEnabled}");
             }
             
+            int amnestyIdx = data.IndexOf("\"death_link_amnesty\":", slotDataIdx);
+            if (amnestyIdx > 0)
+            {
+                int colonPos = amnestyIdx + 21;
+                int endPos = colonPos;
+                while (endPos < data.Length && char.IsDigit(data[endPos])) endPos++;
+                int.TryParse(data.Substring(colonPos, endPos - colonPos), out int amnesty);
+                DeathLinkAmnesty = amnesty;
+                Log.LogInfo($"[AP] Parsed death_link_amnesty: {DeathLinkAmnesty}");
+            }
+            
+            int shooIdx = data.IndexOf("\"include_shoosanity\":", slotDataIdx);
+            if (shooIdx > 0)
+            {
+                int colonPos = shooIdx + 21;
+                string valueArea = data.Substring(colonPos, Math.Min(10, data.Length - colonPos)).Trim();
+                ShoosanityEnabled = valueArea.StartsWith("true") || valueArea.StartsWith("1");
+                Log.LogInfo($"[AP] Parsed include_shoosanity: {ShoosanityEnabled}");
+            }
+            
             Log.LogInfo($"[AP] Slot data parsed: NPCSouls={NPCSoulsEnabled}, PropSouls={PropSoulsEnabled}, NewTasks={NewTasksEnabled}, DeathLink={DeathLinkEnabled}");
             
             PlayerPrefs.SetInt("AP_NPCSoulsEnabled", NPCSoulsEnabled ? 1 : 0);
@@ -906,11 +961,7 @@ namespace GooseGameAP
             NewTasksEnabled = PlayerPrefs.GetInt("AP_NewTasksEnabled", 1) == 1;
             Log.LogInfo($"[AP] Loaded soul settings: NPCSouls={NPCSoulsEnabled}, PropSouls={PropSoulsEnabled}, NewTasks={NewTasksEnabled}");
         }
-        
-        /// <summary>
-        /// Parse checked_locations from Connected packet to know what's already been sent to server
-        /// Format: "checked_locations":[123456,123457,...]
-        /// </summary>
+                // Parse checked_locations from Connected packet to know what's already been sent to server
         private void ParseCheckedLocations(string data)
         {
             int idx = data.IndexOf("\"checked_locations\":");
@@ -987,14 +1038,14 @@ namespace GooseGameAP
                         if (currentIndex > lastProcessedIndex)
                         {
                             plugin.UI.AddReceivedItem(itemName);
-                            plugin.ProcessReceivedItem(itemId);
+                            try { plugin.ProcessReceivedItem(itemId); }
+                            catch (Exception ex) { Log.LogError($"[AP] Error processing item {itemId}: {ex}"); }
                             newItemsCount++;
                             
                             AddServerLog($"[RECV] {itemName}", ServerLogType.ItemReceived);
                             
                             lastProcessedIndex = currentIndex;
                             PlayerPrefs.SetInt("AP_LastItemIndex", lastProcessedIndex);
-                            PlayerPrefs.Save();
                         }
                         
                         currentIndex++;
@@ -1002,6 +1053,7 @@ namespace GooseGameAP
                 }
             }
             
+            if (newItemsCount > 0) PlayerPrefs.Save();
             Log.LogInfo($"[AP] ParseReceivedItems - processed {newItemsCount} new items, lastProcessedIndex now {lastProcessedIndex}");
         }
         

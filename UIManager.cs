@@ -358,7 +358,7 @@ namespace GooseGameAP
             if (notificationTimer > 0 && !string.IsNullOrEmpty(currentNotification))
             {
                 GUI.color = new Color(0.55f, 0.45f, 0.1f);
-                GUI.Label(new Rect(x, y, w, lineH), $"<size={textSize}><b>â–¶ {currentNotification}</b></size>");
+                GUI.Label(new Rect(x, y, w, lineH), $"<size={textSize}><b>\u25B6 {currentNotification}</b></size>");
                 GUI.color = Color.white;
                 y += lineH;
             }
@@ -741,11 +741,11 @@ namespace GooseGameAP
         {
             int checkSize = textSize + 4;
             GUI.color = hasAccess ? new Color(0.2f, 0.5f, 0.2f) : new Color(0.5f, 0.5f, 0.5f);
-            GUI.Label(new Rect(x, y, w, 26), $"<size={checkSize}>{(hasAccess ? "âœ“" : "âœ—")}</size><size={textSize}> {label}</size>");
+            GUI.Label(new Rect(x, y, w, 26), $"<size={checkSize}>{(hasAccess ? "\u2713" : "\u2717")}</size><size={textSize}> {label}</size>");
             GUI.color = Color.white;
         }
         
-        // ============== SOUL TRACKER WINDOW (Notebook Style) ==============
+        // SOUL TRACKER WINDOW (Notebook Style)
         
         public void DrawSoulTracker(Plugin plugin)
         {
@@ -918,11 +918,11 @@ namespace GooseGameAP
             {
                 h += headerH + 3 * lineH + 6 * s;
                 h += headerH + 6 * lineH + 6 * s;
-                h += headerH + 20 * lineH + 6 * s;
-                h += headerH + 31 * lineH + 6 * s;
+                h += headerH + 21 * lineH + 6 * s;
+                h += headerH + 33 * lineH + 6 * s;
                 h += headerH + 26 * lineH + 6 * s;
-                h += headerH + 22 * lineH + 6 * s;
-                h += headerH + 12 * lineH + 6 * s;
+                h += headerH + 23 * lineH + 6 * s;
+                h += headerH + 13 * lineH + 6 * s;
             }
             return h + 20 * s;
         }
@@ -985,6 +985,7 @@ namespace GooseGameAP
         
         private List<SoulInfo> GetGardenPropSouls(Plugin p) { var m = p.PropManager; return new List<SoulInfo> {
             new SoulInfo("Apples", m?.HasReceivedSoul("Apples") ?? false),
+            new SoulInfo("Cabbages", m?.HasReceivedSoul("Cabbages") ?? false),
             new SoulInfo("Carrots", m?.HasReceivedSoul("Carrots") ?? false),
             new SoulInfo("Esky", m?.HasReceivedSoul("Esky") ?? false),
             new SoulInfo("Gumboots", m?.HasReceivedSoul("Gumboots") ?? false),
@@ -1015,6 +1016,8 @@ namespace GooseGameAP
             new SoulInfo("Dish Soap Bottle", m?.HasReceivedSoul("Dish Soap Bottle") ?? false),
             new SoulInfo("Dustbin", m?.HasReceivedSoul("Dustbin") ?? false),
             new SoulInfo("Dustbin Lid", m?.HasReceivedSoul("Dustbin Lid") ?? false),
+            new SoulInfo("Football", m?.HasReceivedSoul("Football") ?? false),
+            new SoulInfo("Garage Rope", m?.HasReceivedSoul("Garage Rope") ?? false),
             new SoulInfo("Chalk", m?.HasReceivedSoul("Chalk") ?? false),
             new SoulInfo("Hairbrush", m?.HasReceivedSoul("Hairbrush") ?? false),
             new SoulInfo("Horn-Rimmed Glasses", m?.HasReceivedSoul("Horn-Rimmed Glasses") ?? false),
@@ -1087,7 +1090,8 @@ namespace GooseGameAP
             new SoulInfo("Plates", m?.HasReceivedSoul("Plates") ?? false),
             new SoulInfo("Pint Glasses", m?.HasReceivedSoul("Pint Glasses") ?? false),
             new SoulInfo("Portable Stool", m?.HasReceivedSoul("Portable Stool") ?? false),
-            new SoulInfo("Quoits", m?.HasReceivedSoul("Quoits") ?? false),
+            new SoulInfo("Quoits (Green)", m?.HasReceivedSoul("Quoits (Green)") ?? false),
+            new SoulInfo("Quoits (Red)", m?.HasReceivedSoul("Quoits (Red)") ?? false),
             new SoulInfo("Stealth Box", m?.HasReceivedSoul("Stealth Box") ?? false),
             new SoulInfo("Tomatoes", m?.HasReceivedSoul("Tomatoes") ?? false),
             new SoulInfo("Toy Boat", m?.HasReceivedSoul("Toy Boat") ?? false),
@@ -1136,7 +1140,7 @@ namespace GooseGameAP
             // new SoulInfo("Mini Person", m?.HasReceivedSoul("Mini Person Soul") ?? false)
         }; }
         
-        // ============== NEW TASKS TRACKER WINDOW (Notebook Style) ==============
+        // NEW TASKS TRACKER WINDOW (Notebook Style)
         
         public void DrawNewTasksTracker(Plugin plugin)
         {

@@ -641,7 +641,6 @@ namespace GooseGameAP
                 
                 // Back Gardens interactions (1320-1325)
                 case "GardenBell": return BASE_ID + 1320;    // Ring the bell in the Back Gardens
-                case "WindChimes": return BASE_ID + 1321;    // Fallback for wind chimes
                 case "Windmill": return BASE_ID + 1322;      // Spin the windmill
                 case "SpinPurpleFlower": return BASE_ID + 1323;  // Spin the purple flower
                 case "BreakTrellis": return BASE_ID + 1324;  // Break through the trellis
@@ -954,48 +953,36 @@ namespace GooseGameAP
                 case 1294: return "Drag Mini Easel";
                 case 1295: return "Drag Mini Sun Lounge";
                 
-                // Interactions (1301-1350)
-                case 1301: return "Ring Bell";
-                case 1302: return "Honk at Speaker";
-                case 1303: return "Doorbell";
-                case 1304: return "Garden Gate";
-                case 1305: return "Greenhouse Window";
-                case 1306: return "Intro Gate";
-                case 1307: return "TV Remote";
-                case 1308: return "Open Umbrella (Black)";
-                case 1309: return "Turn on Tap";
-                case 1310: return "Open Phone Booth";
-                case 1311: return "Spin Propeller";
-                case 1312: return "Kick Football";
+                // Interactions (1300-1346)
+                case 1300: return "Drop something in the well";
+                case 1301: return "Ring the bike bell";
+                case 1302: return "Turn on the tap in the Garden";
+                case 1303: return "Turn on the sprinkler";
+                case 1311: return "Unplug the shop's radio";
                 case 1313: return "Open Umbrella (Black)";
                 case 1314: return "Open Umbrella (Rainbow)";
                 case 1315: return "Open Umbrella (Red)";
-                case 1316: return "Honk at Wimp";
-                case 1317: return "Honk at Burly Kid";
-                case 1318: return "Kick Football";
-                case 1319: return "Turn on Sprinkler";
-                case 1320: return "Untie Wimp's Left Laces";
-                case 1321: return "Untie Wimp's Right Laces";
-                case 1322: return "Untie Pub Man's Left Laces";
-                case 1323: return "Untie Pub Man's Right Laces";
-                case 1324: return "Spin Windmill";
-                case 1325: return "Wheel Barrow Handle";
-                case 1326: return "Spin Purple Flower";
-                case 1327: return "Spin Sunflower";
-                case 1328: return "Pose as Duck";
-                case 1329: return "Dress up the bush with both ribbons";
+                case 1316: return "Untie Boy's Laces (Left)";
+                case 1317: return "Untie Boy's Laces (Right)";
+                case 1318: return "Boop the football";
+                case 1320: return "Ring the bell in the Back Gardens";
+                case 1322: return "Spin the windmill";
+                case 1323: return "Spin the purple flower";
+                case 1324: return "Break through the trellis";
+                case 1325: return "Spin the sunflower";
+                case 1326: return "Peck at the topiary";
                 case 1330: return "Close Van Door (Left)";
                 case 1331: return "Close Van Door (Right)";
-                case 1332: return "Untie Burly Man's Left Laces";
-                case 1333: return "Untie Burly Man's Right Laces";
-                case 1334: return "Turn on Pub Tap";
-                case 1340: return "Wind Chime G";
-                case 1341: return "Wind Chime F";
-                case 1342: return "Wind Chime E";
-                case 1343: return "Wind Chime D";
-                case 1344: return "Wind Chime C";
-                case 1345: return "Wind Chime B";
-                case 1346: return "Wind Chime A";
+                case 1332: return "Untie Burly Man's Laces (Left)";
+                case 1333: return "Untie Burly Man's Laces (Right)";
+                case 1334: return "Turn on the tap in the Pub";
+                case 1340: return "Play Wind Chime (G)";
+                case 1341: return "Play Wind Chime (F)";
+                case 1342: return "Play Wind Chime (E)";
+                case 1343: return "Play Wind Chime (D)";
+                case 1344: return "Play Wind Chime (C)";
+                case 1345: return "Play Wind Chime (B)";
+                case 1346: return "Play Wind Chime (A)";
                 
                 // Sandcastle pecks (1350-1384) - 35 raw pecks
                 case 1350: return "Peck Model Church Doorway 1";
@@ -1062,8 +1049,8 @@ namespace GooseGameAP
                 case 1429: return "Pickup Boxed Pub Tomato 9";
                 case 1430: return "Pickup Pub Tomato 1";
                 case 1431: return "Pickup Pub Tomato 2";
-                case 1440: return "Pickup Boot (Hub)";
-                case 1441: return "Pickup Boot (Start)";
+                case 1440: return "Pick up Boot (Start)";
+                case 1441: return "Pick up Boot (Hub)";
                 case 1450: return "Pickup Topsoil Bag 1";
                 case 1451: return "Pickup Topsoil Bag 2";
                 case 1452: return "Pickup Topsoil Bag 3";
@@ -1082,6 +1069,39 @@ namespace GooseGameAP
                 case 1510: return "Do some interior redecorating";
                 case 1511: return "Trap the TV shop owner in the garage";
                 case 1512: return "Perform at the pub with a harmonica";
+                
+                // NPC sanities (1600-1659)
+                case 1600: return "Honk at the Groundskeeper";
+                case 1601: return "Honk at the Boy";
+                case 1602: return "Honk at the TV Shop Owner";
+                case 1603: return "Honk at the Market Lady";
+                case 1604: return "Honk at the Tidy Neighbour";
+                case 1605: return "Honk at the Messy Neighbour";
+                case 1606: return "Honk at the Burly Man";
+                case 1607: return "Honk at the Old Man";
+                case 1608: return "Honk at the Pub Lady";
+                case 1609: return "Honk at the Fancy Lady (Yellow)";
+                case 1610: return "Honk at the Fancy Lady (Blue)";
+                case 1611: return "Honk at the Cook";
+                case 1620: return "Startle the Groundskeeper";
+                case 1621: return "Startle the Boy";
+                case 1622: return "Startle the TV Shop Owner";
+                case 1623: return "Startle the Market Lady";
+                case 1624: return "Startle the Tidy Neighbour";
+                case 1625: return "Startle the Messy Neighbour";
+                case 1626: return "Startle the Burly Man";
+                case 1627: return "Startle the Old Man";
+                case 1628: return "Startle the Pub Lady";
+                case 1629: return "Startle the Fancy Lady (Yellow)";
+                case 1630: return "Startle the Fancy Lady (Blue)";
+                case 1631: return "Startle the Cook";
+                case 1640: return "Get shooed by the Groundskeeper";
+                case 1642: return "Get shooed by the TV Shop Owner";
+                case 1643: return "Get shooed by the Market Lady";
+                case 1644: return "Get shooed by the Tidy Neighbour";
+                case 1645: return "Get shooed by the Messy Neighbour";
+                case 1646: return "Get shooed by the Burly Man";
+                case 1648: return "Get shooed by the Pub Lady";
             }
             
             // Generic fallbacks for ID ranges

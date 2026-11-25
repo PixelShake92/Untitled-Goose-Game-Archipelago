@@ -28,6 +28,7 @@ namespace GooseGameAP
         
         // Track if finale is active - gates should close
         public bool FinaleActive { get; private set; } = false;
+        private readonly Dictionary<string, GameObject> disabledObjects = new Dictionary<string, GameObject>();
         
         private static readonly Dictionary<string, string[]> AreaGates = new Dictionary<string, string[]>
         {
@@ -162,7 +163,9 @@ namespace GooseGameAP
         
         private void EnableObjectByPath(string path)
         {
-            var obj = GameObject.Find(path);
+            GameObject obj;
+            if (!disabledObjects.TryGetValue(path, out obj) || obj == null)
+                obj = GameObject.Find(path);
             if (obj != null)
             {
                 obj.SetActive(true);
@@ -231,6 +234,7 @@ namespace GooseGameAP
             var parkHubBlocker = GameObject.Find("highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders/ParkHubGateExtraCollider");
             if (parkHubBlocker != null)
             {
+                disabledObjects["highStreetDynamic/GROUP_Garage/irongate/GateSystem/GateExtraColliders/ParkHubGateExtraCollider"] = parkHubBlocker;
                 parkHubBlocker.SetActive(false);
             }
         }
@@ -425,6 +429,7 @@ namespace GooseGameAP
                 {
                     col.enabled = false;
                 }
+                disabledObjects[path] = obj;
                 obj.SetActive(false);
             }
         }

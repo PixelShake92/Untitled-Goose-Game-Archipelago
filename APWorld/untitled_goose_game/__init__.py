@@ -1,4 +1,4 @@
-from typing import Dict, Any, ClassVar
+from typing import Dict, Any, ClassVar, List
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import Item, Tutorial
 from Options import OptionError
@@ -18,7 +18,7 @@ class GooseGameWeb(WebWorld):
         "English",
         "setup_en.md",
         "setup/en",
-        ["PixelShake92, MiaSchemes"]
+        ["PixelShake92", "MiaSchemes"]
     )
     
     tutorials = [setup_en]
@@ -288,18 +288,18 @@ class GooseGameWorld(World):
         filler_needed = total_locations - items_added
 
         # Add Silent Steps first since there can only be one
-        if self.options.filler_active_silent_steps:
+        if self.options.filler_active_silent_steps and filler_needed > 0:
             self.multiworld.itempool.append(self.create_item(itemNames.FILLER_SILENT_STEPS))
             filler_needed -= 1
 
         # Add other capped fillers next
-        for i in range (self.options.filler_amount_mega_honk.value): # Max 3
+        for i in range(min(self.options.filler_amount_mega_honk.value, max(filler_needed, 0))): # Max 3
             self.multiworld.itempool.append(self.create_item(itemNames.FILLER_MEGA_HONK))
             filler_needed -= 1
-        for i in range (self.options.filler_amount_speedy_feet.value): # Max 10
+        for i in range(min(self.options.filler_amount_speedy_feet.value, max(filler_needed, 0))): # Max 10
             self.multiworld.itempool.append(self.create_item(itemNames.FILLER_SPEEDY_FEET))
             filler_needed -= 1
-        for i in range (self.options.filler_amount_goose_day.value): # Max 3
+        for i in range(min(self.options.filler_amount_goose_day.value, max(filler_needed, 0))): # Max 3
             self.multiworld.itempool.append(self.create_item(itemNames.FILLER_A_GOOSE_DAY))
             filler_needed -= 1
         
@@ -354,6 +354,14 @@ class GooseGameWorld(World):
                 
                 self.multiworld.itempool.append(self.create_item(item_name))
     
+    def get_filler_item_name(self) -> str:
+        return itemNames.FILLER_COIN
+
+    def get_pre_fill_items(self) -> List[Item]:
+        if self.options.goal.value != 1:
+            return [self.create_item(itemNames.PROP_GOLDEN_BELL)]
+        return []
+
     def pre_fill(self) -> None:
         """Place victory-related items at their fixed locations.
         
@@ -419,4 +427,8 @@ class GooseGameWorld(World):
             "trap_weight_butterbeak": self.options.trap_weight_butterbeak.value,
             "trap_weight_suspicious_goose": self.options.trap_weight_suspicious_goose.value,
             "death_link": self.options.death_link.value,
+            "death_link_amnesty": self.options.death_link_amnesty.value,
+            "include_honksanity": self.options.include_honksanity.value,
+            "include_startlesanity": self.options.include_startlesanity.value,
+            "include_shoosanity": self.options.include_shoosanity.value,
         }
